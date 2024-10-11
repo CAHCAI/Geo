@@ -1,0 +1,8 @@
+# seperate API apps on Django allow us to version the API
+
+e.g. 
+
+api_v01
+api_v2.0
+
+etc.
