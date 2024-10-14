@@ -1,57 +1,23 @@
-"use client"
-import { FormEvent, useState } from "react";
+// Use Next.js built-in client-side routing
+'use client';
 
-export default function Home() {
-  const [username, setUsername] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
-  const [error, setError] = useState<string>(''); //Error shown to user
+import Link from 'next/link';
+import React from 'react';
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    // Username and Passwords need to be checked with backend
-    if (username === 'user' && password === 'password') {
-      alert('Login successful!');
-    } else {
-      setError('Invalid username or password');
-    }
-  };
-
+const Page: React.FC = () => {
   return (
-    <div className="flex justify-center items-center h-screen">
-      <div className="w-72 p-5 border border-gray-300 rounded-lg">
-        <h2 className="text-2xl font-semibold mb-4">Login</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label htmlFor="username" className="block mb-1">Username</label>
-            <input
-              type="text"
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full p-2 mt-1 border border-gray-300 rounded-md"
-            />
-          </div>
-          <div className="mb-4">
-            <label htmlFor="password" className="block mb-1">Password</label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-2 mt-1 border border-gray-300 rounded-md"
-            />
-          </div>
-          {error && <div className="text-red-500 mb-4">{error}</div>} 
-          <button
-            type="submit"
-            className="w-full p-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-          >
-            Login
-          </button>
-        </form>
+    <div className="flex flex-col items-center justify-center h-screen space-y-6">
+      <h1 className="text-4xl font-bold">Welcome to the Home Page</h1>
+      <div className="space-x-4">
+      <Link href="/login" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+          Go to Login
+        </Link>
+        <Link href="/navbar" className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-700 transition">
+          Go to Navbar
+        </Link>
       </div>
     </div>
-
   );
 };
 
+export default Page;
