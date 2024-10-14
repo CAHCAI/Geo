@@ -1,19 +1,56 @@
-import React from 'react';
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { AlignJustify } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
-export default function Navbar () {
+export default function Navbar() {
   return (
-    <nav className="bg-gray-800 p-4">
-      <div className="container mx-auto flex justify-between items-center">
-        <div className="text-white text-2xl font-bold">Geo</div>
-        <div className="space-x-6">
-          <a href="/" className="text-gray-300 hover:text-white transition">Home</a>
-          <a href="/hpsa-search" className="text-gray-300 hover:text-white transition">HPSA Search</a>
-          <a href="/licensed-healthcare" className="text-gray-300 hover:text-white transition">Licensed Healthcare Facilities</a>
-          <a href="/api-reference" className="text-gray-300 hover:text-white transition">API Reference</a>
+    <div className="bg-white min-h-screen">
+      <nav className="bg-gray-800 drop-shadow-lg p-6">
+        <div className="container mx-auto flex justify-between items-center">
+          <div className="text-white text-3xl font-bold">Geo</div>
+          <div className="flex space-x-4">
+            <Button className="bg-gray-600">
+              <a href="/" className="text-white">
+                Home
+              </a>
+            </Button>
+            <Button className="bg-gray-600">
+              <a href="/hpsa-search" className=" text-white">
+                HPSA Search
+              </a>
+            </Button>
+            <Button className="bg-gray-600">
+              <a href="/licensed-healthcare" className="text-white">
+                Licensed Healthcare Facilities
+              </a>
+            </Button>
+            <Button className="bg-gray-600">
+              <a href="/api-reference" className="text-white">
+                API Reference
+              </a>
+            </Button>
+            <Sheet>
+              <SheetTrigger className="bg-gray-600 h-9 rounded-md px-3">
+                <AlignJustify className="text-white"></AlignJustify>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Login</SheetTitle>
+                  <SheetDescription>add login here</SheetDescription>
+                </SheetHeader>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+    </div>
   );
-};
-
-
+}
