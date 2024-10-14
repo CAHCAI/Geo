@@ -8,7 +8,7 @@ ER Diagram:
 from django.db import models
 
 """
-Input: 
+Input: Input for the Geo application
 """
 
 class Input(models.Model):
@@ -16,7 +16,10 @@ class Input(models.Model):
     address = models.CharField(max_length=250)
     source = models.CharField(max_length=100)
     alt_source = models.CharField(max_length=100)
-
+    
+    # Return input as a string (the address)
+    def __str__(self):
+        return str(self.address)
 
 """
 GIS: Geographic Information System
