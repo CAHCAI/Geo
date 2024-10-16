@@ -9,4 +9,6 @@ def example_view(request):
 
 from django.shortcuts import render
 
+def index(request):
+    return render(request,'frontend.html'),
 
