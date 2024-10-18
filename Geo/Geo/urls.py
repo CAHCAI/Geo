@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.urls import path
 from django.contrib import admin
-from core import views
+from .core import views
 
 # URL Configuration: separates URL patterns for admin, frontend, and example views
 urlpatterns = [
@@ -24,8 +24,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),  # Admin routes
 
     # Frontend route (Main page)
-    path('', views.index_view, name='frontend'),  # Route for the frontend homepage
+    path('', views.index, name='frontend'),  # Route for the frontend homepage
 
     # Example route
-    path('example/', views.example_view, name='example'),  # Optional example route (if needed)
+    #path('example/', views.example_view, name='example'),  # Optional example route (if needed)
 ]
