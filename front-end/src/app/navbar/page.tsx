@@ -1,4 +1,5 @@
 import React from "react";
+import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { AlignJustify } from "lucide-react";
 import {
@@ -23,9 +24,9 @@ export default function Navbar() {
               </a>
             </Button>
             <Button className="bg-gray-600">
-              <a href="/hpsa-search" className=" text-white">
+              <Link href="/hpsa-search" className="text-white">
                 HPSA Search
-              </a>
+              </Link>
             </Button>
             <Button className="bg-gray-600">
               <a href="/licensed-healthcare" className="text-white">
