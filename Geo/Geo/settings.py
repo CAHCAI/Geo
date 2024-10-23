@@ -79,12 +79,12 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'postgres',
-        'USER': 'postgres',
+        'USER': 'yahir',
         'PASSWORD': 'postgres',
         'HOST': '127.0.0.1',
         'PORT': '5432',
         'OPTIONS': {
-            'options': '-c search_path=geo'
+            'options': '-c search_path=public'
         }
     }
 }
