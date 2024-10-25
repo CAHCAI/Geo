@@ -75,6 +75,8 @@ WSGI_APPLICATION = 'Geo.wsgi.application'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 # NOTE: DO NOT USE IN PRODUCTION, TESTDB CONFIGURATION
+
+"""
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -86,6 +88,13 @@ DATABASES = {
         'OPTIONS': {
             'options': '-c search_path=public'
         }
+    }
+}
+"""
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',  # Saves a temporary SQLite database file in your project directory
     }
 }
 
