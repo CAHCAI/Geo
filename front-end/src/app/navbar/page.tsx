@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/sheet";
 
 // Importing page components
-import HpsaSearch from "@/components/ui/HpsaSearch";
+import HpsaSearch from "@/components/HpsaSearch";
 //import LicensedHealthcare from "@/components/LicensedHealthcare";
 //import ApiReference from "@/components/ApiReference";
 
