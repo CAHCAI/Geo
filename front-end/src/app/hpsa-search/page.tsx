@@ -1,21 +1,38 @@
-'use client';
+"use client";
 import React from "react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import Table from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { AlignJustify } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 export const InputWithButton: React.FC = () => (
   <div className="flex w-full max-w-sm items-center space-x-2 mb-4">
     <Input type="address" placeholder="2020 W El Camino Ave, Sacramento CA" />
-    <Button type="search">Search</Button>
+    <Button>Search</Button>
   </div>
 );
 
 const Page: React.FC = () => {
   // Column definitions
-  const [baseTableColumns, primaryCareColumns, mentalHealthCareColumns, dentalHealthCareColumns,
-    healthServiceAreaColumns, laServicePlanningAreaColumns, 
-    assemblyDistrictColumns, senateDistrictColumns, congressionalDistrictColumns
+  const [
+    baseTableColumns,
+    primaryCareColumns,
+    mentalHealthCareColumns,
+    dentalHealthCareColumns,
+    healthServiceAreaColumns,
+    laServicePlanningAreaColumns,
+    assemblyDistrictColumns,
+    senateDistrictColumns,
+    congressionalDistrictColumns,
   ] = React.useMemo(
     () => [
       [
@@ -28,7 +45,6 @@ const Page: React.FC = () => {
         { Header: "MUP", accessor: "MUP" },
         { Header: "PCSA", accessor: "PCSA" },
         { Header: "RNSA", accessor: "RNSA" },
-
       ],
       [{ Header: "HPSA Primary Care", accessor: "PrimaryCare" }],
       [{ Header: "HPSA Mental Health", accessor: "MentalHealth" }],
@@ -43,9 +59,16 @@ const Page: React.FC = () => {
   );
 
   // Table data
-  const [baseTableData, primaryCareData, mentalHealthCareData, dentalHealthCareData,
-    healthServiceAreaData, laServicePlanningAreaData, 
-    assemblyDistrictData, senateDistrictData, congressionalDistrictData
+  const [
+    baseTableData,
+    primaryCareData,
+    mentalHealthCareData,
+    dentalHealthCareData,
+    healthServiceAreaData,
+    laServicePlanningAreaData,
+    assemblyDistrictData,
+    senateDistrictData,
+    congressionalDistrictData,
   ] = React.useMemo(
     () => [
       [
@@ -105,55 +128,115 @@ const Page: React.FC = () => {
   );
 
   return (
-    <div className="container mx-auto">
-      <InputWithButton />
-
-
-      {/* Table Container */}
-      <div className="border border-gray-700 rounded-lg p-4">
-        {/* Base Table */}
-        <div className="border border-gray-700 rounded-lg p-4 mb-6">
-          <Table columns={baseTableColumns} data={baseTableData} />
-        </div>
-        
-        {/* Row 1 Container */}
-        <div className="border border-gray-700 rounded-lg p-4 mb-6">
-          <div className="grid grid-cols-3 ">
-            <div>
-              <Table columns={primaryCareColumns} data={primaryCareData} />
-            </div>
-            <div>
-              <Table columns={mentalHealthCareColumns} data={mentalHealthCareData} />
-            </div>
-            <div>
-              <Table columns={dentalHealthCareColumns} data={dentalHealthCareData} />
-            </div>
+    <div className="bg-white min-h-screen">
+      <nav className="bg-gray-800 drop-shadow-lg p-6">
+        <div className="container mx-auto flex justify-between items-center">
+          <div className="text-white text-3xl font-bold">Geo</div>
+          <div className="flex space-x-4">
+            <Button className="bg-gray-600">
+              <a href="/" className="text-white">
+                Home
+              </a>
+            </Button>
+            <Button className="bg-gray-600">
+              <Link href="/hpsa-search" className="text-white">
+                HPSA Search
+              </Link>
+            </Button>
+            <Button className="bg-gray-600">
+              <a href="/licensed-healthcare" className="text-white">
+                Licensed Healthcare Facilities
+              </a>
+            </Button>
+            <Button className="bg-gray-600">
+              <a href="/api-reference" className="text-white">
+                API Reference
+              </a>
+            </Button>
+            <Sheet>
+              <SheetTrigger className="bg-gray-600 h-9 rounded-md px-3">
+                <AlignJustify className="text-white"></AlignJustify>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Login</SheetTitle>
+                  <SheetDescription>add login here</SheetDescription>
+                </SheetHeader>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
+      </nav>
+      <div className="container mx-auto pt-5">
+        <InputWithButton />
 
-        {/* Row 2 Container */}
-        <div className="border border-gray-700 rounded-lg p-4 mb-6">
-          <div className="grid grid-cols-2 ">
-            <div>
-              <Table columns={healthServiceAreaColumns} data={healthServiceAreaData} />
-            </div>
-            <div>
-              <Table columns={laServicePlanningAreaColumns} data={laServicePlanningAreaData} />
-            </div>
-          </div>
-        </div>
-
-        {/* Row 3 Container */}
+        {/* Table Container */}
         <div className="border border-gray-700 rounded-lg p-4">
-          <div className="grid grid-cols-3 ">
-            <div>
-              <Table columns={assemblyDistrictColumns} data={assemblyDistrictData} />
+          {/* Base Table */}
+          <div className="border border-gray-700 rounded-lg p-4 mb-6">
+            <Table columns={baseTableColumns} data={baseTableData} />
+          </div>
+
+          {/* Row 1 Container */}
+          <div className="border border-gray-700 rounded-lg p-4 mb-6">
+            <div className="grid grid-cols-3 ">
+              <div>
+                <Table columns={primaryCareColumns} data={primaryCareData} />
+              </div>
+              <div>
+                <Table
+                  columns={mentalHealthCareColumns}
+                  data={mentalHealthCareData}
+                />
+              </div>
+              <div>
+                <Table
+                  columns={dentalHealthCareColumns}
+                  data={dentalHealthCareData}
+                />
+              </div>
             </div>
-            <div>
-              <Table columns={senateDistrictColumns} data={senateDistrictData} />
+          </div>
+
+          {/* Row 2 Container */}
+          <div className="border border-gray-700 rounded-lg p-4 mb-6">
+            <div className="grid grid-cols-2 ">
+              <div>
+                <Table
+                  columns={healthServiceAreaColumns}
+                  data={healthServiceAreaData}
+                />
+              </div>
+              <div>
+                <Table
+                  columns={laServicePlanningAreaColumns}
+                  data={laServicePlanningAreaData}
+                />
+              </div>
             </div>
-            <div>
-              <Table columns={congressionalDistrictColumns} data={congressionalDistrictData} />
+          </div>
+
+          {/* Row 3 Container */}
+          <div className="border border-gray-700 rounded-lg p-4">
+            <div className="grid grid-cols-3 ">
+              <div>
+                <Table
+                  columns={assemblyDistrictColumns}
+                  data={assemblyDistrictData}
+                />
+              </div>
+              <div>
+                <Table
+                  columns={senateDistrictColumns}
+                  data={senateDistrictData}
+                />
+              </div>
+              <div>
+                <Table
+                  columns={congressionalDistrictColumns}
+                  data={congressionalDistrictData}
+                />
+              </div>
             </div>
           </div>
         </div>
