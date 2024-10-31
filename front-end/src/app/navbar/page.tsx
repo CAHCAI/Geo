@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { AlignJustify } from "lucide-react";
+import { AlignJustify, LogIn } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -17,6 +17,7 @@ import {
 import HpsaSearch from "@/components/HpsaSearch";
 //import LicensedHealthcare from "@/components/LicensedHealthcare";
 //import ApiReference from "@/components/ApiReference";
+import Login from "../login/page";
 
 export default function Navbar() {
   const [activePage, setActivePage] = useState("hspa_search");
@@ -30,6 +31,8 @@ export default function Navbar() {
       //   return <LicensedHealthcare />;
       // case "api-reference":
       //   return <ApiReference />;
+      case "login":
+        return <Login />
       default:
         return <div className="text-gray-700">Welcome to Geo!</div>;
     }
@@ -66,13 +69,22 @@ export default function Navbar() {
               <span className="text-white">API Reference</span>
             </Button>
             <Sheet>
-              <SheetTrigger className="bg-gray-600 h-9 rounded-md px-3">
+              <SheetTrigger className="bg-gray-600 h-9 rounded-md px-2">
                 <AlignJustify className="text-white" />
               </SheetTrigger>
               <SheetContent>
                 <SheetHeader>
-                  <SheetTitle>Login</SheetTitle>
-                  <SheetDescription>add login here</SheetDescription>
+                  {/* if we want to make the login appear on the same page
+                  <Button
+                    className="bg-gray-600 px-2 py-1"
+                    onClick={() => setActivePage("login")}
+                    >
+                    <span className="text-white">Login</span>
+                </Button> */}
+                {/* Appears on different page */}
+                <Link href="/login" className="bg-gray-600 text-white px-2 py-1 rounded-md hover:bg-gray-700 transition text-center">
+                  Login
+                </Link>
                 </SheetHeader>
               </SheetContent>
             </Sheet>
