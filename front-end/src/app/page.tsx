@@ -15,6 +15,9 @@ const Page: React.FC = () => {
         <Link href="/navbar" className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-700 transition">
           Go to Navbar
         </Link>
+        <Link href="/dashboard/app" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-green-700 transition">
+          Go to Dashboard
+        </Link>
       </div>
     </div>
   );
