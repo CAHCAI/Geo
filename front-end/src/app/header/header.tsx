@@ -17,10 +17,9 @@ const Header: React.FC = () => {
             />
           </div>
 
-          {/* Navigation Links and Log In Button */}
+          {/* Navigation Links */}
           <div className="flex items-center space-x-6">
             <nav className="flex space-x-6">
-              {/* Navigation Links */}
               <a
                 href="https://hcai.ca.gov/media-center/"
                 className="text-md font-semibold text-blue-800 hover:text-blue-900 transition duration-200 hover:underline underline-offset-4"
@@ -46,11 +45,6 @@ const Header: React.FC = () => {
                 Subscribe
               </a>
             </nav>
-
-            {/* Log In Button */}
-            <button className="border border-blue-600 text-blue-600 px-4 py-2 rounded-md hover:bg-blue-600 hover:text-white transition duration-200">
-              LOG IN
-            </button>
           </div>
         </div>
       </div>
