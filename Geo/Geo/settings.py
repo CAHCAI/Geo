@@ -76,27 +76,19 @@ WSGI_APPLICATION = 'Geo.wsgi.application'
 
 # NOTE: DO NOT USE IN PRODUCTION, TESTDB CONFIGURATION
 
-"""
+# Geo/Geo/settings.py
+
 DATABASES = {
     'default': {
-        'ENGINE': 'Django.contrib.gis.db.backends.postgis',
-        'NAME': 'postgres',
-        'USER': 'yahir',
-        'PASSWORD': 'postgres',
-        'HOST': '127.0.0.1',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'geo_db',
+        'USER': 'geo_user',
+        'PASSWORD': 'geo_password',
+        'HOST': 'db',
         'PORT': '5432',
-        'OPTIONS': {
-            'options': '-c search_path=public'
-        }
     }
 }
-"""
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',  # Saves a temporary SQLite database file in your project directory
-    }
-}
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators

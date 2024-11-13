@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:14
+    container_name: geo_db
+    environment:
+      POSTGRES_DB: geo_db
+      POSTGRES_USER: geo_user
+      POSTGRES_PASSWORD: geo_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  django:
+    build:
+      context: ./Geo
+    container_name: geo_django
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./Geo:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=1
+      - POSTGRES_DB=geo_db
+      - POSTGRES_USER=geo_user
+      - POSTGRES_PASSWORD=geo_password
+      - POSTGRES_HOST=db
+    depends_on:
+      - db
+
+  react:
+    build:
+      context: ./react-front-end
+    container_name: geo_react
+    volumes:
+      - ./react-front-end:/app
+    ports:
+      - "3000:3000"
+    environment:
+      - HOST=0.0.0.0  # Bind React to all network interfaces
+    stdin_open: true
+    tty: true
+
+
+volumes:
+  postgres_data:
