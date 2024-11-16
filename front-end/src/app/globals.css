@@ -107,9 +107,3 @@ body {
     grid-template-columns: repeat(auto-fit, minmax(clamp(200px, 30%, 400px), 1fr)); /* Fluid grid items */
   }
 }
-
-img {
-  width: 100%;
-  height: auto;
-  object-fit: cover;
-}

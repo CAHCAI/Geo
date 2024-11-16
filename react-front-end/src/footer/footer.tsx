@@ -3,101 +3,99 @@ import React from 'react';
 const Footer: React.FC = () => {
   return (
     <footer className="bg-gray-50 py-8 border-t border-gray-200">
-      <div className="container mx-auto flex flex-col md:flex-row justify-between items-start px-6 space-y-6 md:space-y-0">
-
-        {/* Left Section - Logos and Copyright */}
-        <div className="flex flex-col items-start space-y-4">
-          {/* Logos Section */}
-          <div className="flex items-center space-x-4">
-            <img
-              src="/assets/ca-gov-logo.png"
-              alt="CA Gov Logo"
-              className="h-10"
-            />
-            <img
-              src="/assets/hcai-logo.png"
-              alt="HCAI Logo"
-              className="h-12"
-            />
-          </div>
-          {/* Copyright Information */}
-          <div className="text-sm text-gray-600 ml-6">
-            © Copyright 2021 State of California
-          </div>
-        </div>
-
-        {/* Center Section - Useful Links */}
-        <div className="flex flex-col items-end space-y-4 md:items-end md:space-y-4 w-full md:w-auto">
-          <div className="flex flex-wrap justify-center md:justify-end space-x-8">
-            {[
-              { name: 'COVID-19 Updates', href: 'https://www.covid19.ca.gov/' },
-              { name: 'Register to Vote', href: 'https://registertovote.ca.gov/' },
-              { name: 'Privacy', href: 'https://hcai.ca.gov/home/privacy-policy/' },
-              { name: 'Accessibility', href: 'https://hcai.ca.gov/home/accessibility/' },
-              { name: 'Conditions of Use', href: 'https://hcai.ca.gov/home/conditions-of-use/' },
-              { name: 'Contact Us', href: 'https://hcai.ca.gov/about/contact-us/' },
-            ].map((link) => (
-              <a
-                key={link.name}
-                href={link.href}
-                className="text-md font-semibold text-blue-800 hover:text-blue-900 transition duration-200 hover:underline underline-offset-4"
-              >
-                {link.name}
-              </a>
-            ))}
-          </div>
-
-          {/* Social Media Icons, Subscribe Button */}
-          <div className="flex flex-col items-end space-y-4">
-            <div className="flex items-center space-x-6 mt-4 md:justify-end">
-              {/* Subscribe Button */}
-              <a
-                href="https://hcai.ca.gov/mailing-list/"
-                className="border border-blue-600 text-blue-800 px-4 py-2 rounded-full hover:bg-blue-600 hover:text-white transition duration-200 shadow-md hover:shadow-lg"
-              >
-                SUBSCRIBE
-              </a>
-
-              {/* Social Media Icons */}
-              <div className="flex space-x-4">
-                {[
-                  {
-                    name: 'Facebook',
-                    href: 'https://www.facebook.com/CaliforniaHCAI',
-                    src: '/assets/facebook-icon.png',
-                  },
-                  {
-                    name: 'Twitter',
-                    href: 'https://x.com/CA_HCAI',
-                    src: '/assets/twitter-icon.png',
-                  },
-                  {
-                    name: 'LinkedIn',
-                    href: 'https://www.linkedin.com/company/department-of-health-care-access-and-information/',
-                    src: '/assets/linkedin-icon.png',
-                  },
-                  {
-                    name: 'YouTube',
-                    href: 'https://www.youtube.com/channel/UCWZlucPkJlQa8bvmf39SRqw',
-                    src: '/assets/youtube-icon.png',
-                  },
-                ].map((social) => (
-                  <a
-                    key={social.name}
-                    href={social.href}
-                  >
-                    <img
-                      src={social.src}
-                      alt={social.name}
-                      className="h-8 hover:opacity-80 transition duration-200 shadow-md hover:shadow-lg rounded-md"
-                    />
-                  </a>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      	<div className="site-footer__bottom">
+		<div className="container">
+			<div className="site-footer__logo-container">
+			
+				<div className="site-footer__logos-and-copyright">
+				
+					<div className="site-footer__logos">
+						<a className="site-footer__logo" href="https://ca.gov/">
+							<img src="https://hcai.ca.gov/wp-content/themes/oshpd/assets/images/ca-logo-color.svg" alt="California State Logo" />
+							<div className="screen-reader-text"> </div>
+						</a>
+						<a className="site-footer__logo" href="/">
+							<img src="https://hcai.ca.gov/wp-content/themes/oshpd/assets/images/logo-color.svg" alt="Department of Health Care Access and Information Logo" />
+							<div className="screen-reader-text"> </div>
+						</a>
+					</div>
+				
+					<div id="js-copyright-container">
+						<p className="copyright" id="js-copyright">
+							© Copyright 2024 State of California </p>
+					</div>
+				</div>
+				<div className="site-footer__mental-health site-footer__logos-and-copyright">
+						<a className="site-footer__mental-health-logo" href="https://www.mentalhealth.ca.gov/">
+							<img src="https://hcai.ca.gov/wp-content/themes/oshpd/assets/images/MHFA%20Logo%20Full%20Color.png" alt="Mental Health for All" />
+							<div className="screen-reader-text"> </div>
+						</a>
+				</div>
+			
+				<div className="site-footer__social">
+					
+					<p className="site-footer__social__heading">HCAI Social Media:</p>
+				
+						<div className="social-links">
+		<ul className="social-links__list">
+												<li className="social-links__item">
+						<a href="https://www.facebook.com/CaliforniaHCAI" target="_blank" rel="noopener noreferrer"
+						className="social-links__link">
+							<svg role="presentation" height="24" width="10" className="icon-facebook icon" aria-label="facebook" aria-hidden="true" focusable="false"><use href="https://hcai.ca.gov/wp-content/themes/oshpd/dist/icons/icons.svg#sprite-icon-facebook"/></svg>		
+              <img src="Geo\front-end\public\assets\facebook-icon.png" />					<span className="social-links__text">
+								Facebook<span
+									className="screen-reader-text"> </span>
+							</span>
+						</a>
+					</li>
+																<li className="social-links__item">
+						<a href="https://twitter.com/CA_HCAI" target="_blank" rel="noopener noreferrer"
+						className="social-links__link">
+							<svg role="presentation" height="24" width="24" className="icon-twitter icon" aria-label="twitter" aria-hidden="true" focusable="false"><use href="https://hcai.ca.gov/wp-content/themes/oshpd/dist/icons/icons.svg#sprite-icon-twitter"/></svg>	
+              <img src="Geo\front-end\public\assets\twitter-icon.png" />						<span className="social-links__text">
+								Twitter<span
+									className="screen-reader-text"> </span>
+							</span>
+						</a>
+					</li>
+																<li className="social-links__item">
+						<a href="https://www.linkedin.com/company/department-of-health-care-access-and-information" target="_blank" rel="noopener noreferrer"
+						className="social-links__link">
+							<svg role="presentation" height="24" width="24" className="icon-linkedin icon" aria-label="linkedin" aria-hidden="true" focusable="false"><use href="https://hcai.ca.gov/wp-content/themes/oshpd/dist/icons/icons.svg#sprite-icon-linkedin"/></svg>		
+              <img src="Geo\front-end\public\assets\linkedin-icon.png" />					<span className="social-links__text">
+								LinkedIn<span
+									className="screen-reader-text"> </span>
+							</span>
+						</a>
+					</li>
+																<li className="social-links__item">
+						<a href="https://www.youtube.com/channel/UCWZlucPkJlQa8bvmf39SRqw" target="_blank" rel="noopener noreferrer"
+						className="social-links__link">
+							<svg role="presentation" height="18" width="24" className="icon-youtube icon" aria-label="youtube" aria-hidden="true" focusable="false"><use href="https://hcai.ca.gov/wp-content/themes/oshpd/dist/icons/icons.svg#sprite-icon-youtube"/></svg> 	
+              <img src="Geo\front-end\public\assets\youtube-icon.png" />						<span className="social-links__text">
+								YouTube<span
+									className="screen-reader-text"> </span>
+							</span>
+						</a>
+					</li>
+									</ul>
+	</div>
+					</div>
+				
+				<div className="subscribe-button">
+					<a className="c-button" id="js-subscribe-button" href="/mailing-list/">
+						Subscribe					</a>
+				</div>
+			</div>
+			<hr aria-hidden="true" />
+			<ul id="menu-footer-menu-bottom" className="site-footer__menu-bottom"><li id="menu-item-85554" className="menu-item menu-item-type-custom menu-item-object-custom menu-item-85554"><u><a href="https://covid19.ca.gov/">COVID-19 Updates</a></u></li>
+<li id="menu-item-13782" className="menu-item menu-item-type-custom menu-item-object-custom menu-item-13782"><u><a href="https://registertovote.ca.gov/">Register to Vote</a></u></li>
+<li id="menu-item-9079" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-9079"><u><a href="https://hcai.ca.gov/home/privacy-policy/">Privacy Policy Statement</a></u></li>
+<li id="menu-item-22321" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-22321"><u><a href="https://hcai.ca.gov/home/accessibility/">Accessibility</a></u></li>
+<li id="menu-item-22320" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-22320"><u><a href="https://hcai.ca.gov/home/conditions-of-use/">Data Collection/Conditions of Use</a></u></li>
+<li id="menu-item-19672" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-19672"><u><a href="https://hcai.ca.gov/about/contact-us/">Contact Us</a></u></li>
+</ul>		</div>
+	</div>
     </footer>
   );
 };
