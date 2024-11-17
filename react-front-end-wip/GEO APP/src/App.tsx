@@ -44,49 +44,10 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="bg-white h-[89vh] flex flex-col overflow-none">
+    <div className="bg-white h-[87vh] flex flex-col overflow-none">
       {/* Navbar */}
       <nav className="fixed top-0 left-0 w-full drop-shadow-lg z-50">
         <div>
-          {/* Top Navigation */}
-          <div className="bg-white flex justify-between items-center p-5">
-            {/* Logo on the left */}
-            <img
-              src={CaGovLogo}
-              alt="CA Gov Logo"
-              className="h-9 object-contain"
-            />
-
-            {/* Links on the right */}
-            <div className="flex space-x-4 md:space-x-6 text-sm md:text-base">
-              {[
-                {
-                  href: "https://hcai.ca.gov/media-center/",
-                  label: "Newsroom",
-                },
-                {
-                  href: "https://hcai.ca.gov/public-meetings/",
-                  label: "Public Meetings",
-                },
-                { href: "https://hcai.ca.gov/about/", label: "About HCAI" },
-                {
-                  href: "https://hcai.ca.gov/mailing-list/",
-                  label: "Subscribe",
-                },
-              ].map((link) => (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  className="font-semibold text-blue-800"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {link.label}
-                </a>
-              ))}
-            </div>
-          </div>
-
           {/* Search Bar Section */}
           <div className="bg-gray-50 h-24 shadow-md border-b border-gray-200 flex items-center w-full px-0">
             <div className="flex justify-between items-center w-full px-4">
