@@ -30,108 +30,110 @@ export default function Login() {
   };
 
   return (
-    <div className="relative flex flex-col justify-center items-center w-full h-full bg-gradient-to-br from-blue-200 via-blue-100 to-blue-50">
+    <div className="pt-2">
+      {" "}
       {/* HCAI Logo */}
       <div className="absolute top-8 left-4">
-        <img src={HcaiLogo} alt="HCAI Logo" className="h-16" />
+        <img src={HcaiLogo} alt="HCAI Logo" className="h-12" />
       </div>
+      <div className="relative flex flex-col pt-[12vh] r w-full h-full">
+        {/* Login Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="relative w-full max-w-sm p-6 rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300 "
+          style={{
+            background: "linear-gradient(135deg, #e0f7fa, #ffffff, #bbdefb)",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          }}
+        >
+          <h2 className="text-xl font-semibold text-gray-800 text-center mb-4 ">
+            Sign In
+          </h2>
 
-      {/* Login Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="relative w-full max-w-sm p-6 rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300"
-        style={{
-          background: "linear-gradient(135deg, #e0f7fa, #ffffff, #bbdefb)",
-          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-        }}
-      >
-        <h2 className="text-xl font-semibold text-gray-800 text-center mb-4">
-          Sign In
-        </h2>
-
-        {loading ? (
-          <div className="flex justify-center items-center h-32">
-            <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Username Field */}
-            <div>
-              <label
-                htmlFor="username"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Username
-              </label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-3 flex items-center text-gray-400">
-                  <FiUser />
-                </span>
-                <input
-                  type="text"
-                  id="username"
-                  placeholder="Enter your username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full p-2 pl-10 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
+          {loading ? (
+            <div className="flex justify-center items-center h-32">
+              <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Username Field */}
+              <div>
+                <label
+                  htmlFor="username"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Username
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-3 flex items-center text-gray-400">
+                    <FiUser />
+                  </span>
+                  <input
+                    type="text"
+                    id="username"
+                    placeholder="Enter your username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="w-full p-2 pl-10 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Password Field */}
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Password
-              </label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-3 flex items-center text-gray-400">
-                  <FiLock />
-                </span>
-                <input
-                  type="password"
-                  id="password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full p-2 pl-10 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
+              {/* Password Field */}
+              <div>
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Password
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-3 flex items-center text-gray-400">
+                    <FiLock />
+                  </span>
+                  <input
+                    type="password"
+                    id="password"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full p-2 pl-10 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Error Message */}
-            {error && (
-              <p className="text-sm text-red-500 text-center">{error}</p>
-            )}
+              {/* Error Message */}
+              {error && (
+                <p className="text-sm text-red-500 text-center">{error}</p>
+              )}
 
-            {/* Login Button */}
-            <button
-              type="submit"
-              className="w-full py-2 bg-blue-500 text-white font-semibold rounded-md shadow-md hover:bg-blue-600 transition focus:outline-none focus:ring-2 focus:ring-blue-400"
-            >
-              Login
-            </button>
+              {/* Login Button */}
+              <button
+                type="submit"
+                className="w-full py-2 bg-blue-500 text-white font-semibold rounded-md shadow-md hover:bg-blue-600 transition focus:outline-none focus:ring-2 focus:ring-blue-400"
+              >
+                Login
+              </button>
 
-            {/* Forgot Password */}
-            <div className="text-center text-sm mt-2">
-              <a href="#" className="text-blue-500 hover:underline">
-                Forgot your password?
-              </a>
-            </div>
-          </form>
-        )}
-      </motion.div>
+              {/* Forgot Password */}
+              <div className="text-center text-sm mt-2">
+                <a href="#" className="text-blue-500 hover:underline">
+                  Forgot your password?
+                </a>
+              </div>
+            </form>
+          )}
+        </motion.div>
 
-      {/* Footer */}
-      <footer className="absolute bottom-0 right-0 m-4">
-        <img src={GeoLogo} alt="CA Gov Logo" className="h-10 opacity-80" />
-      </footer>
+        {/* Footer */}
+        <footer className="absolute bottom-0 right-0 m-4">
+          <img src={GeoLogo} alt="CA Gov Logo" className="h-10 opacity-80" />
+        </footer>
+      </div>
     </div>
   );
 }
