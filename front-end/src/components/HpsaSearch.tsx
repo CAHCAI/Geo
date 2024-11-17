@@ -5,6 +5,11 @@ import Table from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 
 export const InputWithButton: React.FC = () => (
+  /* address: string;
+  setAddress: React.Dispatch<React.SetStateAction<string>>;
+  handleSearch: () => void;
+}> = ({ address, setAddress, handleSearch }) => (
+ */
   <div className="flex w-full max-w-sm items-center space-x-2 mb-4">
     <Input type="address" placeholder="2020 W El Camino Ave, Sacramento CA" />
     <Button>Search</Button>
@@ -12,6 +17,24 @@ export const InputWithButton: React.FC = () => (
 );
 
 const HpsaSearchPage: React.FC = () => {
+/*
+  const [address, setAddress] = React.useState("");
+  const [searchResults, setSearchResults] = React.useState<any>(null);
+
+  const handleSearch = async () => {
+    try {
+      const response = await fetch(`/api/geo/search/?address=${encodeURIComponent(address)}`);
+      const data = await response.json();
+      if (data.error) {
+        console.error(data.error);
+      } else {
+        setSearchResults(data);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+  */
   // Column definitions
   const [
     baseTableColumns,

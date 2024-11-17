@@ -1,7 +1,9 @@
+/* Import Tailwind base, components, and utilities */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Custom Body Styles */
 body {
   font-family: Arial, Helvetica, sans-serif;
   font-size: clamp(1rem, 1vw + 0.5rem, 1.25rem);
@@ -11,12 +13,24 @@ body {
   @apply bg-background text-foreground;
 }
 
+/* Custom Utility Classes */
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+  .border-border {
+    border-color: var(--border); /* Make sure `--border` is defined */
+  }
+  .bg-background {
+    background-color: var(--background); /* Uses the custom CSS variable */
+  }
+
+  .text-foreground {
+    color: var(--foreground); /* Uses the custom CSS variable */
+  }
 }
 
+/* Custom Variables for Colors and Themes */
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -52,8 +66,10 @@ body {
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+    --border: 0 0% 89.8%;
   }
 
+  /* Dark Theme Variables */
   .dark {
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
@@ -90,6 +106,7 @@ body {
   }
 }
 
+/* Global Base Styles */
 @layer base {
   * {
     @apply border-border;
@@ -98,12 +115,15 @@ body {
   .container {
     max-width: 1200px;
     margin: auto;
-    padding: clamp(1rem, 2vw, 2rem); 
+    padding: clamp(1rem, 2vw, 2rem);
   }
 
   .grid-container {
     display: grid;
     gap: clamp(0.5rem, 1vw, 1.5rem);
-    grid-template-columns: repeat(auto-fit, minmax(clamp(200px, 30%, 400px), 1fr)); /* Fluid grid items */
+    grid-template-columns: repeat(
+      auto-fit,
+      minmax(clamp(200px, 30%, 400px), 1fr)
+    );
   }
 }
