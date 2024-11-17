@@ -43,7 +43,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="bg-white h-screen flex flex-col overflow-hidden">
+    <div className="bg-white h-[89vh] flex flex-col overflow-hidden">
       {/* Navbar */}
       <nav className="bg-gray-800 fixed top-0 left-0 w-full drop-shadow-lg p-4">
         <div className="container mx-auto flex justify-between items-center">
