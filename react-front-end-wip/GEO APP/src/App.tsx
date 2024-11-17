@@ -99,9 +99,10 @@ const App: React.FC = () => {
 
               {/* Search Bar */}
               <div className="flex items-center w-full max-w-md border border-gray-300 rounded-lg px-4 py-3 shadow-sm focus-within:ring-2 focus-within:ring-blue-500 transition duration-200">
+               
                 <input
                   type="text"
-                  placeholder="Search ..."
+                  placeholder="Search..."
                   className="w-full text-sm md:text-base border-none focus:outline-none"
                 />
                 <Search className="text-gray-500 ml-2" />
