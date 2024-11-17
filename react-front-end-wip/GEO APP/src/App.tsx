@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -15,9 +16,11 @@ import {
 // Importing page components
 import HpsaSearch from "@/components/HpsaSearch";
 import Login from "./components/Login";
+import AdminDashboard from "./components/dashboard";
 
 const App: React.FC = () => {
   const [activePage, setActivePage] = useState("hpsa_search");
+  const [loggedIn, setLoggedIn] = useState(false);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -36,7 +39,9 @@ const App: React.FC = () => {
       case "hpsa-search":
         return <HpsaSearch />;
       case "login":
-        return <Login />;
+        return <Login setLoggedIn={setLoggedIn} loggedIn={loggedIn} />;
+      case "admin-dashboard":
+        return <AdminDashboard />;
       default:
         return <div className="text-gray-700">Welcome to Geo!</div>;
     }
@@ -50,17 +55,11 @@ const App: React.FC = () => {
           {/* Search Bar Section */}
           <div className="bg-gray-50 h-24 shadow-md border-b border-gray-200 flex items-center w-full px-0">
             <div className="flex justify-between items-center w-full px-4">
-
               {/* HCAI Logo */}
-              <img
-                src={GeoLogo}
-                alt="Geo Logo"
-                className="h-12 object-contain"
-              />
+              <img src={GeoLogo} alt="Geo Logo" className="h-12 object-contain" />
 
               {/* Search Bar */}
               <div className="flex items-center w-full max-w-md border border-gray-300 rounded-lg px-4 py-3 shadow-sm focus-within:ring-2 focus-within:ring-blue-500 transition duration-200">
-               
                 <input
                   type="text"
                   placeholder="Search..."
@@ -134,13 +133,21 @@ const App: React.FC = () => {
               >
                 API Reference
               </Button>
+              {loggedIn && (
+                <Button
+                  className="bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 text-white px-4 py-2 rounded-md"
+                  onClick={() => setActivePage("admin-dashboard")}
+                >
+                  Admin Dashboard
+                </Button>
+              )}
               <Sheet>
                 <SheetTrigger className="bg-gradient-to-r from-blue-500 to-blue-800 hover:from-blue-600 hover:to-blue-800 h-9 rounded-md px-3">
                   <AlignJustify className="text-white" />
                 </SheetTrigger>
                 <SheetContent className="p-6 bg-gradient-to-br from-gray-100 to-blue-100 rounded-md">
                   <SheetHeader></SheetHeader>
-                  <Login />
+                  <Login setLoggedIn={setLoggedIn} loggedIn={loggedIn} />
                 </SheetContent>
               </Sheet>
             </div>
