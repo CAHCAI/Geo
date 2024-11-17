@@ -5,9 +5,9 @@ import { motion } from "framer-motion";
 import { FiUser, FiLock } from "react-icons/fi";
 
 export default function Login() {
-  const [username, setUsername] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
-  const [error, setError] = useState<string>(''); // Error shown to user
+  const [username, setUsername] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [error, setError] = useState<string>(""); // Error shown to user
   const [loading, setLoading] = useState<boolean>(false); // Loading state
 
   const handleSubmit = (e: FormEvent) => {
@@ -15,26 +15,28 @@ export default function Login() {
     setLoading(true); // Show loading spinner
 
     setTimeout(() => {
-      if (username === 'user' && password === 'password') {
-        alert('Login successful!');
-        setError('');
+      if (username === "user" && password === "password") {
+        alert("Login successful!");
+        setError("");
       } else {
-        setError('Invalid username or password');
+        setError("Invalid username or password");
       }
       setLoading(false); // Hide loading spinner
     }, 2000);
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-100 to-blue-100">
+    <div className="flex flex-col justify-start items-center min-h-[80vh] bg-transparent pt-10">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="w-full max-w-md p-10 bg-white rounded-3xl shadow-lg transform transition duration-500 hover:shadow-2xl"
+        className="w-full max-w-md p-6 bg-white rounded-3xl shadow-lg transform transition duration-500 hover:shadow-2xl"
       >
-        <h2 className="text-3xl font-bold text-center text-blue-800 mb-8">Sign In</h2>
-        
+        <h2 className="text-3xl font-bold text-center text-blue-800 mb-6">
+          Sign In
+        </h2>
+
         {loading ? (
           <div className="flex justify-center items-center h-40">
             <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
@@ -42,7 +44,10 @@ export default function Login() {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="relative">
-              <label htmlFor="username" className="block text-gray-600 text-sm font-semibold mb-2">
+              <label
+                htmlFor="username"
+                className="block text-gray-600 text-sm font-semibold mb-2"
+              >
                 Username
               </label>
               <div className="relative">
@@ -62,7 +67,10 @@ export default function Login() {
             </div>
 
             <div className="relative">
-              <label htmlFor="password" className="block text-gray-600 text-sm font-semibold mb-2">
+              <label
+                htmlFor="password"
+                className="block text-gray-600 text-sm font-semibold mb-2"
+              >
                 Password
               </label>
               <div className="relative">
@@ -81,8 +89,12 @@ export default function Login() {
               </div>
             </div>
 
-            {error && <div className="text-red-500 text-center text-sm mt-3">{error}</div>}
-            
+            {error && (
+              <div className="text-red-500 text-center text-sm mt-3">
+                {error}
+              </div>
+            )}
+
             <button
               type="submit"
               className="w-full py-3 mt-4 bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-300"
@@ -95,7 +107,6 @@ export default function Login() {
     </div>
   );
 }
-
 
 /*
   const handleSubmit = async (e: FormEvent) => {

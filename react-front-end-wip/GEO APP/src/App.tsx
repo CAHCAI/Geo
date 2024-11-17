@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { AlignJustify } from "lucide-react";
+import GeoLogo from "@/assets/hcai-logo.png";
 import {
   Sheet,
   SheetContent,
@@ -42,11 +43,17 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="bg-white min-h-screen flex flex-col">
+    <div className="bg-white h-screen flex flex-col overflow-hidden">
       {/* Navbar */}
-      <nav className="bg-gray-800 fixed top-0 left-0 w-full drop-shadow-lg p-4 z-50">
+      <nav className="bg-gray-800 fixed top-0 left-0 w-full drop-shadow-lg p-4">
         <div className="container mx-auto flex justify-between items-center">
-          <div className="text-white text-3xl font-bold">Geo</div>
+          {/* Logo and Title */}
+          <div className="flex items-center space-x-4">
+            <img src={GeoLogo} alt="Geo Logo" className="h-14" />
+            <div className="text-white text-4xl font-bold"></div>
+          </div>
+
+          {/* Navigation Buttons */}
           <div className="flex space-x-4">
             <Button
               className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
@@ -76,15 +83,9 @@ const App: React.FC = () => {
               <SheetTrigger className="bg-blue-500 h-9 rounded-md px-3">
                 <AlignJustify className="text-white" />
               </SheetTrigger>
-              <SheetContent>
-                <SheetHeader>
-                  <Link
-                    to="/login"
-                    className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition text-center"
-                  >
-                    Login
-                  </Link>
-                </SheetHeader>
+              <SheetContent className="p-6 bg-white rounded-md">
+                <SheetHeader></SheetHeader>
+                <Login />
               </SheetContent>
             </Sheet>
           </div>
@@ -92,7 +93,7 @@ const App: React.FC = () => {
       </nav>
 
       {/* Main Content */}
-      <main className="container mx-auto flex-grow p-6 pt-20">
+      <main className="container mx-auto flex-grow p-6 pt-24">
         {renderContent()}
       </main>
     </div>
