@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -87,9 +86,10 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* Search Bar Section */}
+          {/* Search Bar */}
           <div className="bg-gray-50 h-24 shadow-md border-b border-gray-200 flex items-center w-full px-0">
             <div className="flex justify-between items-center w-full px-4">
+
               {/* HCAI Logo */}
               <img
                 src={GeoLogo}
