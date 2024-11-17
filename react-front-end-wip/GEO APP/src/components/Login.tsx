@@ -1,19 +1,31 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { FiUser, FiLock } from "react-icons/fi";
+import { Button } from "@/components/ui/button";
 
 // Import the logos
 import GeoLogo from "../assets/ca-gov-logo-login.png";
 import HcaiLogo from "../assets/hcai-logo-login.png";
 
-export default function Login() {
+interface LoginProps {
+  loggedIn: boolean;
+  setLoggedIn: (state: boolean) => void;
+}
+
+export default function Login({ loggedIn, setLoggedIn }: LoginProps) {
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string>(""); // Error message
   const [loading, setLoading] = useState<boolean>(false); // Loading spinner state
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(loggedIn); // Local login state
 
+  useEffect(() => {
+    setIsLoggedIn(loggedIn);
+    console.log(loggedIn + " hello");
+  }, [loggedIn]);
+  
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -22,6 +34,8 @@ export default function Login() {
       if (username === "user" && password === "password") {
         alert("Login successful!");
         setError("");
+        setLoggedIn(true); // Set login state to true
+        setIsLoggedIn(true); // Update local login state
       } else {
         setError("Invalid username or password");
       }
@@ -31,32 +45,41 @@ export default function Login() {
 
   return (
     <div className="pt-2">
-      {" "}
       {/* HCAI Logo */}
       <div className="absolute top-8 left-4">
         <img src={HcaiLogo} alt="HCAI Logo" className="h-12" />
       </div>
       <div className="relative flex flex-col pt-[12vh] r w-full h-full">
-        {/* Login Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="relative w-full max-w-sm p-6 rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300 "
-          style={{
-            background: "linear-gradient(135deg, #e0f7fa, #ffffff, #bbdefb)",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          }}
-        >
-          <h2 className="text-xl font-semibold text-gray-800 text-center mb-4 ">
-            Sign In
-          </h2>
-
-          {loading ? (
-            <div className="flex justify-center items-center h-32">
-              <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          ) : (
+        {loading ? (
+          <div className="flex justify-center items-center h-32">
+            <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : isLoggedIn ? (
+          <div className="text-center">
+            <p className="text-xl font-semibold text-gray-800 mb-4">
+              You are already logged in!
+            </p>
+            <Button
+              className="bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white px-4 py-2 rounded-md"
+              onClick={() => {
+                setLoggedIn(false);
+                setIsLoggedIn(false);
+              }}
+            >
+              Logout
+            </Button>
+          </div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="relative w-full max-w-sm p-6 rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300"
+            style={{
+              background: "linear-gradient(135deg, #e0f7fa, #ffffff, #bbdefb)",
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            }}
+          >
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Username Field */}
               <div>
@@ -126,8 +149,8 @@ export default function Login() {
                 </a>
               </div>
             </form>
-          )}
-        </motion.div>
+          </motion.div>
+        )}
 
         {/* Footer */}
         <footer className="absolute bottom-0 right-0 m-4">
