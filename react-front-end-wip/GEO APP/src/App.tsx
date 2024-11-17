@@ -75,10 +75,10 @@ const App: React.FC = () => {
               API Reference
             </Button>
             <Sheet>
-              <SheetTrigger className="bg-blue-500 h-9 rounded-md px-3">
+              <SheetTrigger className="bg-gradient-to-r from-blue-500 to-blue-800  hover:from-blue-600 hover:to-blue-800h-9 rounded-md px-3">
                 <AlignJustify className="text-white" />
               </SheetTrigger>
-              <SheetContent className="p-6 bg-white rounded-md">
+              <SheetContent className="p-6 bg-gradient-to-br from-gray-100 to-blue-100 rounded-md">
                 <SheetHeader></SheetHeader>
                 <Login />
               </SheetContent>
