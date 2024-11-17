@@ -56,25 +56,25 @@ const App: React.FC = () => {
           {/* Navigation Buttons */}
           <div className="flex space-x-4">
             <Button
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
+              className=" bg-gradient-to-r from-blue-500 to-blue-700  hover:from-blue-600 hover:to-blue-800 text-white px-4 py-2 rounded-md"
               onClick={() => setActivePage("home")}
             >
               Home
             </Button>
             <Button
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
+              className=" bg-gradient-to-r from-blue-500 to-blue-700  hover:from-blue-600 hover:to-blue-800 text-white px-4 py-2 rounded-md"
               onClick={() => setActivePage("hpsa-search")}
             >
               HPSA Search
             </Button>
             <Button
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
+              className=" bg-gradient-to-r from-blue-500 to-blue-700  hover:from-blue-600 hover:to-blue-800 text-white px-4 py-2 rounded-md"
               onClick={() => setActivePage("licensed-healthcare")}
             >
               Licensed Healthcare Facilities
             </Button>
             <Button
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
+              className=" bg-gradient-to-r from-blue-500 to-blue-800  hover:from-blue-600 hover:to-blue-800 text-white px-4 py-2 rounded-md"
               onClick={() => setActivePage("api-reference")}
             >
               API Reference

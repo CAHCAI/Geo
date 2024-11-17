@@ -12,7 +12,9 @@ export const InputWithButton: React.FC = () => (
  */
   <div className="flex w-full max-w-sm items-center space-x-2 mb-4">
     <Input type="address" placeholder="2020 W El Camino Ave, Sacramento CA" />
-    <Button>Search</Button>
+    <Button className="bg-gradient-to-r from-blue-500 to-blue-700  hover:from-blue-600 hover:to-blue-800 text-white">
+      Search
+    </Button>
   </div>
 );
 
