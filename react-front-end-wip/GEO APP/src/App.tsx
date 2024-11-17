@@ -107,7 +107,7 @@ const App: React.FC = () => {
           </div>
 
           {/* Sub Navigation Section */}
-          <div className="bg-gray-800 p-5 justify-end">
+          <div className="bg-gray-800 p-5 flex justify-end">
             <div className="flex space-x-4">
               <Button
                 className="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white px-4 py-2 rounded-md"
