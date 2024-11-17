@@ -43,10 +43,11 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="bg-white h-[89vh] flex flex-col overflow-none">
+    <div className="bg-white h-[87vh] flex flex-col overflow-none">
       {/* Navbar */}
       <nav className="fixed top-0 left-0 w-full drop-shadow-lg z-50">
         <div>
+<<<<<<< HEAD
           {/* Top Navigation */}
           <div className="bg-white flex justify-between items-center p-5">
             {/* Logo on the left */}
@@ -87,6 +88,9 @@ const App: React.FC = () => {
           </div>
 
           {/* Search Bar */}
+=======
+          {/* Search Bar Section */}
+>>>>>>> 900bd838d73b3a217fbd6dda94917286258696a9
           <div className="bg-gray-50 h-24 shadow-md border-b border-gray-200 flex items-center w-full px-0">
             <div className="flex justify-between items-center w-full px-4">
 
@@ -147,7 +151,7 @@ const App: React.FC = () => {
           </div>
 
           {/* Sub Navigation Section */}
-          <div className="bg-gray-800 p-5 justify-end">
+          <div className="bg-gray-800 p-5 flex justify-end">
             <div className="flex space-x-4">
               <Button
                 className="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white px-4 py-2 rounded-md"
