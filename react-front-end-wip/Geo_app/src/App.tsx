@@ -16,7 +16,8 @@ import {
 // Importing page components
 import HpsaSearch from "@/components/HpsaSearch";
 import Login from "./components/Login";
-import AdminDashboard from "./components/dashboard";
+import AdminDashboard from "./components/AdminDashboard";
+import Home from "./components/Home";
 
 const App: React.FC = () => {
   const [activePage, setActivePage] = useState("hpsa_search");
@@ -42,6 +43,8 @@ const App: React.FC = () => {
         return <Login setLoggedIn={setLoggedIn} loggedIn={loggedIn} />;
       case "admin-dashboard":
         return <AdminDashboard />;
+      case "home":
+        return <Home />;
       default:
         return <div className="text-gray-700">Welcome to Geo!</div>;
     }
@@ -56,7 +59,11 @@ const App: React.FC = () => {
           <div className="bg-gray-50 h-24 shadow-md border-b border-gray-200 flex items-center w-full px-0">
             <div className="flex justify-between items-center w-full px-4">
               {/* HCAI Logo */}
-              <img src={GeoLogo} alt="Geo Logo" className="h-12 object-contain" />
+              <img
+                src={GeoLogo}
+                alt="Geo Logo"
+                className="h-12 object-contain"
+              />
 
               {/* Search Bar */}
               <div className="flex items-center w-full max-w-md border border-gray-300 rounded-lg px-4 py-3 shadow-sm focus-within:ring-2 focus-within:ring-blue-500 transition duration-200">
