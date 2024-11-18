@@ -33,16 +33,17 @@ services:
 
   react:
     build:
-      context: ./react-front-end
+      context: "./react-front-end-wip/"
+      dockerfile: ./Dockerfile
     container_name: geo_react
-    volumes:
-      - ./react-front-end:/app
     ports:
-      - "3000:3000"
+      - "5173:5173"
+    volumes:
+      - ./react-front-end-wip/Geo_app:/app
+      - /app/node_modules
     environment:
-      - HOST=0.0.0.0  # Bind React to all network interfaces
-    stdin_open: true
-    tty: true
+      - NODE_ENV=development
+
 
 
 volumes:
