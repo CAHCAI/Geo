@@ -1,0 +1,27 @@
+--This is the initial data table for the GEO app for the CONGRESSIONAL layers
+CREATE TABLE congressional_layers (
+    FID INTEGER PRIMARY KEY,
+    SHAPE VARCHAR2(20),
+    ID INTEGER UNIQUE,                
+    AREA NUMERIC(9, 2),                   
+    DISTRICT VARCHAR2(12),                 
+    MEMBERS NUMERIC(7, 2),                
+    LOCKED VARCHAR2(1),                    
+    NAMES VARCHAR2(43),                     
+    POPULATIONS BIGINT,                    
+    HSP_CVAP_1 BIGINT,                                          
+    DOJ_NH_BLK BIGINT,                    
+    DOJ_NH_ASN BIGINT, 
+    CVAP_19 BIGINT,                  
+    NH_WHT_CVA BIGINT,                    
+    IDEAL_VALU NUMERIC(11, 4),           
+    DEVIATION NUMERIC(11, 4),             
+    F_DEVIATIO NUMERIC(11, 4),            
+    F_CVAP_19 NUMERIC(11, 4),             
+    F_HSP_CVAP NUMERIC(11, 4),           
+    F_DOJ_NH_B NUMERIC(11, 4),            
+    F_DOJ_NH_A NUMERIC(11, 4),            
+    F_NH_WHT_C NUMERIC(11, 4),            
+    DISTRICT_N VARCHAR2(12),                  
+    DISTRICT_L VARCHAR2(12)                
+);
