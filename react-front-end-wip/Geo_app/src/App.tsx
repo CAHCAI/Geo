@@ -16,7 +16,8 @@ import {
 // Importing page components
 import HpsaSearch from "@/components/HpsaSearch";
 import Login from "./components/Login";
-import AdminDashboard from "./components/dashboard";
+import AdminDashboard from "./components/AdminDashboard";
+import Home from "./components/Home";
 
 const App: React.FC = () => {
   const [activePage, setActivePage] = useState("hpsa_search");
@@ -42,6 +43,8 @@ const App: React.FC = () => {
         return <Login setLoggedIn={setLoggedIn} loggedIn={loggedIn} />;
       case "admin-dashboard":
         return <AdminDashboard />;
+      case "home":
+        return <Home />;
       default:
         return <div className="text-gray-700">Welcome to Geo!</div>;
     }
@@ -50,13 +53,17 @@ const App: React.FC = () => {
   return (
     <div className="bg-white h-[87vh] flex flex-col overflow-none">
       {/* Navbar */}
-      <nav className="fixed top-0 left-0 w-full drop-shadow-lg z-50">
+      <nav className="fixed top-0 left-0 w-full drop-shadow-lg z-50 ">
         <div>
           {/* Search Bar Section */}
-          <div className="bg-gray-50 h-24 shadow-md border-b border-gray-200 flex items-center w-full px-0">
-            <div className="flex justify-between items-center w-full px-4">
+          <div className="bg-gray-50 h-24 shadow-md border-b border-gray-200 flex items-center w-full px-0 ">
+            <div className="flex justify-between items-center w-full px-4 pr-[20vh] pl-[20vh]">
               {/* HCAI Logo */}
-              <img src={GeoLogo} alt="Geo Logo" className="h-12 object-contain" />
+              <img
+                src={GeoLogo}
+                alt="Geo Logo"
+                className="h-12 object-contain"
+              />
 
               {/* Search Bar */}
               <div className="flex items-center w-full max-w-md border border-gray-300 rounded-lg px-4 py-3 shadow-sm focus-within:ring-2 focus-within:ring-blue-500 transition duration-200">
@@ -72,7 +79,7 @@ const App: React.FC = () => {
 
           {/* Main Navigation Links */}
           <div className="bg-blue-800 h-16 flex items-center w-full">
-            <div className="flex justify-evenly text-white text-lg md:text-xl font-bold w-full px-4">
+            <div className="flex justify-evenly text-white text-lg md:text-xl font-bold w-full px-4  pl-[16vh] pr-[16vh]">
               <a
                 href="https://hcai.ca.gov/facilities/building-safety/"
                 className="text-center hover:bg-blue-900 transition duration-300 px-4 py-2 flex-grow"
@@ -107,7 +114,7 @@ const App: React.FC = () => {
           </div>
 
           {/* Sub Navigation Section */}
-          <div className="bg-gray-800 p-5 flex justify-end">
+          <div className="bg-gray-800 p-5 flex justify-end pr-[20vh]">
             <div className="flex space-x-4">
               <Button
                 className="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white px-4 py-2 rounded-md"
