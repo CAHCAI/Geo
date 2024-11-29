@@ -23,10 +23,13 @@ The Geo Healthcare Dashboard is built using a modern stack that includes React, 
 - **User Authentication**: Login functionality with role-based access to certain parts of the application.
 - **Interactive Tables and Data Visualizations**: View healthcare-related data in tables and perform searches.
 - **Responsive Design**: Tailwind CSS ensures that the application is optimized for both desktop and mobile devices.
+- **Versioned API**: Application includes an API with versioned endpoints, simplifying integration with additional applications.
 
 ## Installation
 
 To get started with the Geo Healthcare Dashboard, follow these steps:
+
+#### Frontend
 
 ### Prerequisites
 
@@ -58,7 +61,7 @@ Create a `.env` file in the root of your project to set up necessary environment
 REACT_APP_API_BASE_URL=http://localhost:8000/api
 ```
 
-### Running the Application
+### Running the Frontend Application
 
 To run the application in development mode:
 
@@ -67,6 +70,34 @@ $ npm start
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+
+#### Backend
+
+### Prerequisites
+
+Ensure you have the following software installed on your system:
+
+- Python (v3.0 or later)
+
+```bash
+$ cd Geo/Geo
+```
+
+### Install Dependencies
+
+Install the required dependencies using pip:
+
+```bash
+$ pip install -r requirements.txt
+```
+
+### Running the Backend
+
+To run the application:
+
+```bash
+$ python manage.py runserver
+```
 
 ## Usage
 
