@@ -202,17 +202,20 @@ Under development (WIP)
 
 <img src="https://github.com/CAHCAI/Geo/blob/main/ERD.png">
 
+## WIP Design
+
+
 ## Testing
 
-Placerholder for CSC 191
+Placeholder for CSC 191
 
 ## Deployment
 
-Placerholder for CSC 191
+Placeholder for CSC 191
 
 ## Developer Instructions
 
-Placerholder for CSC 191
+Placeholder for CSC 191
 
 ## Contributing
 
