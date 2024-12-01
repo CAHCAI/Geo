@@ -202,6 +202,18 @@ Under development (WIP)
 
 <img src="https://github.com/CAHCAI/Geo/blob/main/ERD.png">
 
+#### Testing
+
+Placerholder for CSC 191
+
+#### Deployment
+
+Placerholder for CSC 191
+
+#### Developer Instructions
+
+Placerholder for CSC 191
+
 ## Contributing
 
 Contributions are welcome! If you have suggestions for improving this project, please feel free to fork the repository and create a pull request. You can also open an issue with the tag "enhancement".
