@@ -202,15 +202,15 @@ Under development (WIP)
 
 <img src="https://github.com/CAHCAI/Geo/blob/main/ERD.png">
 
-#### Testing
+## Testing
 
 Placerholder for CSC 191
 
-#### Deployment
+## Deployment
 
 Placerholder for CSC 191
 
-#### Developer Instructions
+## Developer Instructions
 
 Placerholder for CSC 191
 
