@@ -203,11 +203,18 @@ Under development (WIP)
 <img src="https://github.com/CAHCAI/Geo/blob/main/ERD.png">
 
 ## WIP Design
+## WIP Design
+#### WIP Home Page
+<img src="https://github.com/CAHCAI/Geo/blob/main/Homepage.png">
+
 #### WIP Data Table
 <img src="https://github.com/CAHCAI/Geo/blob/main/Datatable.png">
 
 #### WIP Admin Login
 <img src="https://github.com/CAHCAI/Geo/blob/main/Sign_In.png">
+
+#### WIP Admin Page
+<img src="https://github.com/CAHCAI/Geo/blob/main/Admin.png">
 
 ## Testing
 
