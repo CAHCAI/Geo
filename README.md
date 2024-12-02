@@ -1,3 +1,5 @@
+<img src="https://github.com/CAHCAI/Geo/blob/main/hcai-logo.png">
+
 # React Application - Geo Healthcare Dashboard - Frontend
 
 ## Overview
@@ -202,7 +204,7 @@ Under development (WIP)
 
 <img src="https://github.com/CAHCAI/Geo/blob/main/ERD.png">
 
-## WIP Design
+
 ## WIP Design
 #### WIP Home Page
 <img src="https://github.com/CAHCAI/Geo/blob/main/Homepage.png">
@@ -217,7 +219,7 @@ Under development (WIP)
 <img src="https://github.com/CAHCAI/Geo/blob/main/Admin.png">
 
 ## Project Timeline
-<img src="https://github.com/CAHCAI/Geo/blob/main/Timeline.png">
+<img src="https://github.com/CAHCAI/Geo/blob/main/New_Timeline.png">
 
 ## Testing
 
