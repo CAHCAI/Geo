@@ -216,6 +216,9 @@ Under development (WIP)
 #### WIP Admin Page
 <img src="https://github.com/CAHCAI/Geo/blob/main/Admin.png">
 
+## Project Timeline
+<img src="https://github.com/CAHCAI/Geo/blob/main/Timeline.png">
+
 ## Testing
 
 Placeholder for CSC 191
