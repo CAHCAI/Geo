@@ -2,16 +2,19 @@ version: '3.8'
 
 services:
   db:
-    image: postgres:14
+    image: postgis/postgis:latest
     container_name: geo_db
     environment:
-      POSTGRES_DB: geo_db
       POSTGRES_USER: geo_user
       POSTGRES_PASSWORD: geo_password
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      POSTGRES_DB: geo_db
     ports:
       - "5432:5432"
+    volumes:
+      - ./sql/Senate.sql:/docker-entrypoint-initdb.d/Senate.sql
+      - ./sql/BOE.sql:/docker-entrypoint-initdb.d/BOE.sql
+      - ./sql/Congressional.sql:/docker-entrypoint-initdb.d/Congressional.sql
+      - ./sql/Assembly.sql:/docker-entrypoint-initdb.d/Assembly.sql
 
   django:
     build:
@@ -44,7 +47,5 @@ services:
     environment:
       - NODE_ENV=development
 
-
-
 volumes:
-  postgres_data:
+  postgis_data:
