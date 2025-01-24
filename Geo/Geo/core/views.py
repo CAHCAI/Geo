@@ -55,15 +55,7 @@ def search_address(request, address: str):
     return geocode_result
 '''
 
-from io import UnsupportedOperation
 from django.shortcuts import render
-import os
-import subprocess
-from ninja import NinjaAPI, File
-from ninja.files import UploadedFile
-from django.conf import settings
-from django.http import JsonResponse
-import zipfile
 
 def index(request):
     return render(request,'frontend.html')
