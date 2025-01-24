@@ -17,6 +17,7 @@ Including another URLconf
 from django.urls import path
 from django.contrib import admin
 from .core import views
+from .core.views import api  # Import the Ninja API instance
 
 # URL Configuration: separates URL patterns for admin, frontend, and example views
 urlpatterns = [
@@ -25,6 +26,7 @@ urlpatterns = [
 
     # Frontend route (Main page)
     path('', views.index, name='frontend'),  # Route for the frontend homepage
+    path('api/', api.urls),  # Register all Ninja API routes under /api/
 
     # Example route
     #path('example/', views.example_view, name='example'),  # Optional example route (if needed)

@@ -8,19 +8,37 @@ services:
       POSTGRES_USER: geo_user
       POSTGRES_PASSWORD: geo_password
       POSTGRES_DB: geo_db
+    networks:
+      - app_network
     ports:
       - "5432:5432"
+    # load existing .sql data into the DB, DB will restart!
     volumes:
       - ./sql/Senate.sql:/docker-entrypoint-initdb.d/Senate.sql
       - ./sql/BOE.sql:/docker-entrypoint-initdb.d/BOE.sql
       - ./sql/Congressional.sql:/docker-entrypoint-initdb.d/Congressional.sql
       - ./sql/Assembly.sql:/docker-entrypoint-initdb.d/Assembly.sql
+      - ./sql/assembly_shapefile.sql:/docker-entrypoint-initdb.d/assembly_shapefile.sql
+      - ./sql/congressional_shapefile.sql:/docker-entrypoint-initdb.d/congressional_shapefile.sql
+      - ./sql/senate_shapefile.sql:/docker-entrypoint-initdb.d/senate_shapefile.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U geo_user -d geo_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   django:
     build:
       context: ./Geo
     container_name: geo_django
-    command: python manage.py runserver 0.0.0.0:8000
+    # need to add this retry behavior because pgsql restarts by default when you run .sql scripts on-startup
+    # issue is: if the db restarts while Django tries to connect, we fail to connect the backend to the DB
+    command: >
+      sh -c "while ! pg_isready -h db -p 5432 > /dev/null 2>&1; do
+              echo 'Waiting for Postgres...';
+              sleep 1;
+            done;
+            python manage.py runserver 0.0.0.0:8000"
     volumes:
       - ./Geo:/app
     ports:
@@ -31,6 +49,8 @@ services:
       - POSTGRES_USER=geo_user
       - POSTGRES_PASSWORD=geo_password
       - POSTGRES_HOST=db
+    networks:
+      - app_network
     depends_on:
       - db
 
@@ -46,6 +66,12 @@ services:
       - /app/node_modules
     environment:
       - NODE_ENV=development
+    networks:
+      - app_network
 
 volumes:
   postgis_data:
+
+networks:
+  app_network:
+    driver: bridge

@@ -9,6 +9,12 @@ ENV PYTHONUNBUFFERED 1
 # Set work directory
 WORKDIR /app
 
+# Install system dependencies for shp2pgsql (PostGIS tools) and PostgreSQL client
+RUN apt-get update && apt-get install -y \
+    postgis \
+    postgresql-client \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 # Install dependencies
 COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
