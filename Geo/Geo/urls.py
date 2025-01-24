@@ -14,10 +14,9 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.urls import path
+from django.urls import include, path
 from django.contrib import admin
 from .core import views
-from .core.views import api  # Import the Ninja API instance
 
 # URL Configuration: separates URL patterns for admin, frontend, and example views
 urlpatterns = [
@@ -26,7 +25,7 @@ urlpatterns = [
 
     # Frontend route (Main page)
     path('', views.index, name='frontend'),  # Route for the frontend homepage
-    path('api/', api.urls),  # Register all Ninja API routes under /api/
+    path('', include('api.urls')),  # Include API URLs from the api app
 
     # Example route
     #path('example/', views.example_view, name='example'),  # Optional example route (if needed)
