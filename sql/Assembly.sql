@@ -3,19 +3,19 @@ CREATE TABLE assembly_layers (
     --identifies a record
     FID INTEGER PRIMARY KEY, 
     --type of shape
-    SHAPE VARCHAR2(20),
+    SHAPE VARCHAR(20),
     --unique identifier (another pk)
     ID INTEGER UNIQUE,  
     --area of district in squre miles              
     AREA NUMERIC(9, 2),     
     --district number              
-    DISTRICT VARCHAR2(12),  
+    DISTRICT VARCHAR(12),  
     --member assigned to disctrict               
     MEMBERS NUMERIC(7, 2),  
     --locked geography              
-    LOCKED VARCHAR2(1),  
+    LOCKED VARCHAR(1),  
     --district name                  
-    NAMES VARCHAR2(43),  
+    NAMES VARCHAR(43),  
     --total population                   
     POPULATIONS BIGINT,      
     --citizen voting age              
@@ -47,5 +47,5 @@ CREATE TABLE assembly_layers (
     -- district number           
     DISTRICT_N BIGINT,   
     --district label                 
-    DISTRICT_L VARCHAR2(12)                
+    DISTRICT_L VARCHAR(12)                
 );

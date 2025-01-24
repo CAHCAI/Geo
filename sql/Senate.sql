@@ -1,13 +1,13 @@
 --This is the initial data table for the GEO app for the SENATE layers
 CREATE TABLE senate_layers (
     FID INTEGER PRIMARY KEY,
-    SHAPE VARCHAR2(20),
+    SHAPE VARCHAR(20),
     ID INTEGER UNIQUE,                
     AREA NUMERIC(9, 2),                   
-    DISTRICT VARCHAR2(12),                 
+    DISTRICT VARCHAR(12),                 
     MEMBERS NUMERIC(7, 2),                
-    LOCKED VARCHAR2(1),                    
-    NAMES VARCHAR2(43),                     
+    LOCKED VARCHAR(1),                    
+    NAMES VARCHAR(43),                     
     POPULATIONS BIGINT,                    
     HSP_CVAP_1 BIGINT,                                          
     DOJ_NH_BLK BIGINT,                    
@@ -23,6 +23,6 @@ CREATE TABLE senate_layers (
     F_DOJ_NH_B NUMERIC(11, 4),            
     F_DOJ_NH_A NUMERIC(11, 4),          
     F_NH_WHT_C NUMERIC(11, 4),            
-    MULTIPLE_F VARCHAR2(12),                  
-    DISTRICT_L VARCHAR2(12)                
+    MULTIPLE_F VARCHAR(12),                  
+    DISTRICT_L VARCHAR(12)                
 );
