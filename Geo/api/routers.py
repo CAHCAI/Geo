@@ -90,3 +90,13 @@ def upload_shapefile(request, shapefile: UploadedFile = File(...)):  # type: ign
             os.makedirs(UPLOAD_DIR)  # Recreate the directory after cleanup
         except Exception as cleanup_error:
             print(f"Error during cleanup: {cleanup_error}")
+
+
+#Test 
+@router.get("/dev-credentials")
+def dev_credentials(request):
+   
+    return {
+        "admin_username": "admin",
+        "admin_password": "password"
+    }

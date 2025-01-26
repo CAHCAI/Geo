@@ -18,6 +18,7 @@ import HpsaSearch from "@/components/HpsaSearch";
 import Login from "./components/Login";
 import AdminDashboard from "./components/AdminDashboard";
 import Home from "./components/Home";
+import TestAdminCredentials from './components/TestAdminCred'
 
 const App: React.FC = () => {
   const [activePage, setActivePage] = useState("hpsa_search");
@@ -45,6 +46,8 @@ const App: React.FC = () => {
         return <AdminDashboard />;
       case "home":
         return <Home />;
+      case "test_cred":
+        return <TestAdminCredentials />;
       default:
         return <div className="text-gray-700">Welcome to Geo!</div>;
     }
@@ -139,6 +142,12 @@ const App: React.FC = () => {
                 onClick={() => setActivePage("api-reference")}
               >
                 API Reference
+              </Button>
+              <Button
+                className="bg-gradient-to-r from-blue-500 to-blue-800 hover:from-blue-600 hover:to-blue-800 text-white px-4 py-2 rounded-md"
+                onClick={() => setActivePage("test_cred")}
+              >
+                Test
               </Button>
               {loggedIn && (
                 <Button
