@@ -6,6 +6,10 @@ from django.conf import settings
 from django.http import JsonResponse
 from ninja import Router, File
 from ninja.files import UploadedFile
+from tempfile import TemporaryDirectory
+from django.contrib.gis.gdal import DataSource
+from .utils import (extract_zip, find_shapefile, get_shapefile_metadata, 
+identify_shapefile_type, upload_assembly_shapefile, upload_congressional_shapefile, upload_senate_shapefile, get_shapefile_layer)
 
 # Directory to temporarily store uploaded shapefiles
 UPLOAD_DIR = os.path.join(settings.MEDIA_ROOT, "shapefiles")
@@ -22,71 +26,40 @@ def test(request):
     return JsonResponse({"success": True, "message": "test successful."})
 
 @router.post("/upload-shapefile/")
-def upload_shapefile(request, shapefile: UploadedFile = File(...)):  # type: ignore
+def upload_shapefile(request, file: UploadedFile = File(...)):
     """
-    Endpoint to upload a shapefile (.zip) and load it into the database.
+    Upload a shapefile (as .zip) and populate the respective model.
     """
-    # Save the uploaded file
-    zip_path = os.path.join(UPLOAD_DIR, shapefile.name)
-    with open(zip_path, "wb") as f:
-        for chunk in shapefile.chunks():
-            f.write(chunk)
-
     # Extract the zip file
-    with zipfile.ZipFile(zip_path, "r") as zip_ref:
-        zip_ref.extractall(UPLOAD_DIR)
-
-    # Find the .shp file in the extracted files
-    shp_file = None
-    for file in zip_ref.namelist():
-        if file.endswith(".shp"):
-            shp_file = os.path.join(UPLOAD_DIR, file)
-            break
-
-    if not shp_file:
-        return JsonResponse({"success": False, "error": "No .shp file found in the uploaded zip."}, status=400)
-
-    # Define table name and SQL path
-    table_name = os.path.splitext(os.path.basename(shp_file))[0]
-    sql_path = os.path.join(UPLOAD_DIR, f"{table_name}.sql")
+    tmp_dir = extract_zip(file)
 
     try:
-        # Convert shapefile to SQL using shp2pgsql
-        subprocess.run(
-            [
-                "shp2pgsql",
-                "-s", "4326",  # EPSG:4326 spatial reference system (WGS 84)
-                "-I",          # Create spatial index
-                shp_file,
-                table_name,
-            ],
-            stdout=open(sql_path, "w"),
-            check=True,
-        )
+        # Get the path to the shapefile (.shp)
+        shapefile_path = find_shapefile(tmp_dir.name)
 
-        # Execute the SQL to insert data into the PostgreSQL database
-        subprocess.run(
-            [
-                "psql",
-                "-U", settings.DATABASES["default"]["USER"],
-                "-d", settings.DATABASES["default"]["NAME"],
-                "-h", settings.DATABASES["default"]["HOST"],
-                "-p", settings.DATABASES["default"]["PORT"],
-                "-f", sql_path,
-            ],
-            check=True,
-            env={
-                "PGPASSWORD": settings.DATABASES["default"]["PASSWORD"]
-            },
-        )
+        # Check if a shapefile is found
+        if not shapefile_path:
+            return {"error": "No shapefile found in the .zip archive."}
 
-        return JsonResponse({"success": True, "message": f"Shapefile {shapefile.name} uploaded and data loaded into the database."})
-    except subprocess.CalledProcessError as e:
-        return JsonResponse({"success": False, "error": str(e)}, status=500)
+        # Get metadata from the shapefile
+        fields = get_shapefile_metadata(shapefile_path)
+
+        # Identify the type of shapefile
+        shapefile_type = identify_shapefile_type(fields)
+
+        layer = get_shapefile_layer(shapefile_path)
+
+        # Process the shapefile based on its type
+        if shapefile_type == "assembly":
+            upload_assembly_shapefile(layer)
+        elif shapefile_type == "senate":
+            upload_senate_shapefile(layer)
+        elif shapefile_type == "congressional":
+            upload_congressional_shapefile(layer)
+        else:
+            return JsonResponse({"success": False, "error": "Unknown shapefile type"})
+
+        return JsonResponse({"success": True, "message": f"Shapefile of type '{shapefile_type}' uploaded and processed successfully."})
     finally:
-        # Clean up the entire directory
-        try:
-            rmtree(UPLOAD_DIR)
-            os.makedirs(UPLOAD_DIR)  # Recreate the directory after cleanup
-        except Exception as cleanup_error:
-            print(f"Error during cleanup: {cleanup_error}")
+        # Cleanup the temporary directory
+        tmp_dir.cleanup()

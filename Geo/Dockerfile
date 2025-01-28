@@ -11,7 +11,10 @@ WORKDIR /app
 
 # Install system dependencies for shp2pgsql (PostGIS tools) and PostgreSQL client
 RUN apt-get update && apt-get install -y \
-    postgis \
+    binutils \
+    libproj-dev \
+    gdal-bin \
+    libgdal-dev \
     postgresql-client \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 

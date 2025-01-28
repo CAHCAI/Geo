@@ -23,8 +23,7 @@ urlpatterns = [
     # Admin Panel
     path('admin/', admin.site.urls),  # Admin routes
 
-    # Frontend route (Main page)
-    path('', views.index, name='frontend'),  # Route for the frontend homepage
+    # backend api routes
     path('', include('api.urls')),  # Include API URLs from the api app
 
     # Example route

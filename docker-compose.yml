@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   db:
-    image: postgis/postgis:latest
+    image: postgis/postgis:14-3.3
     container_name: geo_db
     environment:
       POSTGRES_USER: geo_user
@@ -21,6 +21,7 @@ services:
       - ./sql/assembly_shapefile.sql:/docker-entrypoint-initdb.d/assembly_shapefile.sql
       - ./sql/congressional_shapefile.sql:/docker-entrypoint-initdb.d/congressional_shapefile.sql
       - ./sql/senate_shapefile.sql:/docker-entrypoint-initdb.d/senate_shapefile.sql
+      - ./sql/postgis_init.sql:/docker-entrypoint-initdb.d/postgis_init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U geo_user -d geo_db"]
       interval: 10s
