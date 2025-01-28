@@ -143,12 +143,7 @@ const App: React.FC = () => {
               >
                 API Reference
               </Button>
-              <Button
-                className="bg-gradient-to-r from-blue-500 to-blue-800 hover:from-blue-600 hover:to-blue-800 text-white px-4 py-2 rounded-md"
-                onClick={() => setActivePage("test_cred")}
-              >
-                Test
-              </Button>
+
               {loggedIn && (
                 <Button
                   className="bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 text-white px-4 py-2 rounded-md"
@@ -180,3 +175,13 @@ const App: React.FC = () => {
 };
 
 export default App;
+
+
+/*
+              <Button
+                className="bg-gradient-to-r from-blue-500 to-blue-800 hover:from-blue-600 hover:to-blue-800 text-white px-4 py-2 rounded-md"
+                onClick={() => setActivePage("test_cred")}
+              >
+                Test
+              </Button>
+*/
