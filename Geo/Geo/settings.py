@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.gis',
     'corsheaders', #Temp
     'Geo', # Geo app registration
-
+    'api'
 ]
 
 MIDDLEWARE = [

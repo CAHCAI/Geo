@@ -69,7 +69,7 @@ def get_geos_geometry(geometry: ogr.Geometry) -> MultiPolygon:
     """
     # Convert geometry to MultiPolygon if it's a Polygon
     # This is needed because our PostGIS DB can only store one or the other, not both in a column
-    print(type(geometry))
+
     # Convert GDAL geometry to GEOSGeometry
     geos_geometry = GEOSGeometry(geometry.wkt)
 

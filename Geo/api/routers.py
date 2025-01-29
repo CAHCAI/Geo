@@ -39,7 +39,7 @@ def upload_shapefile(request, file: UploadedFile = File(...)):
 
         # Check if a shapefile is found
         if not shapefile_path:
-            return {"error": "No shapefile found in the .zip archive."}
+            return JsonResponse({"success": False, "error": "No shapefile found in the .zip archive."})
 
         # Get metadata from the shapefile
         fields = get_shapefile_metadata(shapefile_path)
