@@ -3,8 +3,11 @@ from ninja import NinjaAPI
 from .routers import router
 
 api = NinjaAPI()
-api.add_router("/api/", router)
 
+# Add the router correctly
+api.add_router("", router)  # Remove extra "/api/"
+
+# Properly include API URLs
 urlpatterns = [
-    path("", api.urls),  # Attach Ninja API routes
+    path("api/", api.urls),  # Fix the path to properly register NinjaAPI
 ]

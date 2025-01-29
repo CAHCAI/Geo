@@ -16,7 +16,7 @@ def extract_zip(file: str) -> TemporaryDirectory:
         zip_ref.extractall(tmp_dir.name)  # Use tmp_dir.name to access the path
     return tmp_dir  # Return the TemporaryDirectory object itself
 
-def find_shapefile(directory: str) -> str | None:
+def find_shapefile(directory: str) -> str | None: # type: ignore
     """
     Recursively locate the first .shp file in the given directory.
     """
