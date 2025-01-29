@@ -7,7 +7,6 @@ from django.http import JsonResponse
 from ninja import Router, File
 from ninja.files import UploadedFile
 from tempfile import TemporaryDirectory
-from django.contrib.gis.gdal import DataSource
 from .utils import (extract_zip, find_shapefile, get_shapefile_metadata, 
 identify_shapefile_type, upload_assembly_shapefile, upload_congressional_shapefile, upload_senate_shapefile, get_shapefile_layer)
 
@@ -26,12 +25,12 @@ def test(request):
     return JsonResponse({"success": True, "message": "test successful."})
 
 @router.post("/upload-shapefile/")
-def upload_shapefile(request, file: UploadedFile = File(...)):
+def upload_shapefile(request, file: UploadedFile = File(...)): # type: ignore
     """
     Upload a shapefile (as .zip) and populate the respective model.
     """
     # Extract the zip file
-    tmp_dir = extract_zip(file)
+    tmp_dir = extract_zip(file) # type: ignore
 
     try:
         # Get the path to the shapefile (.shp)
@@ -61,15 +60,9 @@ def upload_shapefile(request, file: UploadedFile = File(...)):
 
         return JsonResponse({"success": True, "message": f"Shapefile of type '{shapefile_type}' uploaded and processed successfully."})
     finally:
-
         # Cleanup the temporary directory
         tmp_dir.cleanup()
-        # Clean up the entire directory
-        try:
-            rmtree(UPLOAD_DIR)
-            os.makedirs(UPLOAD_DIR)  # Recreate the directory after cleanup
-        except Exception as cleanup_error:
-            print(f"Error during cleanup: {cleanup_error}")
+
 
 
 #Test 
