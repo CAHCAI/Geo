@@ -61,5 +61,22 @@ def upload_shapefile(request, file: UploadedFile = File(...)):
 
         return JsonResponse({"success": True, "message": f"Shapefile of type '{shapefile_type}' uploaded and processed successfully."})
     finally:
+
         # Cleanup the temporary directory
         tmp_dir.cleanup()
+        # Clean up the entire directory
+        try:
+            rmtree(UPLOAD_DIR)
+            os.makedirs(UPLOAD_DIR)  # Recreate the directory after cleanup
+        except Exception as cleanup_error:
+            print(f"Error during cleanup: {cleanup_error}")
+
+
+#Test 
+@router.get("/dev-credentials")
+def dev_credentials(request):
+   
+    return {
+        "admin_username": "admin",
+        "admin_password": "password"
+    }
