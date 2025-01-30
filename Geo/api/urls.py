@@ -5,7 +5,7 @@ from .routers import router
 api = NinjaAPI()
 
 # Add the router correctly
-api.add_router("/", router)  # Remove extra "/api/"
+api.add_router("/", router)
 
 # Properly include API URLs
 urlpatterns = [
