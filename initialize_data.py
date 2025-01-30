@@ -23,7 +23,7 @@ def main():
             file_path = os.path.join(DATA_DIR, file_name)
 
             if not os.path.isfile(file_path):
-                print(f"❌ File not found: {file_path}")
+                print(f"File not found: {file_path}")
                 continue
 
             print(f"Uploading {file_name}...")
