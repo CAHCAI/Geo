@@ -30,6 +30,7 @@ def upload_shapefile(request, file: UploadedFile = File(...)): # type: ignore
     Upload a shapefile (as .zip) and populate the respective model.
     """
     # Extract the zip file
+    print("here")
     tmp_dir = extract_zip(file) # type: ignore
 
     try:

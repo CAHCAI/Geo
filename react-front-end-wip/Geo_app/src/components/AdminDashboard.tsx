@@ -1,8 +1,51 @@
-import React from "react";
+import React, { useState } from "react";
 
 const AdminDashboard: React.FC = () => {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadStatus, setUploadStatus] = useState<string | null>(null);
+
+  // Handle file selection
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      setSelectedFile(event.target.files[0]);
+    }
+  };
+
+  // Handle file upload
+  const handleUpload = async () => {
+    if (!selectedFile) {
+      alert("Please select a file to upload.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+
+    try {
+      const response = await fetch(
+        "http://localhost:8000/api/upload-shapefile/",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Upload failed.");
+      }
+
+      const result = await response.json();
+      setUploadStatus(result.message);
+      alert("Upload successful!");
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      setUploadStatus("Upload failed. Please try again.");
+      alert("Upload failed. Please try again.");
+    }
+  };
+
   return (
-    <div className="p-4 ">
+    <div className="p-4">
       <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">
         Admin Dashboard
       </h1>
@@ -48,13 +91,35 @@ const AdminDashboard: React.FC = () => {
         <div className="flex flex-col items-center justify-center space-y-4">
           <div className="border border-dashed border-gray-300 rounded-lg p-8 w-full text-center bg-gray-100 hover:bg-gray-200 transition">
             <p className="text-gray-600 mb-4">Drag and drop your files here</p>
-            <button
-              type="button"
-              className="px-6 py-3 bg-blue-500 text-white font-bold rounded-lg shadow-md hover:bg-blue-600 transition"
+            <input
+              type="file"
+              id="file-upload"
+              className="hidden"
+              onChange={handleFileChange}
+              accept=".zip"
+            />
+            <label
+              htmlFor="file-upload"
+              className="px-6 py-3 bg-blue-500 text-white font-bold rounded-lg shadow-md hover:bg-blue-600 transition cursor-pointer"
             >
               Select Files
-            </button>
+            </label>
+            {selectedFile && (
+              <p className="mt-4 text-gray-600">
+                Selected file: {selectedFile.name}
+              </p>
+            )}
           </div>
+          <button
+            type="button"
+            onClick={handleUpload}
+            className="px-6 py-3 bg-green-500 text-white font-bold rounded-lg shadow-md hover:bg-green-600 transition"
+          >
+            Upload File
+          </button>
+          {uploadStatus && (
+            <p className="text-sm text-gray-500">{uploadStatus}</p>
+          )}
           <p className="text-sm text-gray-500">Shapefiles only.</p>
         </div>
       </div>
