@@ -74,7 +74,7 @@ def upload_shapefile(request, file: UploadedFile = File(...)): # type: ignore
 def dev_credentials(request):
    
     return {
-        "admin_username": "admin",
+        "admin_username": "user",
         "admin_password": "password"
     }
 
