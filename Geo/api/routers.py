@@ -7,6 +7,8 @@ from django.contrib.gis.utils import LayerMapping
 from .models import AssemblyDistrict  # Adjust the import as needed
 from django.conf import settings
 from django.http import JsonResponse
+from django.contrib.gis.geos import Point
+from django.contrib.gis.db.models.functions import Distance
 from ninja import Router, File
 from ninja.files import UploadedFile
 from tempfile import TemporaryDirectory
@@ -164,6 +166,60 @@ def list_tables(request):
     # Flatten list of tuples into a list of strings
     tables = [row[0] for row in table_rows]
     return JsonResponse({"tables": tables})
+
+
+
+
+@router.get("/nearest-location/")
+def nearest_location(request, longitude: float, latitude: float):
+    """
+    Accepts a longitude and latitude as query parameters and returns the nearest
+    AssemblyDistrict record (with all its fields) from the database.
+    
+    """
+    # Create a geospatial point (assumes EPSG:4326 coordinate system)
+    test_point = Point(longitude, latitude, srid=4326)
+    
+    # Annotate the AssemblyDistrict queryset with distance from the test point,
+    # then order by distance (ascending)
+    qs = AssemblyDistrict.objects.annotate(distance=Distance("geom", test_point)).order_by("distance")
+    
+    if not qs.exists():
+        return JsonResponse({"success": False, "error": "No location found."})
+    
+    # Get the nearest record
+    nearest = qs.first()
+    
+    # Prepare the response data. Adjust the field names as needed.
+    data = {
+        "id": nearest.id,
+        "district_number": nearest.district_number,
+        "area": nearest.area,
+        "members": nearest.members,
+        "population": nearest.population,
+        "cvap_19": nearest.cvap_19,
+        "hsp_cvap_1": nearest.hsp_cvap_1,
+        "doj_nh_blk": nearest.doj_nh_blk,
+        "doj_nh_asn": nearest.doj_nh_asn,
+        "nh_wht_cva": nearest.nh_wht_cva,
+        "ideal_value": nearest.ideal_value,
+        "deviation": nearest.deviation,
+        "f_deviatio": nearest.f_deviatio,
+        "f_cvap_19": nearest.f_cvap_19,
+        "f_hsp_cvap": nearest.f_hsp_cvap,
+        "f_doj_nh_b": nearest.f_doj_nh_b,
+        "f_doj_nh_a": nearest.f_doj_nh_a,
+        "f_nh_wht_c": nearest.f_nh_wht_c,
+        "district_n": nearest.district_n,
+        "district_label": nearest.district_label,
+    }
+    
+    return JsonResponse({"success": True, "data": data})
+
+
+
+
+
 
 
 @router.get("/all-districts-data")
