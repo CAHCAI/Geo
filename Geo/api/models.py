@@ -47,18 +47,20 @@ class SenateDistrict(models.Model):
     district_number = models.IntegerField()  # DISTRICT field
     area = models.FloatField()  # AREA field
     members = models.IntegerField(null=True, blank=True)  # MEMBERS field
+    name = models.CharField()
     population = models.IntegerField()  # POPULATION field
     cvap_19 = models.IntegerField()  # CVAP_19 field
     hsp_cvap_1 = models.IntegerField()  # HSP_CVAP_1 field
     doj_nh_ind = models.IntegerField(null=True)  # DOJ_NH_IND field
     doj_nh_blk = models.IntegerField()  # DOJ_NH_BLK field
     doj_nh_asn = models.IntegerField()  # DOJ_NH_ASN field
-    nh_wht_c = models.IntegerField()  # NH_WHT_C field
-    ideal_value = models.FloatField()  # IDEAL_VALU field
+    nh_wht_cva = models.IntegerField(null=True, blank=True)  # NH_WHT_C field
+    ideal_valu = models.FloatField()  # IDEAL_VALU field
     deviation = models.FloatField()  # DEVIATION field
-    f_deviation = models.FloatField()  # F_DEVIATION FIELD
+    f_deviatio = models.FloatField()  # F_DEVIATION FIELD
     f_cvap_19 = models.FloatField()  # F_CVAP_19 field
-    f_hsp_cvap_1 = models.FloatField()  # F_HSP_CVAP_1 field
+    f_hsp_cvap = models.FloatField()  # F_HSP_CVAP_1 field
+    f_doj_nh_i = models.FloatField()
     f_doj_nh_b = models.FloatField()  # F_DOJ_NH_B field
     f_doj_nh_a = models.FloatField()  # F_DOJ_NH_A field
     f_nh_wht_c = models.FloatField()  # F_NH_WHT_C field
