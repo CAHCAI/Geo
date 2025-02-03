@@ -160,3 +160,5 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 node_modules
+react-front-end-wip/Geo_app/package-lock.json
+react-front-end-wip/Geo_app/package.json
