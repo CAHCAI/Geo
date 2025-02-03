@@ -32,7 +32,6 @@ def test(request):
     """
     return JsonResponse({"success": True, "message": "test api, successful."})
 
-
 # Field mapping: map model field names to shapefile field names.
 assembly_shp_mapping = {
     'district_number': 'DISTRICT',     # shapefile field "DISTRICT" → model field "district_number"
@@ -149,67 +148,43 @@ def import_senate_shapefile(shp_path):
 @router.post("/upload-shapefile/")
 def upload_shapefile(request, file: UploadedFile = File(...)):
     """
-    Accepts an uploaded .zip file, extracts it, searches for shapefiles,
-    and returns the paths of the found shapefiles in a JSON response.
+    Upload a shapefile (as .zip) and populate the respective model.
     """
+    # Extract the zip file
+    tmp_dir = extract_zip(file)
 
-    # Generate a unique file name to avoid collisions
-    unique_filename = f"{uuid.uuid4()}_{file.name}"
-    
-    # Create a directory for the uploaded zip files
-    upload_dir = os.path.join(settings.MEDIA_ROOT, "shapefiles")
-    os.makedirs(upload_dir, exist_ok=True)
-    
-    # Construct the full file path
-    file_path = os.path.join(upload_dir, unique_filename)
-    
-    # Save the file to disk by writing chunks
-    with open(file_path, "wb+") as destination:
-        for chunk in file.chunks():
-            destination.write(chunk)
-    
-    # Extracts the zip file
     try:
-        with zipfile.ZipFile(file_path, 'r') as zf:
-            zf.extractall(upload_dir)
-    except zipfile.BadZipFile:
-        return JsonResponse({"success": False, "error": "Uploaded file is not a valid zip file."})
-    
+        # Get the path to the shapefile (.shp)
+        shapefile_path = find_shapefile(tmp_dir.name)
 
-    # Search for the .shp file in the upload directory
-    shapefile_paths = None
-    for root, dirs, files in os.walk(upload_dir):
-        for name in files:
-            if name.lower().endswith('.shp'):
-                shapefile_paths = os.path.join(root, name)
-                break
-        if shapefile_paths:
-            break
+        # Check if a shapefile is found
+        if not shapefile_path:
+            return {"error": "No shapefile found in the .zip archive."}
 
-    # Return an appropriate response based on whether shapefiles were found
-    if not shapefile_paths:
-        return JsonResponse({
-            "success": False,
-            "message": "File uploaded and extracted successfully, but no shapefile (.shp) was found.",
-        })
-    
-    # Import the shapefile data into the database
-    try:
-        import_assembly_shapefile(shapefile_paths)
+        # Get metadata from the shapefile
+        fields = get_shapefile_metadata(shapefile_path)
+
+        # Identify the type of shapefile
+        shapefile_type = identify_shapefile_type(fields)
+
+        layer = get_shapefile_layer(shapefile_path)
+
+        # Process the shapefile based on its type
+        if shapefile_type == "assembly":
+            upload_assembly_shapefile(layer)
+        elif shapefile_type == "senate":
+            upload_senate_shapefile(layer)
+        elif shapefile_type == "congressional":
+            upload_congressional_shapefile(layer)
+        else:
+            return JsonResponse({"success": False, "error": "Unknown shapefile type"})
+        # return on success
+        return JsonResponse({"success" : True, "message": f"Shapefile of type '{shapefile_type}' uploaded and processed successfully."})
     except Exception as e:
-        return JsonResponse({
-            "success": False,
-            "error": f"Error importing shapefile: {e}"
-        })
-    
-    #debug purposes
-    return JsonResponse({
-        "success": True,
-        "message": "File uploaded and extracted successfully.",
-        "uploaded_file_path": file_path,
-        "extracted_directory": upload_dir,
-        "shapefiles_found": shapefile_paths
-    })
+        return JsonResponse({"success": False, "error": f"Error response {e}"})
+    finally:
+        # Cleanup the temporary directory
+        tmp_dir.cleanup()
 
 
 
