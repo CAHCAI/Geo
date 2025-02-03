@@ -20,12 +20,8 @@ from .core import views
 
 # URL Configuration: separates URL patterns for admin, frontend, and example views
 urlpatterns = [
-    # Admin Panel
-    path('admin/', admin.site.urls),  # Admin routes
-
-    # backend api routes
-    path('', include('api.urls')),  # Include API URLs from the api app
-
-    # Example route
-    #path('example/', views.example_view, name='example'),  # Optional example route (if needed)
+    #Admin Panel
+    path('admin/', admin.site.urls),  
+    #  Ensures API routes are registered
+    path('api/', include('api.urls')),  
 ]

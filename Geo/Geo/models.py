@@ -6,6 +6,7 @@ ER Diagram:
 """
 
 from django.db import models
+from django.contrib.auth.models import AbstractUser
 
 """
 Input: Input for the Geo application
@@ -175,3 +176,22 @@ class FQHC(models.Model):
     update_frequency = models.CharField(max_length=100)
     last_updated = models.CharField(max_length=100)
     gis = models.ForeignKey(GIS, on_delete=models.CASCADE)
+
+
+class AdminUser(AbstractUser):
+    created_at = models.DateTimeField(auto_now_add=True)  
+
+    groups = models.ManyToManyField(
+        "auth.Group",
+        related_name="admin_users_groups",
+        blank=True
+    )
+
+    user_permissions = models.ManyToManyField(
+        "auth.Permission",
+        related_name="admin_users_permissions",
+        blank=True
+    )
+
+    def str(self):
+        return self.username

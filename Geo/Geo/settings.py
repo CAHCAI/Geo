@@ -194,6 +194,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.gis',
+    'django_extensions',
     'corsheaders',  # Temp
     'Geo',        # Geo app registration
     'api',
