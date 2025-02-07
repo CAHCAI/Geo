@@ -19,6 +19,7 @@ import Login from "./components/Login";
 import AdminDashboard from "./components/AdminDashboard";
 import Home from "./components/Home";
 import TestAdminCredentials from './components/TestAdminCred'
+import LicensedHealthcareFacilities from "./components/LicensedHealthcareFacilities";
 
 const App: React.FC = () => {
   const [activePage, setActivePage] = useState("hpsa_search");
@@ -48,6 +49,8 @@ const App: React.FC = () => {
         return <Home />;
       case "test_cred":
         return <TestAdminCredentials />;
+      case "licensed-healthcare":
+        return <LicensedHealthcareFacilities />;
       default:
         return <div className="text-gray-700">Welcome to Geo!</div>;
     }

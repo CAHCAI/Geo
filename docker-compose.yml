@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   db:
-    image: postgis/postgis:latest
+    image: postgis/postgis:17-3.4
     container_name: geo_db
     environment:
       POSTGRES_USER: geo_user
@@ -12,15 +12,6 @@ services:
       - app_network
     ports:
       - "5432:5432"
-    # load existing .sql data into the DB, DB will restart!
-    volumes:
-      - ./sql/Senate.sql:/docker-entrypoint-initdb.d/Senate.sql
-      - ./sql/BOE.sql:/docker-entrypoint-initdb.d/BOE.sql
-      - ./sql/Congressional.sql:/docker-entrypoint-initdb.d/Congressional.sql
-      - ./sql/Assembly.sql:/docker-entrypoint-initdb.d/Assembly.sql
-      - ./sql/assembly_shapefile.sql:/docker-entrypoint-initdb.d/assembly_shapefile.sql
-      - ./sql/congressional_shapefile.sql:/docker-entrypoint-initdb.d/congressional_shapefile.sql
-      - ./sql/senate_shapefile.sql:/docker-entrypoint-initdb.d/senate_shapefile.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U geo_user -d geo_db"]
       interval: 10s
@@ -38,7 +29,9 @@ services:
               echo 'Waiting for Postgres...';
               sleep 1;
             done;
-            python manage.py runserver 0.0.0.0:8000"
+            python manage.py runserver 0.0.0.0:8000;
+            python manage.py makemigrations;
+            python manage.py migrate"
     volumes:
       - ./Geo:/app
     ports:
