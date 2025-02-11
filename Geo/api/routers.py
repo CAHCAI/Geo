@@ -485,3 +485,29 @@ def all_districts_data(request):
         "senate_districts": senate_data,
         "congressional_districts": congress_data,
     })
+
+@router.get("/search")
+def coordinate_search(request, lat: float, lng: float):
+    """
+    Search the district tables for polygons containing (lat, lng).
+    """
+    point = Point(lng, lat, srid=4326)
+
+    senate_matches = SenateDistrict.objects.filter(geom__contains=point)
+    assembly_matches = AssemblyDistrict.objects.filter(geom__contains=point)
+    congressional_matches = CongressionalDistrict.objects.filter(geom__contains=point)
+
+    def to_dict(dist):
+        return {
+            "district_number": dist.district_number,
+            "district_label": dist.district_label,
+            "population": dist.population,
+            # Other information here if needed
+        }
+
+    return {
+        "senate": [to_dict(d) for d in senate_matches],
+        "assembly": [to_dict(d) for d in assembly_matches],
+        "congressional": [to_dict(d) for d in congressional_matches],
+    }
+
