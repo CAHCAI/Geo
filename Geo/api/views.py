@@ -3,6 +3,9 @@ from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
+from django.contrib.gis.geos import Point
+from .models import AssemblyDistrict, SenateDistrict, CongressionalDistrict
+
 
 # Create your views here.
 def index(request):
@@ -31,3 +34,42 @@ def admin_login(request):
 def admin_logout(request):
     logout(request)  # Logs the user out.
     return JsonResponse({"message": "Logged out successfully"}, status=200)
+
+def coordinate_search(request):
+    # This new view handles your point-in-polygon search.
+    lat = request.GET.get('lat')
+    lng = request.GET.get('lng')
+
+    # Validate we got lat/lng
+    if not lat or not lng:
+        return JsonResponse({"error": "Missing lat or lng"}, status=400)
+
+    try:
+        lat = float(lat)
+        lng = float(lng)
+    except ValueError:
+        return JsonResponse({"error": "Invalid lat or lng"}, status=400)
+
+    point = Point(lng, lat, srid=4326)
+
+ # Query each district table to see if the point is contained
+    senate_matches = SenateDistrict.objects.filter(geom__contains=point)
+    assembly_matches = AssemblyDistrict.objects.filter(geom__contains=point)
+    congressional_matches = CongressionalDistrict.objects.filter(geom__contains=point)
+
+    # Format results (pick whichever fields you want to send back)
+    def to_dict(d):
+        return {
+            "district_number": d.district_number,
+            "district_label": d.district_label,
+            "population": d.population,
+            # etc.
+        }
+
+    results = {
+        "senate": [to_dict(d) for d in senate_matches],
+        "assembly": [to_dict(d) for d in assembly_matches],
+        "congressional": [to_dict(d) for d in congressional_matches],
+    }
+
+    return JsonResponse(results, safe=False)

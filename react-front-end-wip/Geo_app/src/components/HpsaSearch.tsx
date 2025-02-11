@@ -1,20 +1,87 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import Table from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 
-export const InputWithButton: React.FC = () => (
+export const InputWithButton: React.FC<{
+  searchQuery: string;
+  setSearchQuery: (value: string) => void;
+  fetchResults: () => void;
+  isLoading: boolean;
+}> = ({ searchQuery, setSearchQuery, fetchResults, isLoading }) => (
   <div className="flex w-full max-w-sm items-center space-x-2 mb-4">
-    <Input type="address" placeholder="2020 W El Camino Ave, Sacramento CA" />
-    <Button className="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white">
-      Search
+    <Input
+      type="text"
+      placeholder="Enter coordinates (lat, lng)..."
+      value={searchQuery}
+      onChange={(e) => setSearchQuery(e.target.value)}
+    />
+    <Button
+      className="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white"
+      onClick={fetchResults}
+      disabled={isLoading} // Disable button when loading
+    >
+      {isLoading ? "Loading..." : "Search"}
     </Button>
   </div>
 );
 
+
 const HpsaSearchPage: React.FC = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [searchResults, setSearchResults] = useState<any>(null);
+
+  const fetchResults = async () => {
+    console.log("fetchResults function triggered.");
+
+    // Clear old error before new search
+    setError(null);
+
+    if (!searchQuery.trim()) {
+      console.error("No search query provided.");
+      setError("Please enter valid coordinates.");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const [lat, lng] = searchQuery.split(",").map(coord => parseFloat(coord.trim()));
+
+      if (isNaN(lat) || isNaN(lng)) {
+        console.error("Invalid coordinates:", lat, lng);
+        setError("Invalid coordinate format. Use: lat, lng");
+        return;
+      }
+
+      console.log(`Fetching: http://localhost:8000/api/search?lat=${lat}&lng=${lng}`);
+      const response = await fetch(`http://localhost:8000/api/search?lat=${lat}&lng=${lng}`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Fetched data:", data);
+
+      if (Object.keys(data).length === 0) {
+        console.warn("No results found.");
+        setError("No results found.");
+      } else {
+        setSearchResults(data);
+        console.table(data);
+      }
+    } catch (error) {
+      console.error("Error fetching search results:", error);
+      setError("Failed to retrieve data.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Column definitions
   const baseTableColumns = [
     { Header: "MSSA ID", accessor: "ID" },
@@ -103,7 +170,11 @@ const HpsaSearchPage: React.FC = () => {
 
   return (
     <div className="container mx-auto pt-5 space-y-4">
-      <InputWithButton />
+      <InputWithButton 
+      searchQuery={searchQuery}
+      setSearchQuery={setSearchQuery}
+      fetchResults={fetchResults}
+      isLoading={isLoading} />
 
       {/* Base Table */}
       <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[350px] overflow-auto">
