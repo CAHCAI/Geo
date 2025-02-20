@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { FiUser, FiLock } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
+import axios from "axios";
 
 // Import the logos
 import GeoLogo from "../assets/ca-gov-logo-login.png";
@@ -23,33 +24,41 @@ export default function Login({ loggedIn, setLoggedIn }: LoginProps) {
 
   useEffect(() => {
     setIsLoggedIn(loggedIn);
-    console.log(loggedIn + " hello");
   }, [loggedIn]);
-  
-  const handleSubmit = (e: FormEvent) => {
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError("");
 
-    setTimeout(() => {
-      if (username === "user" && password === "password") {
-        alert("Login successful!");
-        setError("");
-        setLoggedIn(true); // Set login state to true
-        setIsLoggedIn(true); // Update local login state
+    try {
+      const response = await axios.post("http://127.0.0.1:8000/api/login/", {
+        username,
+        password,
+      });
+
+      if (response.data.message === "Login successful") {
+        setLoggedIn(true); // Update parent state
+        setIsLoggedIn(true); // Local state update
+        alert("✅ Login successful!");
       } else {
-        setError("Invalid username or password");
+        setError("Invalid username or password.");
       }
+    } catch (err) {
+      setError("Invalid credentials.");
+    } finally {
       setLoading(false);
-    }, 2000);
+    }
   };
 
   return (
     <div className="pt-2">
-      {/* HCAI Logo */}
+      {/* Logo */}
       <div className="absolute top-8 left-4">
         <img src={HcaiLogo} alt="HCAI Logo" className="h-12" />
       </div>
-      <div className="relative flex flex-col pt-[12vh] r w-full h-full">
+
+      <div className="relative flex flex-col pt-[12vh] w-full h-full">
         {loading ? (
           <div className="flex justify-center items-center h-32">
             <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -57,7 +66,7 @@ export default function Login({ loggedIn, setLoggedIn }: LoginProps) {
         ) : isLoggedIn ? (
           <div className="text-center">
             <p className="text-xl font-semibold text-gray-800 mb-4">
-              You are already logged in!
+              ✅ You are already logged in!
             </p>
             <Button
               className="bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white px-4 py-2 rounded-md"
@@ -74,19 +83,15 @@ export default function Login({ loggedIn, setLoggedIn }: LoginProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="relative w-full max-w-sm p-6 rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300"
+            className="relative w-full max-w-sm p-6 rounded-lg shadow-lg hover:shadow-2xl"
             style={{
               background: "linear-gradient(135deg, #e0f7fa, #ffffff, #bbdefb)",
-              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
             }}
           >
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Username Field */}
+              {/* Username */}
               <div>
-                <label
-                  htmlFor="username"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
+                <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
                   Username
                 </label>
                 <div className="relative">
@@ -105,12 +110,9 @@ export default function Login({ loggedIn, setLoggedIn }: LoginProps) {
                 </div>
               </div>
 
-              {/* Password Field */}
+              {/* Password */}
               <div>
-                <label
-                  htmlFor="password"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                   Password
                 </label>
                 <div className="relative">
@@ -130,9 +132,7 @@ export default function Login({ loggedIn, setLoggedIn }: LoginProps) {
               </div>
 
               {/* Error Message */}
-              {error && (
-                <p className="text-sm text-red-500 text-center">{error}</p>
-              )}
+              {error && <p className="text-sm text-red-500 text-center">{error}</p>}
 
               {/* Login Button */}
               <button
