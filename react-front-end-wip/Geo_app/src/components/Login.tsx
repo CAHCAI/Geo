@@ -12,9 +12,10 @@ import HcaiLogo from "../assets/hcai-logo-login.png";
 interface LoginProps {
   loggedIn: boolean;
   setLoggedIn: (state: boolean) => void;
+  setIsGuest: (state: boolean) => void;
 }
 
-export default function Login({ loggedIn, setLoggedIn }: LoginProps) {
+export default function Login({ loggedIn, setIsGuest, setLoggedIn }: LoginProps) {
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string>(""); // Error message
@@ -23,13 +24,13 @@ export default function Login({ loggedIn, setLoggedIn }: LoginProps) {
 
   useEffect(() => {
     setIsLoggedIn(loggedIn);
-    console.log(loggedIn + " hello");
   }, [loggedIn]);
-  
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
+    // Simulate API call delay
     setTimeout(() => {
       if (username === "user" && password === "password") {
         alert("Login successful!");
@@ -43,13 +44,22 @@ export default function Login({ loggedIn, setLoggedIn }: LoginProps) {
     }, 2000);
   };
 
+  const handleGuestLogin = () => {
+    // Directly log the user in as a guest.
+    alert("You're logged in as a GUEST user!");
+    setError("");
+    setLoggedIn(true);
+    setIsLoggedIn(true);
+    setIsGuest(true); // Mark this login as guest
+  };
+
   return (
     <div className="pt-2">
       {/* HCAI Logo */}
       <div className="absolute top-8 left-4">
         <img src={HcaiLogo} alt="HCAI Logo" className="h-12" />
       </div>
-      <div className="relative flex flex-col pt-[12vh] r w-full h-full">
+      <div className="relative flex flex-col pt-[12vh] w-full h-full">
         {loading ? (
           <div className="flex justify-center items-center h-32">
             <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -64,6 +74,7 @@ export default function Login({ loggedIn, setLoggedIn }: LoginProps) {
               onClick={() => {
                 setLoggedIn(false);
                 setIsLoggedIn(false);
+                setIsGuest(false);
               }}
             >
               Logout
@@ -141,6 +152,17 @@ export default function Login({ loggedIn, setLoggedIn }: LoginProps) {
               >
                 Login
               </button>
+
+              {/* Guest Login Button */}
+              <div className="text-center mt-2">
+                <button
+                  type="button"
+                  onClick={handleGuestLogin}
+                  className="w-full py-2 bg-gray-500 text-white font-semibold rounded-md shadow-md hover:bg-gray-600 transition focus:outline-none focus:ring-2 focus:ring-gray-400"
+                >
+                  Login as Guest
+                </button>
+              </div>
 
               {/* Forgot Password */}
               <div className="text-center text-sm mt-2">
