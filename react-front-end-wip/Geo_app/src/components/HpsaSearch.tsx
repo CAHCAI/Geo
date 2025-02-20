@@ -37,37 +37,39 @@ const HpsaSearchPage: React.FC = () => {
 
   const fetchResults = async () => {
     console.log("fetchResults function triggered.");
-
-    // Clear old error before new search
+  
     setError(null);
-
+  
     if (!searchQuery.trim()) {
       console.error("No search query provided.");
       setError("Please enter valid coordinates.");
       return;
     }
-
+  
     try {
       setIsLoading(true);
       const [lat, lng] = searchQuery.split(",").map(coord => parseFloat(coord.trim()));
-
+  
       if (isNaN(lat) || isNaN(lng)) {
         console.error("Invalid coordinates:", lat, lng);
         setError("Invalid coordinate format. Use: lat, lng");
         return;
       }
-
-      console.log(`Fetching: http://localhost:8000/api/search?lat=${lat}&lng=${lng}`);
-      const response = await fetch(`http://localhost:8000/api/search?lat=${lat}&lng=${lng}`);
-
-      if (!response.ok) {
-        throw new Error(`HTTP Error: ${response.status}`);
-      }
-
+  
+      const apiUrl = `http://localhost:8000/api/search?lat=${lat}&lng=${lng}`;
+      console.log("Fetching from API:", apiUrl);
+  
+      const response = await fetch(apiUrl, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+  
       const data = await response.json();
       console.log("Fetched data:", data);
-
-      if (Object.keys(data).length === 0) {
+  
+      if (Object.keys(data).length === 0 || (!data.senate && !data.assembly && !data.congressional)) {
         console.warn("No results found.");
         setError("No results found.");
       } else {
@@ -81,7 +83,7 @@ const HpsaSearchPage: React.FC = () => {
       setIsLoading(false);
     }
   };
-
+  
   // Column definitions
   const baseTableColumns = [
     { Header: "MSSA ID", accessor: "ID" },
@@ -111,14 +113,23 @@ const HpsaSearchPage: React.FC = () => {
     { Header: "LA Service Planning Area", accessor: "LAServiceArea" },
   ];
   const assemblyDistrictColumns = [
-    { Header: "Assembly District", accessor: "AssemblyDistrict" },
+    { Header: "Assembly District", accessor: "district_number" },
+    { Header: "District Label", accessor: "district_label" },
+    { Header: "Population", accessor: "population" },
   ];
+  
   const senateDistrictColumns = [
-    { Header: "Senate District", accessor: "SenateDistrict" },
+    { Header: "Senate District", accessor: "district_number" },
+    { Header: "District Label", accessor: "district_label" },
+    { Header: "Population", accessor: "population" },
   ];
+  
   const congressionalDistrictColumns = [
-    { Header: "Congressional District", accessor: "CongressDistrict" },
+    { Header: "Congressional District", accessor: "district_number" },
+    { Header: "District Label", accessor: "district_label" },
+    { Header: "Population", accessor: "population" },
   ];
+  
 
   // Table data
   const baseTableData = [
@@ -238,24 +249,25 @@ const HpsaSearchPage: React.FC = () => {
           <h3 className="text-lg font-bold text-gray-800 mb-3">
             Assembly District
           </h3>
-          <Table
-            columns={assemblyDistrictColumns}
-            data={assemblyDistrictData}
-          />
+      <Table
+      columns={assemblyDistrictColumns} 
+      data={searchResults?.assembly || []}
+      />
         </div>
         <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] overflow-auto">
           <h3 className="text-lg font-bold text-gray-800 mb-3">
             Senate District
           </h3>
-          <Table columns={senateDistrictColumns} data={senateDistrictData} />
+          <Table columns={senateDistrictColumns} 
+          data={searchResults?.senate || []} />
         </div>
         <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] overflow-auto">
           <h3 className="text-lg font-bold text-gray-800 mb-3">
             Congressional District
           </h3>
           <Table
-            columns={congressionalDistrictColumns}
-            data={congressionalDistrictData}
+            columns={congressionalDistrictColumns} 
+            data={searchResults?.congressional || []}
           />
         </div>
       </div>

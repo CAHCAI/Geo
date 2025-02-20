@@ -493,9 +493,9 @@ def coordinate_search(request, lat: float, lng: float):
     """
     point = Point(lng, lat, srid=4326)
 
-    senate_matches = SenateDistrict.objects.filter(geom__contains=point)
-    assembly_matches = AssemblyDistrict.objects.filter(geom__contains=point)
-    congressional_matches = CongressionalDistrict.objects.filter(geom__contains=point)
+    senate_matches = SenateDistrict.objects.filter(geom__contains=point).distinct("district_number")
+    assembly_matches = AssemblyDistrict.objects.filter(geom__contains=point).distinct("district_number")
+    congressional_matches = CongressionalDistrict.objects.filter(geom__contains=point).distinct("district_number")
 
     def to_dict(dist):
         return {
@@ -510,6 +510,7 @@ def coordinate_search(request, lat: float, lng: float):
         "assembly": [to_dict(d) for d in assembly_matches],
         "congressional": [to_dict(d) for d in congressional_matches],
     }
+
 
 
 # Define a schema for expected data
