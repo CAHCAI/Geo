@@ -3,6 +3,12 @@ import React, { useState } from "react";
 const AdminDashboard: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
+  const [coordinates, setCoordinates] = useState("");
+  const [address, setAddress] = useState("");
+  const [showAddressInput, setShowAddressInput] = useState(false);
+  const [showSubmitButton, setShowSubmitButton] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Handle file selection
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -44,6 +50,65 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
+  const handleCoordinatesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    const coordinatesRegex = /^-?\d{1,3}\.\d+,\s*-?\d{1,3}\.\d+$/;
+    setCoordinates(value);
+    setShowAddressInput(coordinatesRegex.test(value));
+  };
+
+  const handleAddressChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setAddress(event.target.value);
+    setShowSubmitButton(event.target.value.length > 0);
+  };
+
+  const handleSubmit = () => {
+    setShowConfirmation(true);
+  };
+
+  const confirmSubmit = async () => {
+      setIsSubmitting(true);
+      try {
+        const lat = parseFloat(coordinates.split(",")[0].trim());
+        const lon = parseFloat(coordinates.split(",")[1].trim());
+
+        if (isNaN(lat) || isNaN(lon)) {
+          throw new Error("Invalid coordinate format. Ensure it is in 'lat, lon' format.");
+        }
+
+        const response = await fetch("http://localhost:8000/api/override-location/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            lat: lat,
+            lon: lon,
+            address: address.trim(),
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("Server response error:", errorData);
+          throw new Error(errorData.message || "Failed to update location.");
+        }
+
+        alert(`Coordinates: ${coordinates}\nAddress: ${address}\nSuccessfully Updated!`);
+      } catch (error) {
+        console.error("Error updating location:", error);
+        alert("Failed to update location. Please try again.");
+      }
+
+      setIsSubmitting(false);
+      setCoordinates("");
+      setAddress("");
+      setShowAddressInput(false);
+      setShowSubmitButton(false);
+      setShowConfirmation(false);
+  };
+
+
   return (
     <div className="p-4">
       <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">
@@ -82,6 +147,60 @@ const AdminDashboard: React.FC = () => {
           <p className="text-5xl font-bold text-red-500 mt-4">None</p>
         </div>
       </div>
+
+      {/* Cords Input Section */} {/* Confirmation */}
+      <div className="bg-gray-50 rounded-lg shadow-lg p-6 mb-6">
+        <h2 className="text-xl font-semibold text-gray-700 mb-4">Coordinate Override</h2>
+        <input
+          type="text"
+          placeholder="Enter coordinates (lat, lon)"
+          value={coordinates}
+          onChange={handleCoordinatesChange}
+          className="w-full p-3 border border-gray-300 rounded-lg mb-4"
+        />
+        {showAddressInput && (
+          <input
+            type="text"
+            placeholder="Enter new address"
+            value={address}
+            onChange={handleAddressChange}
+            className="w-full p-3 border border-gray-300 rounded-lg mb-4"
+          />
+        )}
+        {showSubmitButton && (
+          <button
+            onClick={handleSubmit}
+            className={`px-6 py-3 bg-orange-500 text-white font-bold rounded-lg shadow-md transition ${isSubmitting ? 'animate-spin' : 'hover:bg-orange-600'}`}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Submitting..." : "Submit"}
+          </button>
+        )}
+      </div>
+
+      {showConfirmation && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <h3 className="text-lg font-bold mb-4">Are you sure?</h3>
+            <p className="mb-2">Coordinates: {coordinates}</p>
+            <p className="mb-4">Address: {address}</p>
+            <button
+              onClick={confirmSubmit}
+              className="px-6 py-3 bg-green-500 text-white font-bold rounded-lg shadow-md hover:bg-green-600 transition mr-4"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? <span className="animate-spin inline-block w-5 h-5 border-4 border-white border-t-transparent rounded-full"></span> : "Confirm"}
+            </button>
+            <button
+              onClick={() => setShowConfirmation(false)}
+              className="px-6 py-3 bg-red-500 text-white font-bold rounded-lg shadow-md hover:bg-red-600 transition"
+              disabled={isSubmitting}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* File Upload Section */}
       <div className="bg-gray-50 rounded-lg shadow-lg p-6 mt-6">
@@ -123,8 +242,22 @@ const AdminDashboard: React.FC = () => {
           <p className="text-sm text-gray-500">Shapefiles only.</p>
         </div>
       </div>
+
+
     </div>
   );
 };
 
 export default AdminDashboard;
+
+
+/*
+  const confirmSubmit = () => {
+    alert(`Coordinates: ${coordinates}\nAddress: ${address}\nSuccessfully Updated!`);
+    setCoordinates("");
+    setAddress("");
+    setShowAddressInput(false);
+    setShowSubmitButton(false);
+    setShowConfirmation(false);
+  };
+ */
