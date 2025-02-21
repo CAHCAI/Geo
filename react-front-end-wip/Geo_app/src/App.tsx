@@ -80,7 +80,6 @@ const App: React.FC = () => {
                 alt="Geo Logo"
                 className="h-10 sm:h-12 object-contain"
               />
-
               {/* Search Bar */}
               <div className="flex items-center w-full max-w-md border border-gray-300 rounded-lg px-4 py-2 sm:py-3 shadow-sm focus-within:ring-2 focus-within:ring-blue-500 transition duration-200">
                 <input
@@ -94,7 +93,6 @@ const App: React.FC = () => {
           </div>
 
           {/* Main Navigation Links */}
-          {/* Outer div now handles full-width background color */}
           <div className="bg-blue-800 w-full">
             <div className="h-14 sm:h-16 flex items-center w-full max-w-screen-xl mx-auto">
               <div className="flex justify-evenly text-white text-base sm:text-lg md:text-xl font-bold w-full px-4">
@@ -133,7 +131,6 @@ const App: React.FC = () => {
           </div>
 
           {/* Sub Navigation Section */}
-          {/* Same approach: background spans full width, content is centered */}
           <div className="bg-gray-800 w-full">
             <div className="p-4 sm:p-5 flex justify-end max-w-screen-xl mx-auto">
               <div className="flex space-x-3 sm:space-x-4">
@@ -202,7 +199,7 @@ const App: React.FC = () => {
       </nav>
 
       {/* Main Content */}
-      <main className="container mx-auto flex-grow p-4 sm:p-6 pt-24 sm:pt-32 lg:pt-40">
+      <main className="container mx-auto flex-grow p-4 sm:p-6 pt-40 sm:pt-48 lg:pt-56">
         {renderContent()}
       </main>
     </div>
