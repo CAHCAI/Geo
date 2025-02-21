@@ -291,7 +291,7 @@ const AdminDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Dropdown Menu placed below the file upload option */}
+      {/* Dropdown Menu placed above the file upload option */}
       <div className="w-full">
             <label className="block text-gray-700 font-medium mb-2">
               Select Option
@@ -309,8 +309,7 @@ const AdminDashboard: React.FC = () => {
               You have selected:{" "}
               {selectedOption.charAt(0).toUpperCase() + selectedOption.slice(1)}
             </p>
-          </div>1
-
+          </div>
 
       {/* File Upload Section */}
       <div className="bg-gray-50 rounded-lg shadow-lg p-6 mt-6">

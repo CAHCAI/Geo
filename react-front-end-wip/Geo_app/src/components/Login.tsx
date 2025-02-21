@@ -13,10 +13,9 @@ import HcaiLogo from "../assets/hcai-logo-login.png";
 interface LoginProps {
   loggedIn: boolean;
   setLoggedIn: (state: boolean) => void;
-  setIsGuest: (state: boolean) => void;
 }
 
-export default function Login({ loggedIn, setIsGuest, setLoggedIn}: LoginProps) {
+export default function Login({ loggedIn, setLoggedIn }: LoginProps) {
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string>(""); // Error message
@@ -52,15 +51,6 @@ export default function Login({ loggedIn, setIsGuest, setLoggedIn}: LoginProps) 
     }
   };
 
-  const handleGuestLogin = () => {
-    // Directly log the user in as a guest.
-    alert("You're logged in as a GUEST user!");
-    setError("");
-    setLoggedIn(true);
-    setIsLoggedIn(true);
-    setIsGuest(true); // Mark this login as guest
-  };
-
   return (
     <div className="pt-2">
       {/* Logo */}
@@ -83,7 +73,6 @@ export default function Login({ loggedIn, setIsGuest, setLoggedIn}: LoginProps) 
               onClick={() => {
                 setLoggedIn(false);
                 setIsLoggedIn(false);
-                setIsGuest(false);
               }}
             >
               Logout
@@ -152,17 +141,6 @@ export default function Login({ loggedIn, setIsGuest, setLoggedIn}: LoginProps) 
               >
                 Login
               </button>
-            
-              {/* Guest Login Button */}
-              <div className="text-center mt-2">
-                <button
-                  type="button"
-                  onClick={handleGuestLogin}
-                  className="w-full py-2 bg-gray-500 text-white font-semibold rounded-md shadow-md hover:bg-gray-600 transition focus:outline-none focus:ring-2 focus:ring-gray-400"
-                >
-                  Login as Guest
-                </button>
-              </div>
 
               {/* Forgot Password */}
               <div className="text-center text-sm mt-2">
