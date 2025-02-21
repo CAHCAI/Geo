@@ -17,7 +17,6 @@ import {
 import HpsaSearch from "@/components/HpsaSearch";
 import Login from "./components/Login";
 import AdminDashboard from "./components/AdminDashboard";
-import GuestDashBoard from "./components/Guest";
 import Home from "./components/Home";
 import TestAdminCredentials from './components/TestAdminCred'
 import LicensedHealthcareFacilities from "./components/LicensedHealthcareFacilities";
@@ -25,7 +24,6 @@ import LicensedHealthcareFacilities from "./components/LicensedHealthcareFacilit
 const App: React.FC = () => {
   const [activePage, setActivePage] = useState("hpsa_search");
   const [loggedIn, setLoggedIn] = useState(false);
-  const [isGuest, setIsGuest] = useState(false); 
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -44,7 +42,7 @@ const App: React.FC = () => {
       case "hpsa-search":
         return <HpsaSearch />;
       case "login":
-        return <Login setLoggedIn={setLoggedIn} loggedIn={loggedIn} setIsGuest={setIsGuest} />;
+        return <Login setLoggedIn={setLoggedIn} loggedIn={loggedIn} />;
       case "admin-dashboard":
         return <AdminDashboard />;
       case "home":
@@ -53,10 +51,8 @@ const App: React.FC = () => {
         return <TestAdminCredentials />;
       case "licensed-healthcare":
         return <LicensedHealthcareFacilities />;
-        case "guest":
-        return <GuestDashBoard />;
       default:
-        return <div className="text-gray-1000">Welcome to Geo!</div>;
+        return <div className="text-gray-700">Welcome to Geo!</div>;
     }
   };
 
@@ -152,32 +148,20 @@ const App: React.FC = () => {
               </Button>
 
               {loggedIn && (
-                <div className="flex space-x-2">
-                  {isGuest ? (
-                    <Button
-                      className="bg-gradient-to-r from-gray-500 to-gray-700 hover:from-gray-600 hover:to-green-800 text-white px-4 py-2 rounded-md"
-                      onClick={() => setActivePage("guest")}
-                    >
-                      Guest Dashboard
-                    </Button>
-                  ) : ( 
-                    <Button
-                      className="bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 text-white px-4 py-2 rounded-md"
-                      onClick={() => setActivePage("admin-dashboard")}
-                    >
-                      Admin Dashboard
-                    </Button>
-                  )}
-                </div>
+                <Button
+                  className="bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 text-white px-4 py-2 rounded-md"
+                  onClick={() => setActivePage("admin-dashboard")}
+                >
+                  Admin Dashboard
+                </Button>
               )}
-
               <Sheet>
                 <SheetTrigger className="bg-gradient-to-r from-blue-500 to-blue-800 hover:from-blue-600 hover:to-blue-800 h-9 rounded-md px-3">
                   <AlignJustify className="text-white" />
                 </SheetTrigger>
                 <SheetContent className="p-6 bg-gradient-to-br from-gray-100 to-blue-100 rounded-md">
                   <SheetHeader></SheetHeader>
-                  <Login setLoggedIn={setLoggedIn} loggedIn={loggedIn} setIsGuest={setIsGuest}/>
+                  <Login setLoggedIn={setLoggedIn} loggedIn={loggedIn} />
                 </SheetContent>
               </Sheet>
             </div>
