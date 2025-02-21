@@ -134,50 +134,49 @@ const AdminDashboard: React.FC = () => {
   };
 
   const confirmSubmit = async () => {
-      setIsSubmitting(true);
-      try {
-        const lat = parseFloat(coordinates.split(",")[0].trim());
-        const lon = parseFloat(coordinates.split(",")[1].trim());
+    setIsSubmitting(true);
+    try {
+      const lat = parseFloat(coordinates.split(",")[0].trim());
+      const lon = parseFloat(coordinates.split(",")[1].trim());
 
-        if (isNaN(lat) || isNaN(lon)) {
-          throw new Error("Invalid coordinate format. Ensure it is in 'lat, lon' format.");
-        }
-
-        const response = await fetch("http://localhost:8000/api/override-location/", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            lat: lat,
-            lon: lon,
-            address: address.trim(),
-          }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error("Server response error:", errorData);
-          throw new Error(errorData.message || "Failed to update location.");
-        }
-
-        alert(`Coordinates: ${coordinates}\nAddress: ${address}\nSuccessfully Updated!`);
-      } catch (error) {
-        console.error("Error updating location:", error);
-        alert("Failed to update location. Please try again.");
+      if (isNaN(lat) || isNaN(lon)) {
+        throw new Error("Invalid coordinate format. Ensure it is in 'lat, lon' format.");
       }
 
-      setIsSubmitting(false);
-      setCoordinates("");
-      setAddress("");
-      setShowAddressInput(false);
-      setShowSubmitButton(false);
-      setShowConfirmation(false);
+      const response = await fetch("http://localhost:8000/api/override-location/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          lat: lat,
+          lon: lon,
+          address: address.trim(),
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Server response error:", errorData);
+        throw new Error(errorData.message || "Failed to update location.");
+      }
+
+      alert(`Coordinates: ${coordinates}\nAddress: ${address}\nSuccessfully Updated!`);
+    } catch (error) {
+      console.error("Error updating location:", error);
+      alert("Failed to update location. Please try again.");
+    }
+
+    setIsSubmitting(false);
+    setCoordinates("");
+    setAddress("");
+    setShowAddressInput(false);
+    setShowSubmitButton(false);
+    setShowConfirmation(false);
   };
 
-
   return (
-    <div className="p-4">
+    <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">
         Admin Dashboard
       </h1>
@@ -253,7 +252,9 @@ const AdminDashboard: React.FC = () => {
         {showSubmitButton && (
           <button
             onClick={handleSubmit}
-            className={`px-6 py-3 bg-orange-500 text-white font-bold rounded-lg shadow-md transition ${isSubmitting ? 'animate-spin' : 'hover:bg-orange-600'}`}
+            className={`px-6 py-3 bg-orange-500 text-white font-bold rounded-lg shadow-md transition ${
+              isSubmitting ? "animate-spin" : "hover:bg-orange-600"
+            }`}
             disabled={isSubmitting}
           >
             {isSubmitting ? "Submitting..." : "Submit"}
@@ -272,7 +273,11 @@ const AdminDashboard: React.FC = () => {
               className="px-6 py-3 bg-green-500 text-white font-bold rounded-lg shadow-md hover:bg-green-600 transition mr-4"
               disabled={isSubmitting}
             >
-              {isSubmitting ? <span className="animate-spin inline-block w-5 h-5 border-4 border-white border-t-transparent rounded-full"></span> : "Confirm"}
+              {isSubmitting ? (
+                <span className="animate-spin inline-block w-5 h-5 border-4 border-white border-t-transparent rounded-full"></span>
+              ) : (
+                "Confirm"
+              )}
             </button>
             <button
               onClick={() => setShowConfirmation(false)}
@@ -335,14 +340,11 @@ const AdminDashboard: React.FC = () => {
           <p className="text-sm text-gray-500">Shapefiles only.</p>
         </div>
       </div>
-
-
     </div>
   );
 };
 
 export default AdminDashboard;
-
 
 /*
   const confirmSubmit = () => {
