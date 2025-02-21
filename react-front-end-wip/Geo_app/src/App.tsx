@@ -61,6 +61,7 @@ const App: React.FC = () => {
       {/* Navbar */}
       <nav className="fixed top-0 left-0 w-full drop-shadow-lg z-50">
         <div>
+        </div>
           {/* Search Bar Section */}
           <div className="bg-gray-50 h-20 sm:h-24 shadow-md border-b border-gray-200 flex items-center w-full px-4">
             <div className="flex justify-between items-center w-full max-w-screen-xl mx-auto">
