@@ -16,7 +16,7 @@ interface LoginProps {
   setIsGuest: (state: boolean) => void;
 }
 
-export default function Login({ loggedIn, setIsGuest, setLoggedIn }: LoginProps) {
+export default function Login({ loggedIn, setIsGuest, setLoggedIn}: LoginProps) {
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string>(""); // Error message
@@ -152,7 +152,7 @@ export default function Login({ loggedIn, setIsGuest, setLoggedIn }: LoginProps)
               >
                 Login
               </button>
-
+            
               {/* Guest Login Button */}
               <div className="text-center mt-2">
                 <button

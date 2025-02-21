@@ -17,6 +17,7 @@ const AdminDashboard: React.FC = () => {
   const [showSubmitButton, setShowSubmitButton] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedOption, setSelectedOption] = useState<string>("senate");
 
   // Handle file selection
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -289,6 +290,27 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Dropdown Menu placed below the file upload option */}
+      <div className="w-full">
+            <label className="block text-gray-700 font-medium mb-2">
+              Select Option
+            </label>
+            <select
+              value={selectedOption}
+              onChange={(e) => setSelectedOption(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg"
+            >
+              <option value="senate">Senate</option>
+              <option value="assembly">Assembly</option>
+              <option value="congressional">Congressional</option>
+            </select>
+            <p className="text-sm text-gray-500 mt-2">
+              You have selected:{" "}
+              {selectedOption.charAt(0).toUpperCase() + selectedOption.slice(1)}
+            </p>
+          </div>1
+
 
       {/* File Upload Section */}
       <div className="bg-gray-50 rounded-lg shadow-lg p-6 mt-6">
