@@ -5,10 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 export const InputWithButton: React.FC = () => (
-  <div className="flex w-full max-w-sm items-center space-x-2 mb-4">
+  <div className="flex flex-col sm:flex-row w-full max-w-sm items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-4">
     <Input type="text" placeholder="Search facilities..." />
     <Button className="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white">
-        Search
+      Search
     </Button>
   </div>
 );
@@ -168,13 +168,13 @@ const LicensedHealthcareFacilities: React.FC = () => {
   const filteredData = filterData(tableData, filters);
 
   return (
-    <div className="container mx-auto pt-5 space-y-4">
+    <div className="container mx-auto pt-5 px-4 space-y-4">
       <h1 className="text-3xl font-bold">Licensed Healthcare Facilities</h1>
       <InputWithButton />
 
       {/* Table Section */}
       <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 overflow-x-auto">
-        <div className="w-full min-w-[1800px]">
+        <div className="w-full min-w-full sm:min-w-[1800px]">
           <table className="table-auto w-full border-collapse">
             <thead>
               <tr className="bg-gray-700 text-white">

@@ -11,15 +11,16 @@ export const InputWithButton: React.FC<{
   fetchResults: () => void;
   isLoading: boolean;
 }> = ({ searchQuery, setSearchQuery, fetchResults, isLoading }) => (
-  <div className="flex w-full max-w-sm items-center space-x-2 mb-4">
+  <div className="flex flex-col sm:flex-row w-full max-w-sm items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-4">
     <Input
       type="text"
       placeholder="Enter coordinates (lat, lng)..."
       value={searchQuery}
       onChange={(e) => setSearchQuery(e.target.value)}
+      className="w-full sm:w-auto"
     />
     <Button
-      className="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white"
+      className="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white w-full sm:w-auto"
       onClick={fetchResults}
       disabled={isLoading} // Disable button when loading
     >
@@ -27,7 +28,6 @@ export const InputWithButton: React.FC<{
     </Button>
   </div>
 );
-
 
 const HpsaSearchPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -180,15 +180,16 @@ const HpsaSearchPage: React.FC = () => {
   ];
 
   return (
-    <div className="container mx-auto pt-5 space-y-4">
+    <div className="container mx-auto pt-5 px-4 space-y-4">
       <InputWithButton 
-      searchQuery={searchQuery}
-      setSearchQuery={setSearchQuery}
-      fetchResults={fetchResults}
-      isLoading={isLoading} />
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        fetchResults={fetchResults}
+        isLoading={isLoading} 
+      />
 
       {/* Base Table */}
-      <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[350px] overflow-auto">
+      <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[350px] sm:max-h-[400px] overflow-auto">
         <h3 className="text-lg font-bold text-gray-800 mb-3">Base Table</h3>
         <div className="overflow-x-auto">
           <Table columns={baseTableColumns} data={baseTableData} />
@@ -197,11 +198,11 @@ const HpsaSearchPage: React.FC = () => {
 
       {/* Row 1 */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] overflow-auto">
+        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
           <h3 className="text-lg font-bold text-gray-800 mb-3">Primary Care</h3>
           <Table columns={primaryCareColumns} data={primaryCareData} />
         </div>
-        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] overflow-auto">
+        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
           <h3 className="text-lg font-bold text-gray-800 mb-3">
             Mental Health Care
           </h3>
@@ -210,7 +211,7 @@ const HpsaSearchPage: React.FC = () => {
             data={mentalHealthCareData}
           />
         </div>
-        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] overflow-auto">
+        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
           <h3 className="text-lg font-bold text-gray-800 mb-3">
             Dental Health Care
           </h3>
@@ -223,7 +224,7 @@ const HpsaSearchPage: React.FC = () => {
 
       {/* Row 2 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] overflow-auto">
+        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
           <h3 className="text-lg font-bold text-gray-800 mb-3">
             Health Service Area
           </h3>
@@ -232,7 +233,7 @@ const HpsaSearchPage: React.FC = () => {
             data={healthServiceAreaData}
           />
         </div>
-        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] overflow-auto">
+        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
           <h3 className="text-lg font-bold text-gray-800 mb-3">
             LA Service Planning Area
           </h3>
@@ -245,23 +246,22 @@ const HpsaSearchPage: React.FC = () => {
 
       {/* Row 3 */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] overflow-auto">
+        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
           <h3 className="text-lg font-bold text-gray-800 mb-3">
             Assembly District
           </h3>
-      <Table
-      columns={assemblyDistrictColumns} 
-      data={searchResults?.assembly || []}
-      />
+          <Table
+            columns={assemblyDistrictColumns} 
+            data={searchResults?.assembly || []}
+          />
         </div>
-        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] overflow-auto">
+        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
           <h3 className="text-lg font-bold text-gray-800 mb-3">
             Senate District
           </h3>
-          <Table columns={senateDistrictColumns} 
-          data={searchResults?.senate || []} />
+          <Table columns={senateDistrictColumns} data={searchResults?.senate || []} />
         </div>
-        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] overflow-auto">
+        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
           <h3 className="text-lg font-bold text-gray-800 mb-3">
             Congressional District
           </h3>
