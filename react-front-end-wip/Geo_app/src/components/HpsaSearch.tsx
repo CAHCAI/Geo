@@ -29,6 +29,14 @@ export const InputWithButton: React.FC<{
   </div>
 );
 
+// Helper function to transpose data
+const transposeData = (data: any[], columns: any[]) => {
+  return columns.map((column) => ({
+    Header: column.Header,
+    rows: data.map((item) => item[column.accessor]),
+  }));
+};
+
 const HpsaSearchPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -113,19 +121,19 @@ const HpsaSearchPage: React.FC = () => {
     { Header: "LA Service Planning Area", accessor: "LAServiceArea" },
   ];
   const assemblyDistrictColumns = [
-    { Header: "Assembly District", accessor: "district_number" },
+    { Header: "Name", accessor: "district_number" },
     { Header: "District Label", accessor: "district_label" },
     { Header: "Population", accessor: "population" },
   ];
   
   const senateDistrictColumns = [
-    { Header: "Senate District", accessor: "district_number" },
+    { Header: "Name", accessor: "district_number" },
     { Header: "District Label", accessor: "district_label" },
     { Header: "Population", accessor: "population" },
   ];
   
   const congressionalDistrictColumns = [
-    { Header: "Congressional District", accessor: "district_number" },
+    { Header: "Name", accessor: "district_number" },
     { Header: "District Label", accessor: "district_label" },
     { Header: "Population", accessor: "population" },
   ];
@@ -178,6 +186,11 @@ const HpsaSearchPage: React.FC = () => {
     { CongressDistrict: "Party" },
     { CongressDistrict: "Website" },
   ];
+
+  // Transpose the data for the required tables
+  const transposedAssemblyData = transposeData(searchResults?.assembly || [], assemblyDistrictColumns);
+  const transposedSenateData = transposeData(searchResults?.senate || [], senateDistrictColumns);
+  const transposedCongressionalData = transposeData(searchResults?.congressional || [], congressionalDistrictColumns);
 
   return (
     <div className="container mx-auto pt-5 px-4 space-y-4">
@@ -244,34 +257,62 @@ const HpsaSearchPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Row 3 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
-          <h3 className="text-lg font-bold text-gray-800 mb-3">
-            Assembly District
-          </h3>
-          <Table
-            columns={assemblyDistrictColumns} 
-            data={searchResults?.assembly || []}
-          />
+{/* Row 3 - Using Transposed Data Needed to Make Rows Instead of Columns*/}
+<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+  <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
+  <h3 className="text-lg font-bold text-gray-800 mb-3"> Assembly District
+    </h3>
+    <div className="space-y-2">
+      {transposedAssemblyData.map((row, index) => (
+        <div
+          key={index}
+          className={`py-2 ${index !== transposedAssemblyData.length - 1 ? 'border-b border-gray-200' : ''}`}
+        >
+          <div className="font-semibold">{row.Header}:</div>
+          {row.rows.map((cell, idx) => (
+            <div key={idx} className="text-gray-700">{cell}</div>
+          ))}
         </div>
-        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
-          <h3 className="text-lg font-bold text-gray-800 mb-3">
-            Senate District
-          </h3>
-          <Table columns={senateDistrictColumns} data={searchResults?.senate || []} />
-        </div>
-        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
-          <h3 className="text-lg font-bold text-gray-800 mb-3">
-            Congressional District
-          </h3>
-          <Table
-            columns={congressionalDistrictColumns} 
-            data={searchResults?.congressional || []}
-          />
-        </div>
-      </div>
+      ))}
     </div>
+  </div>
+  <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
+  <h3 className="text-lg font-bold text-gray-800 mb-3"> Senate District
+    </h3>
+    <div className="space-y-2">
+      {transposedSenateData.map((row, index) => (
+        <div
+          key={index}
+          className={`py-2 ${index !== transposedSenateData.length - 1 ? 'border-b border-gray-200' : ''}`}
+        >
+          <div className="font-semibold">{row.Header}:</div>
+          {row.rows.map((cell, idx) => (
+            <div key={idx} className="text-gray-700">{cell}</div>
+          ))}
+        </div>
+      ))}
+    </div>
+  </div>
+  <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
+  <h3 className="text-lg font-bold text-gray-800 mb-3"> Congressional District
+    </h3>
+    <div className="space-y-2">
+      {transposedCongressionalData.map((row, index) => (
+        <div
+          key={index}
+          className={`py-2 ${index !== transposedCongressionalData.length - 1 ? 'border-b border-gray-200' : ''}`}
+        >
+          <div className="font-semibold">{row.Header}:</div>
+          {row.rows.map((cell, idx) => (
+            <div key={idx} className="text-gray-700">{cell}</div>
+          ))}
+        </div>
+      ))}
+    </div>
+  </div>
+</div>
+
+</div>
   );
 };
 
