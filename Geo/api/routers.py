@@ -9,7 +9,7 @@ from django.conf import settings
 from django.http import JsonResponse
 from django.contrib.gis.geos import Point
 from django.contrib.gis.db.models.functions import Distance
-from ninja import Router, File
+from ninja import Router, File, Schema
 from ninja.files import UploadedFile
 from tempfile import TemporaryDirectory
 from .utils import (extract_zip, find_shapefile, get_shapefile_metadata, 
@@ -493,9 +493,9 @@ def coordinate_search(request, lat: float, lng: float):
     """
     point = Point(lng, lat, srid=4326)
 
-    senate_matches = SenateDistrict.objects.filter(geom__contains=point)
-    assembly_matches = AssemblyDistrict.objects.filter(geom__contains=point)
-    congressional_matches = CongressionalDistrict.objects.filter(geom__contains=point)
+    senate_matches = SenateDistrict.objects.filter(geom__contains=point).distinct("district_number")
+    assembly_matches = AssemblyDistrict.objects.filter(geom__contains=point).distinct("district_number")
+    congressional_matches = CongressionalDistrict.objects.filter(geom__contains=point).distinct("district_number")
 
     def to_dict(dist):
         return {
@@ -511,3 +511,19 @@ def coordinate_search(request, lat: float, lng: float):
         "congressional": [to_dict(d) for d in congressional_matches],
     }
 
+
+
+# Define a schema for expected data
+class OverrideLocationSchema(Schema):
+    lat: float
+    lon: float
+    address: str
+
+@router.post("/override-location/")
+def override_location(request, data: OverrideLocationSchema):
+    """
+    Receives latitude, longitude, and an address, then prints them to the terminal.
+    """
+    print(f"Received Data - Coordinates: ({data.lat}, {data.lon}), Address: {data.address}")
+
+    return JsonResponse({"success": True, "message": "Coordinates and address logged successfully."})

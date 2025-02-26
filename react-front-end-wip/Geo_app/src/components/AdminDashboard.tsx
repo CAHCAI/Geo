@@ -1,25 +1,79 @@
 import React, { useState } from "react";
 
+interface Alert {
+  id: number;
+  type: "error" | "success" | "info";
+  message: string;
+}
+
 const AdminDashboard: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploadStatus, setUploadStatus] = useState<string | null>(null);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [coordinates, setCoordinates] = useState("");
+  const [address, setAddress] = useState("");
+  const [showAddressInput, setShowAddressInput] = useState(false);
+  const [showSubmitButton, setShowSubmitButton] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedOption, setSelectedOption] = useState<string>("senate");
 
   // Handle file selection
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
-      setSelectedFile(event.target.files[0]);
+      const file = event.target.files[0];
+      validateAndSetFile(file);
+    }
+  };
+
+  // Handle drag-and-drop events
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragEnter = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragging(false);
+
+    if (event.dataTransfer.files && event.dataTransfer.files[0]) {
+      const file = event.dataTransfer.files[0];
+      validateAndSetFile(file);
+    }
+  };
+
+  // Validate and set the selected file
+  const validateAndSetFile = (file: File) => {
+    if (file.type === "application/zip" || file.name.endsWith(".zip")) {
+      setSelectedFile(file);
+      addAlert("info", `Selected file: ${file.name}`);
+    } else {
+      addAlert("error", "Invalid file type. Please upload a .zip file.");
     }
   };
 
   // Handle file upload
   const handleUpload = async () => {
     if (!selectedFile) {
-      alert("Please select a file to upload.");
+      addAlert("error", "Please select a file to upload.");
       return;
     }
 
     const formData = new FormData();
     formData.append("file", selectedFile);
+
+    setIsUploading(true);
 
     try {
       const response = await fetch(
@@ -35,17 +89,95 @@ const AdminDashboard: React.FC = () => {
       }
 
       const result = await response.json();
-      setUploadStatus(result.message);
-      alert("Upload successful!");
+      addAlert("success", result.message || "Upload successful!");
     } catch (error) {
       console.error("Error uploading file:", error);
-      setUploadStatus("Upload failed. Please try again.");
-      alert("Upload failed. Please try again.");
+      addAlert("error", "Upload failed. Please try again.");
+    } finally {
+      setIsUploading(false);
     }
   };
 
+  // Add a new alert
+  const addAlert = (type: Alert["type"], message: string) => {
+    const newAlert: Alert = {
+      id: Date.now(),
+      type,
+      message,
+    };
+    setAlerts((prevAlerts) => [...prevAlerts, newAlert]);
+
+    // Automatically remove the alert after 10 seconds
+    setTimeout(() => {
+      removeAlert(newAlert.id);
+    }, 10000);
+  };
+
+  // Remove an alert by id
+  const removeAlert = (id: number) => {
+    setAlerts((prevAlerts) => prevAlerts.filter((alert) => alert.id !== id));
+  };
+
+  const handleCoordinatesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    const coordinatesRegex = /^-?\d{1,3}\.\d+,\s*-?\d{1,3}\.\d+$/;
+    setCoordinates(value);
+    setShowAddressInput(coordinatesRegex.test(value));
+  };
+
+  const handleAddressChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setAddress(event.target.value);
+    setShowSubmitButton(event.target.value.length > 0);
+  };
+
+  const handleSubmit = () => {
+    setShowConfirmation(true);
+  };
+
+  const confirmSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      const lat = parseFloat(coordinates.split(",")[0].trim());
+      const lon = parseFloat(coordinates.split(",")[1].trim());
+
+      if (isNaN(lat) || isNaN(lon)) {
+        throw new Error("Invalid coordinate format. Ensure it is in 'lat, lon' format.");
+      }
+
+      const response = await fetch("http://localhost:8000/api/override-location/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          lat: lat,
+          lon: lon,
+          address: address.trim(),
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Server response error:", errorData);
+        throw new Error(errorData.message || "Failed to update location.");
+      }
+
+      alert(`Coordinates: ${coordinates}\nAddress: ${address}\nSuccessfully Updated!`);
+    } catch (error) {
+      console.error("Error updating location:", error);
+      alert("Failed to update location. Please try again.");
+    }
+
+    setIsSubmitting(false);
+    setCoordinates("");
+    setAddress("");
+    setShowAddressInput(false);
+    setShowSubmitButton(false);
+    setShowConfirmation(false);
+  };
+
   return (
-    <div className="p-4">
+    <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">
         Admin Dashboard
       </h1>
@@ -53,10 +185,26 @@ const AdminDashboard: React.FC = () => {
       {/* Alerts Section */}
       <div className="bg-gray-50 rounded-lg shadow-lg p-6 mb-6">
         <h2 className="text-xl font-semibold text-gray-700 mb-4">Alerts</h2>
-        <p className="text-gray-600">
-          No new alerts at the moment. Placeholder for future alert messages or
-          notifications.
-        </p>
+        {alerts.length === 0 ? (
+          <p className="text-gray-600">No new alerts at the moment.</p>
+        ) : (
+          <div className="space-y-2">
+            {alerts.map((alert) => (
+              <div
+                key={alert.id}
+                className={`p-4 rounded-lg ${
+                  alert.type === "error"
+                    ? "bg-red-100 text-red-700"
+                    : alert.type === "success"
+                    ? "bg-green-100 text-green-700"
+                    : "bg-blue-100 text-blue-700"
+                }`}
+              >
+                <p>{alert.message}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -83,13 +231,101 @@ const AdminDashboard: React.FC = () => {
         </div>
       </div>
 
+      {/* Cords Input Section */} {/* Confirmation */}
+      <div className="bg-gray-50 rounded-lg shadow-lg p-6 mb-6">
+        <h2 className="text-xl font-semibold text-gray-700 mb-4">Coordinate Override</h2>
+        <input
+          type="text"
+          placeholder="Enter coordinates (lat, lon)"
+          value={coordinates}
+          onChange={handleCoordinatesChange}
+          className="w-full p-3 border border-gray-300 rounded-lg mb-4"
+        />
+        {showAddressInput && (
+          <input
+            type="text"
+            placeholder="Enter new address"
+            value={address}
+            onChange={handleAddressChange}
+            className="w-full p-3 border border-gray-300 rounded-lg mb-4"
+          />
+        )}
+        {showSubmitButton && (
+          <button
+            onClick={handleSubmit}
+            className={`px-6 py-3 bg-orange-500 text-white font-bold rounded-lg shadow-md transition ${
+              isSubmitting ? "animate-spin" : "hover:bg-orange-600"
+            }`}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Submitting..." : "Submit"}
+          </button>
+        )}
+      </div>
+
+      {showConfirmation && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <h3 className="text-lg font-bold mb-4">Are you sure?</h3>
+            <p className="mb-2">Coordinates: {coordinates}</p>
+            <p className="mb-4">Address: {address}</p>
+            <button
+              onClick={confirmSubmit}
+              className="px-6 py-3 bg-green-500 text-white font-bold rounded-lg shadow-md hover:bg-green-600 transition mr-4"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <span className="animate-spin inline-block w-5 h-5 border-4 border-white border-t-transparent rounded-full"></span>
+              ) : (
+                "Confirm"
+              )}
+            </button>
+            <button
+              onClick={() => setShowConfirmation(false)}
+              className="px-6 py-3 bg-red-500 text-white font-bold rounded-lg shadow-md hover:bg-red-600 transition"
+              disabled={isSubmitting}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Dropdown Menu placed above the file upload option */}
+      <div className="w-full">
+            <label className="block text-gray-700 font-medium mb-2">
+              Select Option
+            </label>
+            <select
+              value={selectedOption}
+              onChange={(e) => setSelectedOption(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg"
+            >
+              <option value="senate">Senate</option>
+              <option value="assembly">Assembly</option>
+              <option value="congressional">Congressional</option>
+            </select>
+            <p className="text-sm text-gray-500 mt-2">
+              You have selected:{" "}
+              {selectedOption.charAt(0).toUpperCase() + selectedOption.slice(1)}
+            </p>
+          </div>
+
       {/* File Upload Section */}
       <div className="bg-gray-50 rounded-lg shadow-lg p-6 mt-6">
         <h2 className="text-xl font-semibold text-gray-700 mb-4">
           File Upload
         </h2>
         <div className="flex flex-col items-center justify-center space-y-4">
-          <div className="border border-dashed border-gray-300 rounded-lg p-8 w-full text-center bg-gray-100 hover:bg-gray-200 transition">
+          <div
+            className={`border-2 border-dashed ${
+              isDragging ? "border-blue-500" : "border-gray-300"
+            } rounded-lg p-8 w-full text-center bg-gray-100 hover:bg-gray-200 transition`}
+            onDragOver={handleDragOver}
+            onDragEnter={handleDragEnter}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
             <p className="text-gray-600 mb-4">Drag and drop your files here</p>
             <input
               type="file"
@@ -113,13 +349,15 @@ const AdminDashboard: React.FC = () => {
           <button
             type="button"
             onClick={handleUpload}
-            className="px-6 py-3 bg-green-500 text-white font-bold rounded-lg shadow-md hover:bg-green-600 transition"
+            disabled={isUploading || !selectedFile}
+            className={`px-6 py-3 ${
+              isUploading || !selectedFile
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-green-500 hover:bg-green-600"
+            } text-white font-bold rounded-lg shadow-md transition`}
           >
-            Upload File
+            {isUploading ? "Uploading..." : "Upload File"}
           </button>
-          {uploadStatus && (
-            <p className="text-sm text-gray-500">{uploadStatus}</p>
-          )}
           <p className="text-sm text-gray-500">Shapefiles only.</p>
         </div>
       </div>
@@ -128,3 +366,14 @@ const AdminDashboard: React.FC = () => {
 };
 
 export default AdminDashboard;
+
+/*
+  const confirmSubmit = () => {
+    alert(`Coordinates: ${coordinates}\nAddress: ${address}\nSuccessfully Updated!`);
+    setCoordinates("");
+    setAddress("");
+    setShowAddressInput(false);
+    setShowSubmitButton(false);
+    setShowConfirmation(false);
+  };
+ */
