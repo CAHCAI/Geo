@@ -81,6 +81,9 @@ const AdminDashboard: React.FC = () => {
         {
           method: "POST",
           body: formData,
+          headers: {
+            "X-API-KEY": "supersecret",
+          },
         }
       );
 
@@ -118,7 +121,9 @@ const AdminDashboard: React.FC = () => {
     setAlerts((prevAlerts) => prevAlerts.filter((alert) => alert.id !== id));
   };
 
-  const handleCoordinatesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCoordinatesChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const value = event.target.value;
     const coordinatesRegex = /^-?\d{1,3}\.\d+,\s*-?\d{1,3}\.\d+$/;
     setCoordinates(value);
@@ -141,20 +146,26 @@ const AdminDashboard: React.FC = () => {
       const lon = parseFloat(coordinates.split(",")[1].trim());
 
       if (isNaN(lat) || isNaN(lon)) {
-        throw new Error("Invalid coordinate format. Ensure it is in 'lat, lon' format.");
+        throw new Error(
+          "Invalid coordinate format. Ensure it is in 'lat, lon' format."
+        );
       }
 
-      const response = await fetch("http://localhost:8000/api/override-location/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          lat: lat,
-          lon: lon,
-          address: address.trim(),
-        }),
-      });
+      const response = await fetch(
+        "http://localhost:8000/api/override-location/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-API-KEY": "supersecret",
+          },
+          body: JSON.stringify({
+            lat: lat,
+            lon: lon,
+            address: address.trim(),
+          }),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -162,7 +173,9 @@ const AdminDashboard: React.FC = () => {
         throw new Error(errorData.message || "Failed to update location.");
       }
 
-      alert(`Coordinates: ${coordinates}\nAddress: ${address}\nSuccessfully Updated!`);
+      alert(
+        `Coordinates: ${coordinates}\nAddress: ${address}\nSuccessfully Updated!`
+      );
     } catch (error) {
       console.error("Error updating location:", error);
       alert("Failed to update location. Please try again.");
@@ -181,7 +194,6 @@ const AdminDashboard: React.FC = () => {
       <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">
         Admin Dashboard
       </h1>
-
       {/* Alerts Section */}
       <div className="bg-gray-50 rounded-lg shadow-lg p-6 mb-6">
         <h2 className="text-xl font-semibold text-gray-700 mb-4">Alerts</h2>
@@ -206,7 +218,6 @@ const AdminDashboard: React.FC = () => {
           </div>
         )}
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Cards for Statistics */}
         <div className="bg-gray-50 rounded-lg shadow-lg p-6">
@@ -230,10 +241,11 @@ const AdminDashboard: React.FC = () => {
           <p className="text-5xl font-bold text-red-500 mt-4">None</p>
         </div>
       </div>
-
       {/* Cords Input Section */} {/* Confirmation */}
       <div className="bg-gray-50 rounded-lg shadow-lg p-6 mb-6">
-        <h2 className="text-xl font-semibold text-gray-700 mb-4">Coordinate Override</h2>
+        <h2 className="text-xl font-semibold text-gray-700 mb-4">
+          Coordinate Override
+        </h2>
         <input
           type="text"
           placeholder="Enter coordinates (lat, lon)"
@@ -262,7 +274,6 @@ const AdminDashboard: React.FC = () => {
           </button>
         )}
       </div>
-
       {showConfirmation && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-6 rounded-lg shadow-lg">
@@ -290,27 +301,25 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
       )}
-
       {/* Dropdown Menu placed above the file upload option */}
       <div className="w-full">
-            <label className="block text-gray-700 font-medium mb-2">
-              Select Option
-            </label>
-            <select
-              value={selectedOption}
-              onChange={(e) => setSelectedOption(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg"
-            >
-              <option value="senate">Senate</option>
-              <option value="assembly">Assembly</option>
-              <option value="congressional">Congressional</option>
-            </select>
-            <p className="text-sm text-gray-500 mt-2">
-              You have selected:{" "}
-              {selectedOption.charAt(0).toUpperCase() + selectedOption.slice(1)}
-            </p>
-          </div>
-
+        <label className="block text-gray-700 font-medium mb-2">
+          Select Option
+        </label>
+        <select
+          value={selectedOption}
+          onChange={(e) => setSelectedOption(e.target.value)}
+          className="w-full p-3 border border-gray-300 rounded-lg"
+        >
+          <option value="senate">Senate</option>
+          <option value="assembly">Assembly</option>
+          <option value="congressional">Congressional</option>
+        </select>
+        <p className="text-sm text-gray-500 mt-2">
+          You have selected:{" "}
+          {selectedOption.charAt(0).toUpperCase() + selectedOption.slice(1)}
+        </p>
+      </div>
       {/* File Upload Section */}
       <div className="bg-gray-50 rounded-lg shadow-lg p-6 mt-6">
         <h2 className="text-xl font-semibold text-gray-700 mb-4">
