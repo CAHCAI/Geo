@@ -8,6 +8,8 @@ services:
       POSTGRES_USER: geo_user
       POSTGRES_PASSWORD: geo_password
       POSTGRES_DB: geo_db
+    volumes:
+      - postgis_data:/var/lib/postgresql/data
     networks:
       - app_network
     ports:
@@ -25,13 +27,12 @@ services:
     # need to add this retry behavior because pgsql restarts by default when you run .sql scripts on-startup
     # issue is: if the db restarts while Django tries to connect, we fail to connect the backend to the DB
     command: >
-      sh -c "while ! pg_isready -h db -p 5432 > /dev/null 2>&1; do
-              echo 'Waiting for Postgres...';
-              sleep 1;
-            done;
-            python manage.py runserver 0.0.0.0:8000;
+      sh -c 
+            "echo 'Postgres is ready. Applying migrations...';
             python manage.py makemigrations;
-            python manage.py migrate"
+            python manage.py migrate;
+            echo 'Starting Django...';
+            python manage.py runserver 0.0.0.0:8000"
     volumes:
       - ./Geo:/app
     ports:
@@ -45,7 +46,8 @@ services:
     networks:
       - app_network
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   react:
     build:
