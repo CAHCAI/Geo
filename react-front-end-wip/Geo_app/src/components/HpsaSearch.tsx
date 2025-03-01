@@ -45,39 +45,45 @@ const HpsaSearchPage: React.FC = () => {
 
   const fetchResults = async () => {
     console.log("fetchResults function triggered.");
-  
+
     setError(null);
-  
+
     if (!searchQuery.trim()) {
       console.error("No search query provided.");
       setError("Please enter valid coordinates.");
       return;
     }
-  
+
     try {
       setIsLoading(true);
-      const [lat, lng] = searchQuery.split(",").map(coord => parseFloat(coord.trim()));
-  
+      const [lat, lng] = searchQuery
+        .split(",")
+        .map((coord) => parseFloat(coord.trim()));
+
       if (isNaN(lat) || isNaN(lng)) {
         console.error("Invalid coordinates:", lat, lng);
         setError("Invalid coordinate format. Use: lat, lng");
         return;
       }
-  
+
       const apiUrl = `http://localhost:8000/api/search?lat=${lat}&lng=${lng}`;
       console.log("Fetching from API:", apiUrl);
-  
+
       const response = await fetch(apiUrl, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
+          "X-API-KEY": "supersecret",
         },
       });
-  
+
       const data = await response.json();
       console.log("Fetched data:", data);
-  
-      if (Object.keys(data).length === 0 || (!data.senate && !data.assembly && !data.congressional)) {
+
+      if (
+        Object.keys(data).length === 0 ||
+        (!data.senate && !data.assembly && !data.congressional)
+      ) {
         console.warn("No results found.");
         setError("No results found.");
       } else {
@@ -91,7 +97,7 @@ const HpsaSearchPage: React.FC = () => {
       setIsLoading(false);
     }
   };
-  
+
   // Column definitions
   const baseTableColumns = [
     { Header: "MSSA ID", accessor: "ID" },
@@ -125,19 +131,18 @@ const HpsaSearchPage: React.FC = () => {
     { Header: "District Label", accessor: "district_label" },
     { Header: "Population", accessor: "population" },
   ];
-  
+
   const senateDistrictColumns = [
     { Header: "Name", accessor: "district_number" },
     { Header: "District Label", accessor: "district_label" },
     { Header: "Population", accessor: "population" },
   ];
-  
+
   const congressionalDistrictColumns = [
     { Header: "Name", accessor: "district_number" },
     { Header: "District Label", accessor: "district_label" },
     { Header: "Population", accessor: "population" },
   ];
-  
 
   // Table data
   const baseTableData = [
@@ -188,17 +193,26 @@ const HpsaSearchPage: React.FC = () => {
   ];
 
   // Transpose the data for the required tables
-  const transposedAssemblyData = transposeData(searchResults?.assembly || [], assemblyDistrictColumns);
-  const transposedSenateData = transposeData(searchResults?.senate || [], senateDistrictColumns);
-  const transposedCongressionalData = transposeData(searchResults?.congressional || [], congressionalDistrictColumns);
+  const transposedAssemblyData = transposeData(
+    searchResults?.assembly || [],
+    assemblyDistrictColumns
+  );
+  const transposedSenateData = transposeData(
+    searchResults?.senate || [],
+    senateDistrictColumns
+  );
+  const transposedCongressionalData = transposeData(
+    searchResults?.congressional || [],
+    congressionalDistrictColumns
+  );
 
   return (
     <div className="container mx-auto pt-5 px-4 space-y-4">
-      <InputWithButton 
+      <InputWithButton
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         fetchResults={fetchResults}
-        isLoading={isLoading} 
+        isLoading={isLoading}
       />
 
       {/* Base Table */}
@@ -257,62 +271,85 @@ const HpsaSearchPage: React.FC = () => {
         </div>
       </div>
 
-{/* Row 3 - Using Transposed Data Needed to Make Rows Instead of Columns*/}
-<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-  <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
-  <h3 className="text-lg font-bold text-gray-800 mb-3"> Assembly District
-    </h3>
-    <div className="space-y-2">
-      {transposedAssemblyData.map((row, index) => (
-        <div
-          key={index}
-          className={`py-2 ${index !== transposedAssemblyData.length - 1 ? 'border-b border-gray-200' : ''}`}
-        >
-          <div className="font-semibold">{row.Header}:</div>
-          {row.rows.map((cell, idx) => (
-            <div key={idx} className="text-gray-700">{cell}</div>
-          ))}
+      {/* Row 3 - Using Transposed Data Needed to Make Rows Instead of Columns*/}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
+          <h3 className="text-lg font-bold text-gray-800 mb-3">
+            {" "}
+            Assembly District
+          </h3>
+          <div className="space-y-2">
+            {transposedAssemblyData.map((row, index) => (
+              <div
+                key={index}
+                className={`py-2 ${
+                  index !== transposedAssemblyData.length - 1
+                    ? "border-b border-gray-200"
+                    : ""
+                }`}
+              >
+                <div className="font-semibold">{row.Header}:</div>
+                {row.rows.map((cell, idx) => (
+                  <div key={idx} className="text-gray-700">
+                    {cell}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
-      ))}
-    </div>
-  </div>
-  <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
-  <h3 className="text-lg font-bold text-gray-800 mb-3"> Senate District
-    </h3>
-    <div className="space-y-2">
-      {transposedSenateData.map((row, index) => (
-        <div
-          key={index}
-          className={`py-2 ${index !== transposedSenateData.length - 1 ? 'border-b border-gray-200' : ''}`}
-        >
-          <div className="font-semibold">{row.Header}:</div>
-          {row.rows.map((cell, idx) => (
-            <div key={idx} className="text-gray-700">{cell}</div>
-          ))}
+        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
+          <h3 className="text-lg font-bold text-gray-800 mb-3">
+            {" "}
+            Senate District
+          </h3>
+          <div className="space-y-2">
+            {transposedSenateData.map((row, index) => (
+              <div
+                key={index}
+                className={`py-2 ${
+                  index !== transposedSenateData.length - 1
+                    ? "border-b border-gray-200"
+                    : ""
+                }`}
+              >
+                <div className="font-semibold">{row.Header}:</div>
+                {row.rows.map((cell, idx) => (
+                  <div key={idx} className="text-gray-700">
+                    {cell}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
-      ))}
-    </div>
-  </div>
-  <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
-  <h3 className="text-lg font-bold text-gray-800 mb-3"> Congressional District
-    </h3>
-    <div className="space-y-2">
-      {transposedCongressionalData.map((row, index) => (
-        <div
-          key={index}
-          className={`py-2 ${index !== transposedCongressionalData.length - 1 ? 'border-b border-gray-200' : ''}`}
-        >
-          <div className="font-semibold">{row.Header}:</div>
-          {row.rows.map((cell, idx) => (
-            <div key={idx} className="text-gray-700">{cell}</div>
-          ))}
+        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
+          <h3 className="text-lg font-bold text-gray-800 mb-3">
+            {" "}
+            Congressional District
+          </h3>
+          <div className="space-y-2">
+            {transposedCongressionalData.map((row, index) => (
+              <div
+                key={index}
+                className={`py-2 ${
+                  index !== transposedCongressionalData.length - 1
+                    ? "border-b border-gray-200"
+                    : ""
+                }`}
+              >
+                <div className="font-semibold">{row.Header}:</div>
+                {row.rows.map((cell, idx) => (
+                  <div key={idx} className="text-gray-700">
+                    {cell}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
-      ))}
+      </div>
     </div>
-  </div>
-</div>
-
-</div>
   );
 };
 
