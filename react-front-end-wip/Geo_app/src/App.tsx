@@ -20,6 +20,7 @@ import AdminDashboard from "./components/AdminDashboard";
 import Home from "./components/Home";
 import TestAdminCredentials from "./components/TestAdminCred";
 import LicensedHealthcareFacilities from "./components/LicensedHealthcareFacilities";
+import APIReference from "./components/APIReference";
 
 const App: React.FC = () => {
   const [activePage, setActivePage] = useState("hpsa_search");
@@ -51,6 +52,8 @@ const App: React.FC = () => {
         return <TestAdminCredentials />;
       case "licensed-healthcare":
         return <LicensedHealthcareFacilities />;
+      case "api-reference":
+        return <APIReference />;
       default:
         return <div className="text-gray-700">Welcome to Geo!</div>;
     }
