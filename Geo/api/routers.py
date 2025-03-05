@@ -537,7 +537,7 @@ def coordinate_search(request, lat: float, lng: float):
     # Don't cache if all results are empty
     if senate_matches.exists() or assembly_matches.exists() or congressional_matches.exists():
         try:
-            # Create a cached value with a 50-minute TTL
+            # Create a cached value with a TTL
             cache.set(cache_key, json.dumps(cache_value), ex=TTL)
         except Exception as e:
             return {"success": False, "message": f"Error: {e}"}
