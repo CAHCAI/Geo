@@ -18,7 +18,7 @@ from django.db import connection
 from django.contrib.gis.db.models.functions import AsGeoJSON
 from .models import AssemblyDistrict, SenateDistrict, CongressionalDistrict
 import json
-from Geo.cache import cache
+from Geo.cache import cache, TTL
 
 # Directory to temporarily store uploaded shapefiles
 UPLOAD_DIR = os.path.join(settings.MEDIA_ROOT, "shapefiles")
@@ -456,9 +456,6 @@ def nearest_location(request, longitude: float, latitude: float):
     return JsonResponse({"success": True, "data": result})
 
 
-
-
-
 @router.get("/all-districts-data")
 def all_districts_data(request):
     """
@@ -537,12 +534,14 @@ def coordinate_search(request, lat: float, lng: float):
         "assembly": [to_dict(d) for d in assembly_matches],
         "congressional": [to_dict(d) for d in congressional_matches],
     }
-    try:
-        # create a cached value with a 50 minute TTL
-        cache.set(cache_key, json.dumps(cache_value), ex=3000)
-    except Exception as e:
+    # Don't cache if all results are empty
+    if senate_matches.exists() or assembly_matches.exists() or congressional_matches.exists():
+        try:
+            # Create a cached value with a 50-minute TTL
+            cache.set(cache_key, json.dumps(cache_value), ex=TTL)
+        except Exception as e:
             return {"success": False, "message": f"Error: {e}"}
-        
+
     return cache_value
 
 
