@@ -7,6 +7,14 @@ from api.models import SenateDistrict, CongressionalDistrict, AssemblyDistrict
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.gis.geos import MultiPolygon, Polygon
 
+def to_dict(dist):
+    return {
+        "district_number": dist.district_number,
+        "district_label": dist.district_label,
+        "population": dist.population,
+        # Other information here if needed
+    }
+
 def extract_zip(file: str) -> TemporaryDirectory:
     """
     Extracts provided zip file to a temporary directory

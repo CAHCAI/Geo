@@ -20,6 +20,17 @@ services:
       timeout: 5s
       retries: 5
 
+  cache:
+    image: redis:6.2-alpine
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning #--requirepass <password>
+    volumes: 
+      - cache:/data
+    networks:
+      - app_network
+
   django:
     build:
       context: ./Geo
@@ -66,6 +77,8 @@ services:
 
 volumes:
   postgis_data:
+  cache:
+    driver: local
 
 networks:
   app_network:
