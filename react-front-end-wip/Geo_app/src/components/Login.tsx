@@ -52,7 +52,7 @@ export default function Login({ loggedIn, setLoggedIn }: LoginProps) {
   };
 
   return (
-    <div className="pt-2">
+    <section aria-label="Login Module" className="pt-2">
       {/* Logo */}
       <div className="absolute top-8 left-4">
         <img src={HcaiLogo} alt="HCAI Logo" className="h-12" />
@@ -60,8 +60,12 @@ export default function Login({ loggedIn, setLoggedIn }: LoginProps) {
 
       <div className="relative flex flex-col pt-[12vh] w-full h-full">
         {loading ? (
-          <div className="flex justify-center items-center h-32">
-            <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <div
+            className="flex justify-center items-center h-32"
+            role="status"
+            aria-label="Loading. Please wait."
+          >
+            <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : isLoggedIn ? (
           <div className="text-center">
@@ -91,7 +95,10 @@ export default function Login({ loggedIn, setLoggedIn }: LoginProps) {
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Username */}
               <div>
-                <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="username"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Username
                 </label>
                 <div className="relative">
@@ -112,7 +119,10 @@ export default function Login({ loggedIn, setLoggedIn }: LoginProps) {
 
               {/* Password */}
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Password
                 </label>
                 <div className="relative">
@@ -132,7 +142,11 @@ export default function Login({ loggedIn, setLoggedIn }: LoginProps) {
               </div>
 
               {/* Error Message */}
-              {error && <p className="text-sm text-red-500 text-center">{error}</p>}
+              {error && (
+                <p className="text-sm text-red-500 text-center" role="alert">
+                  {error}
+                </p>
+              )}
 
               {/* Login Button */}
               <button
@@ -157,6 +171,6 @@ export default function Login({ loggedIn, setLoggedIn }: LoginProps) {
           <img src={GeoLogo} alt="CA Gov Logo" className="h-10 opacity-80" />
         </footer>
       </div>
-    </div>
+    </section>
   );
 }
