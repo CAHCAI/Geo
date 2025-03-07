@@ -223,6 +223,13 @@ const HpsaSearchPage: React.FC = () => {
     >
       Skip to main content
     </a>
+
+    <header className="container mx-auto pt-5 px-4">
+        <h1 className="text-3xl font-bold text-gray-900">
+          Health Professional Shortage Areas (HPSA) Search
+        </h1>
+      </header>
+      
     <div className="container mx-auto pt-5 px-4 space-y-4">
       <InputWithButton
         searchQuery={searchQuery}
