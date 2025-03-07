@@ -6,8 +6,15 @@ import { Button } from "@/components/ui/button";
 
 export const InputWithButton: React.FC = () => (
   <div className="flex flex-col sm:flex-row w-full max-w-sm items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-4">
-    <Input type="text" placeholder="Search facilities..." />
-    <Button className="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white">
+    <Input 
+      type="text" 
+      placeholder="Search facilities..." 
+      aria-label="Search facilities"
+    />
+    <Button 
+      className="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white"
+      aria-label="Search facilities"
+    >
       Search
     </Button>
   </div>
@@ -168,60 +175,76 @@ const LicensedHealthcareFacilities: React.FC = () => {
   const filteredData = filterData(tableData, filters);
 
   return (
-    <div className="container mx-auto pt-5 px-4 space-y-4">
-      <h1 className="text-3xl font-bold">Licensed Healthcare Facilities</h1>
-      <InputWithButton />
+    <>
+      {/* Skip Link */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 bg-white p-2 rounded"
+      >
+        Skip to main content
+      </a>
 
-      {/* Table Section */}
-      <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 overflow-x-auto">
-        <div className="w-full min-w-full sm:min-w-[1800px]">
-          <table className="table-auto w-full border-collapse">
-            <thead>
-              <tr className="bg-gray-700 text-white">
-                {tableColumns.map((col) => (
-                  <th key={col.accessor} className="px-3 py-5 text-left font-semibold">
-                    {col.Header}
-                  </th>
-                ))}
-              </tr>
-              <tr>
-                {tableColumns.map((col) => (
-                  <th key={col.accessor} className="p-2 bg-gray-100">
-                    <Input
-                      type="text"
-                      placeholder={`Filter ${col.Header}`}
-                      value={filters[col.accessor]}
-                      onChange={(e) => handleFilterChange(col.accessor, e.target.value)}
-                      className="w-full px-2 py-4 border rounded text-sm"
-                      style={{ minWidth: "240px" }}
-                    />
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filteredData.length > 0 ? (
-                filteredData.map((row, index) => (
-                  <tr key={index} className={index % 2 === 0 ? "bg-gray-50" : "bg-gray-100"}>
-                    {tableColumns.map((col) => (
-                      <td key={col.accessor} className="px-3 py-3 whitespace-nowrap text-base">
-                        {row[col.accessor as keyof FacilityData]}
-                      </td>
-                    ))}
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={tableColumns.length} className="text-center p-4 text-lg">
-                    No matching results
-                  </td>
+      <header className="container mx-auto pt-5 px-4">
+        <h1 className="text-3xl font-bold text-gray-900">
+          Licensed Healthcare Facilities
+        </h1>
+      </header>
+
+      <main id="main-content" className="container mx-auto pt-5 px-4 space-y-4" tabIndex={-1}>
+        <InputWithButton />
+
+        {/* Table Section */}
+        <section className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 overflow-x-auto">
+          <div className="w-full min-w-full sm:min-w-[1800px]">
+            <table className="table-auto w-full border-collapse">
+              <thead>
+                <tr className="bg-gray-800 text-white">
+                  {tableColumns.map((col) => (
+                    <th key={col.accessor} scope="col" className="px-3 py-4 text-left font-semibold">
+                      {col.Header}
+                    </th>
+                  ))}
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+                <tr>
+                  {tableColumns.map((col) => (
+                    <th key={col.accessor} className="p-2 bg-gray-100">
+                      <Input
+                        type="text"
+                        placeholder={`Filter ${col.Header}`}
+                        aria-label={`Filter by ${col.Header}`}
+                        value={filters[col.accessor]}
+                        onChange={(e) => handleFilterChange(col.accessor, e.target.value)}
+                        className="w-full px-2 py-2 border rounded text-sm"
+                        style={{ minWidth: "240px" }}
+                      />
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filteredData.length > 0 ? (
+                  filteredData.map((row, index) => (
+                    <tr key={index} className={index % 2 === 0 ? "bg-gray-50" : "bg-gray-100"}>
+                      {tableColumns.map((col) => (
+                        <td key={col.accessor} className="px-3 py-3 whitespace-nowrap text-base">
+                          {row[col.accessor as keyof FacilityData]}
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={tableColumns.length} className="text-center p-4 text-lg" aria-live="polite">
+                      No matching results found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </>
   );
 };
 

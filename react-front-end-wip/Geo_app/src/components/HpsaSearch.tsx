@@ -12,17 +12,26 @@ export const InputWithButton: React.FC<{
   isLoading: boolean;
 }> = ({ searchQuery, setSearchQuery, fetchResults, isLoading }) => (
   <div className="flex flex-col sm:flex-row w-full max-w-sm items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-4">
+    <label htmlFor="coordinates-input" className="sr-only">
+      Enter coordinates (latitude, longitude)
+    </label>
     <Input
+      id="coordinates-input"
       type="text"
       placeholder="Enter coordinates (lat, lng)..."
       value={searchQuery}
       onChange={(e) => setSearchQuery(e.target.value)}
       className="w-full sm:w-auto"
+      aria-describedby="coordinate-hint"
     />
+    <p id="coordinate-hint" className="sr-only">
+      Example: 37.7749, -122.4194
+    </p>
     <Button
       className="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white w-full sm:w-auto"
       onClick={fetchResults}
-      disabled={isLoading} // Disable button when loading
+      disabled={isLoading}
+      aria-label="Search for HPSA data based on coordinates"
     >
       {isLoading ? "Loading..." : "Search"}
     </Button>
@@ -207,6 +216,13 @@ const HpsaSearchPage: React.FC = () => {
   );
 
   return (
+    <>
+    <a
+      href="#main-content"
+      className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 bg-white p-2 rounded"
+    >
+      Skip to main content
+    </a>
     <div className="container mx-auto pt-5 px-4 space-y-4">
       <InputWithButton
         searchQuery={searchQuery}
@@ -216,8 +232,8 @@ const HpsaSearchPage: React.FC = () => {
       />
 
       {/* Base Table */}
-      <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[350px] sm:max-h-[400px] overflow-auto">
-        <h3 className="text-lg font-bold text-gray-800 mb-3">Base Table</h3>
+      <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white max-h-[350px] sm:max-h-[400px] overflow-auto">
+        <h3 className="text-lg font-bold text-gray-900 mb-3">Base Table</h3>
         <div className="overflow-x-auto">
           <Table columns={baseTableColumns} data={baseTableData} />
         </div>
@@ -225,12 +241,12 @@ const HpsaSearchPage: React.FC = () => {
 
       {/* Row 1 */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
-          <h3 className="text-lg font-bold text-gray-800 mb-3">Primary Care</h3>
+        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white max-h-[250px] sm:max-h-[300px] overflow-auto">
+          <h3 className="text-lg font-bold text-gray-900 mb-3">Primary Care</h3>
           <Table columns={primaryCareColumns} data={primaryCareData} />
         </div>
-        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
-          <h3 className="text-lg font-bold text-gray-800 mb-3">
+        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white max-h-[250px] sm:max-h-[300px] overflow-auto">
+          <h3 className="text-lg font-bold text-gray-900 mb-3">
             Mental Health Care
           </h3>
           <Table
@@ -238,8 +254,8 @@ const HpsaSearchPage: React.FC = () => {
             data={mentalHealthCareData}
           />
         </div>
-        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
-          <h3 className="text-lg font-bold text-gray-800 mb-3">
+        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white max-h-[250px] sm:max-h-[300px] overflow-auto">
+          <h3 className="text-lg font-bold text-gray-900 mb-3">
             Dental Health Care
           </h3>
           <Table
@@ -251,8 +267,8 @@ const HpsaSearchPage: React.FC = () => {
 
       {/* Row 2 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
-          <h3 className="text-lg font-bold text-gray-800 mb-3">
+        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white max-h-[250px] sm:max-h-[300px] overflow-auto">
+          <h3 className="text-lg font-bold text-gray-900 mb-3">
             Health Service Area
           </h3>
           <Table
@@ -260,8 +276,8 @@ const HpsaSearchPage: React.FC = () => {
             data={healthServiceAreaData}
           />
         </div>
-        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
-          <h3 className="text-lg font-bold text-gray-800 mb-3">
+        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white max-h-[250px] sm:max-h-[300px] overflow-auto">
+          <h3 className="text-lg font-bold text-gray-900 mb-3">
             LA Service Planning Area
           </h3>
           <Table
@@ -273,9 +289,8 @@ const HpsaSearchPage: React.FC = () => {
 
       {/* Row 3 - Using Transposed Data Needed to Make Rows Instead of Columns*/}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
-          <h3 className="text-lg font-bold text-gray-800 mb-3">
-            {" "}
+        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white max-h-[250px] sm:max-h-[300px] overflow-auto">
+          <h3 className="text-lg font-bold text-gray-900 mb-3">
             Assembly District
           </h3>
           <div className="space-y-2">
@@ -284,11 +299,11 @@ const HpsaSearchPage: React.FC = () => {
                 key={index}
                 className={`py-2 ${
                   index !== transposedAssemblyData.length - 1
-                    ? "border-b border-gray-200"
+                    ? "border-b border-gray-300"
                     : ""
                 }`}
               >
-                <div className="font-semibold">{row.Header}:</div>
+                <div className="font-semibold text-gray-800">{row.Header}:</div>
                 {row.rows.map((cell, idx) => (
                   <div key={idx} className="text-gray-700">
                     {cell}
@@ -298,9 +313,8 @@ const HpsaSearchPage: React.FC = () => {
             ))}
           </div>
         </div>
-        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
-          <h3 className="text-lg font-bold text-gray-800 mb-3">
-            {" "}
+        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white max-h-[250px] sm:max-h-[300px] overflow-auto">
+          <h3 className="text-lg font-bold text-gray-900 mb-3">
             Senate District
           </h3>
           <div className="space-y-2">
@@ -309,11 +323,11 @@ const HpsaSearchPage: React.FC = () => {
                 key={index}
                 className={`py-2 ${
                   index !== transposedSenateData.length - 1
-                    ? "border-b border-gray-200"
+                    ? "border-b border-gray-300"
                     : ""
                 }`}
               >
-                <div className="font-semibold">{row.Header}:</div>
+                <div className="font-semibold text-gray-800">{row.Header}:</div>
                 {row.rows.map((cell, idx) => (
                   <div key={idx} className="text-gray-700">
                     {cell}
@@ -323,9 +337,8 @@ const HpsaSearchPage: React.FC = () => {
             ))}
           </div>
         </div>
-        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
-          <h3 className="text-lg font-bold text-gray-800 mb-3">
-            {" "}
+        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white max-h-[250px] sm:max-h-[300px] overflow-auto">
+          <h3 className="text-lg font-bold text-gray-900 mb-3">
             Congressional District
           </h3>
           <div className="space-y-2">
@@ -334,11 +347,11 @@ const HpsaSearchPage: React.FC = () => {
                 key={index}
                 className={`py-2 ${
                   index !== transposedCongressionalData.length - 1
-                    ? "border-b border-gray-200"
+                    ? "border-b border-gray-300"
                     : ""
                 }`}
               >
-                <div className="font-semibold">{row.Header}:</div>
+                <div className="font-semibold text-gray-800">{row.Header}:</div>
                 {row.rows.map((cell, idx) => (
                   <div key={idx} className="text-gray-700">
                     {cell}
@@ -350,6 +363,7 @@ const HpsaSearchPage: React.FC = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 
