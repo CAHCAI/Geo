@@ -303,7 +303,7 @@ const AdminDashboard: React.FC = () => {
           <button
             onClick={handleSubmit}
             className={`px-6 py-3 bg-orange-500 text-white font-bold rounded-lg shadow-md transition ${
-              isSubmitting ? "animate-spin" : "hover:bg-orange-600"
+              isSubmitting ? "" : "hover:bg-orange-600"
             }`}
             disabled={isSubmitting}
           >
