@@ -1,4 +1,4 @@
-"use client";
+"use client";  // Add this as the first line
 
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
@@ -37,7 +37,25 @@ const App: React.FC = () => {
         console.error("Error fetching data:", error);
       });
   }, []);
+  
+  /*const [activePage, setActivePage] = useState("hpsa_search");
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [message, setMessage] = useState("");
 
+  useEffect(() => {
+    fetch("http://localhost:8000/api/message/")
+      .then((response) => response.json())  // ✅ Ensure it expects JSON
+      .then((data) => setMessage(data.message))
+      .catch((error) => console.error("Error fetching data:", error));
+  }, []);
+
+  return (
+    <div>
+      <h1>Geo App</h1>
+      <p>API Message: {message}</p>
+    </div>
+  );
+*/
   const renderContent = () => {
     switch (activePage) {
       case "hpsa-search":
@@ -182,6 +200,8 @@ const App: React.FC = () => {
     </div>
   );
 };
+
+
 
 export default App;
 

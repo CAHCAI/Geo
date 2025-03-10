@@ -4,7 +4,9 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
 from django.contrib.gis.geos import Point
-from .models import AssemblyDistrict, SenateDistrict, CongressionalDistrict
+from .models import AssemblyDistrict, SenateDistrict, CongressionalDistrict, APIKey
+from .auth import api_key_required
+
 
 
 # Create your views here.
@@ -73,3 +75,16 @@ def coordinate_search(request):
     }
 
     return JsonResponse(results, safe=False)
+
+@csrf_exempt
+@api_key_required
+def protected_view(request):
+    return JsonResponse({"message": "Authorized access"}, status=200)
+
+def create_api_key(request):
+    client_ip = request.META.get("REMOTE_ADDR")  # Get the client's IP address
+    api_key = APIKey.objects.create(ip_address=client_ip)
+    return JsonResponse({"api_key": api_key.key, "ip_address": client_ip})
+
+def message_view(request):
+    return JsonResponse({"message": "Hello from Django API!"})

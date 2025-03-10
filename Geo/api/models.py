@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.gis.db import models
-
+import uuid
 # Create your models here.
 
 """
@@ -97,3 +97,21 @@ class CongressionalDistrict(models.Model):
 
     def __str__(self):
         return f"Congressional District {self.district_number}"
+
+
+import uuid
+from django.db import models
+
+def generate_api_key():
+    return str(uuid.uuid4()).replace('-', '')  # Generates a unique API key
+
+class APIKey(models.Model):
+    key = models.CharField(max_length=64, unique=True, default=generate_api_key)  # Use function, not lambda
+    ip_address = models.GenericIPAddressField()  # Required field
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.key} ({self.ip_address})"
+
+
+
