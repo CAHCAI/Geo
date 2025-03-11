@@ -80,13 +80,7 @@ const App: React.FC = () => {
       case "api-reference":
         return <APIReference />;
       default:
-        return (
-          <div className="flex justify-center my-8">
-            <h1 className="text-3xl font-bold text-gray-700">
-              Welcome to Geo!
-            </h1>
-          </div>
-        );
+        return <Home />;
     }
   };
 

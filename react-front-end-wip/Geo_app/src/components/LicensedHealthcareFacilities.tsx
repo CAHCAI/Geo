@@ -6,13 +6,14 @@ import { Button } from "@/components/ui/button";
 
 export const InputWithButton: React.FC = () => (
   <div className="flex flex-col sm:flex-row w-full max-w-sm items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-4">
-    <Input 
-      type="text" 
-      placeholder="Search facilities..." 
+    <Input
+      type="text"
+      placeholder="Search facilities..."
       aria-label="Search facilities"
+      className=" border-gray-300 border-2 bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 text-md"
     />
-    <Button 
-      className="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white"
+    <Button
+      className="bg-blue-600  hover:bg-blue-800 text-white w-full sm:w-auto text-md"
       aria-label="Search facilities"
     >
       Search
@@ -20,7 +21,9 @@ export const InputWithButton: React.FC = () => (
   </div>
 );
 
-{/* Defined Table Data Types */}
+{
+  /* Defined Table Data Types */
+}
 type FacilityData = {
   hcai_id: string;
   facility: string;
@@ -40,7 +43,9 @@ type FacilityData = {
   dsh: string;
 };
 
-{/* Table Column Definitions */}
+{
+  /* Table Column Definitions */
+}
 const tableColumns = [
   { Header: "HCAI ID", accessor: "hcai_id" },
   { Header: "Facility", accessor: "facility" },
@@ -60,7 +65,9 @@ const tableColumns = [
   { Header: "DSH", accessor: "dsh" },
 ];
 
-{/* Dummy Data Section */}
+{
+  /* Dummy Data Section */
+}
 const tableData: FacilityData[] = [
   {
     hcai_id: "106010042",
@@ -154,11 +161,17 @@ const tableData: FacilityData[] = [
   },
 ];
 
-{/* Filtering Section */}
+{
+  /* Filtering Section */
+}
 const filterData = (data: FacilityData[], filters: Record<string, string>) => {
   return data.filter((row) =>
     Object.entries(filters).every(([key, value]) =>
-      value ? row[key as keyof FacilityData]?.toLowerCase().includes(value.toLowerCase()) : true
+      value
+        ? row[key as keyof FacilityData]
+            ?.toLowerCase()
+            .includes(value.toLowerCase())
+        : true
     )
   );
 };
@@ -190,7 +203,11 @@ const LicensedHealthcareFacilities: React.FC = () => {
         </h1>
       </header>
 
-      <main id="main-content" className="container mx-auto pt-5 px-4 space-y-4" tabIndex={-1}>
+      <main
+        id="main-content"
+        className="container mx-auto pt-5 px-4 space-y-4"
+        tabIndex={-1}
+      >
         <InputWithButton />
 
         {/* Table Section */}
@@ -200,7 +217,11 @@ const LicensedHealthcareFacilities: React.FC = () => {
               <thead>
                 <tr className="bg-gray-800 text-white">
                   {tableColumns.map((col) => (
-                    <th key={col.accessor} scope="col" className="px-3 py-4 text-left font-semibold">
+                    <th
+                      key={col.accessor}
+                      scope="col"
+                      className="px-3 py-4 text-left font-semibold"
+                    >
                       {col.Header}
                     </th>
                   ))}
@@ -213,7 +234,9 @@ const LicensedHealthcareFacilities: React.FC = () => {
                         placeholder={`Filter ${col.Header}`}
                         aria-label={`Filter by ${col.Header}`}
                         value={filters[col.accessor]}
-                        onChange={(e) => handleFilterChange(col.accessor, e.target.value)}
+                        onChange={(e) =>
+                          handleFilterChange(col.accessor, e.target.value)
+                        }
                         className="w-full px-2 py-2 border rounded text-sm"
                         style={{ minWidth: "240px" }}
                       />
@@ -224,9 +247,15 @@ const LicensedHealthcareFacilities: React.FC = () => {
               <tbody>
                 {filteredData.length > 0 ? (
                   filteredData.map((row, index) => (
-                    <tr key={index} className={index % 2 === 0 ? "bg-gray-50" : "bg-gray-100"}>
+                    <tr
+                      key={index}
+                      className={index % 2 === 0 ? "bg-gray-50" : "bg-gray-100"}
+                    >
                       {tableColumns.map((col) => (
-                        <td key={col.accessor} className="px-3 py-3 whitespace-nowrap text-base">
+                        <td
+                          key={col.accessor}
+                          className="px-3 py-3 whitespace-nowrap text-base"
+                        >
                           {row[col.accessor as keyof FacilityData]}
                         </td>
                       ))}
@@ -234,7 +263,11 @@ const LicensedHealthcareFacilities: React.FC = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={tableColumns.length} className="text-center p-4 text-lg" aria-live="polite">
+                    <td
+                      colSpan={tableColumns.length}
+                      className="text-center p-4 text-lg"
+                      aria-live="polite"
+                    >
                       No matching results found.
                     </td>
                   </tr>

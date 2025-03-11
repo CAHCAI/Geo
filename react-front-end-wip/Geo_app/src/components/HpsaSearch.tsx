@@ -21,14 +21,14 @@ export const InputWithButton: React.FC<{
       placeholder="Enter coordinates (lat, lng)..."
       value={searchQuery}
       onChange={(e) => setSearchQuery(e.target.value)}
-      className="w-full sm:w-auto"
+      className=" border-gray-300 border-2 bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 text-md"
       aria-describedby="coordinate-hint"
     />
     <p id="coordinate-hint" className="sr-only">
       Example: 37.7749, -122.4194
     </p>
     <Button
-      className="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white w-full sm:w-auto"
+      className="bg-blue-600  hover:bg-blue-800 text-white w-full sm:w-auto text-md"
       onClick={fetchResults}
       disabled={isLoading}
       aria-label="Search for HPSA data based on coordinates"
