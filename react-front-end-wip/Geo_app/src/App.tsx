@@ -103,42 +103,27 @@ const App: React.FC = () => {
         <div className="bg-gray-800 w-full">
           <div className=" flex  max-w-screen-xl mx-auto ">
             <div className=" ml-8 flex gap-3 overflow-x-auto scrollbar-hide">
-              <button
-                className={cn(
-                  " hover:bg-black whitespace-nowrap text-white px-2 sm:px-4 py-3  text-sm sm:text-base",
-                  activePage === "home" && "bg-black"
-                )}
-                onClick={() => setActivePage("home")}
-              >
-                Home
-              </button>
-              <button
-                className={cn(
-                  "hover:bg-black whitespace-nowrap text-white px-2 sm:px-4 py-3  text-sm sm:text-base",
-                  activePage === "hpsa-search" && "bg-black"
-                )}
-                onClick={() => setActivePage("hpsa-search")}
-              >
-                HPSA Search
-              </button>
-              <button
-                className={cn(
-                  "hover:bg-black whitespace-nowrap text-white px-2 sm:px-4 py-3  text-sm sm:text-base",
-                  activePage === "licensed-healthcare" && "bg-black"
-                )}
-                onClick={() => setActivePage("licensed-healthcare")}
-              >
-                Licensed Healthcare Facilities
-              </button>
-              <button
-                className={cn(
-                  "hover:bg-black whitespace-nowrap text-white px-2 sm:px-4 py-3  text-sm sm:text-base",
-                  activePage === "api-reference" && "bg-black"
-                )}
-                onClick={() => setActivePage("api-reference")}
-              >
-                API Reference
-              </button>
+              {[
+                { label: "Home", page: "home" },
+                { label: "HPSA Search", page: "hpsa-search" },
+                {
+                  label: "Licensed Healthcare Facilities",
+                  page: "licensed-healthcare",
+                },
+                { label: "API Reference", page: "api-reference" },
+              ].map(({ label, page }) => (
+                <button
+                  key={page}
+                  className={cn(
+                    "relative hover:bg-black whitespace-nowrap text-white px-2 sm:px-4 py-3 text-sm sm:text-base",
+                    activePage === page &&
+                      "bg-black after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-0 after:h-0 after:border-l-8 after:border-r-8 after:border-b-8 after:border-t-gray-100 after:border-l-transparent after:border-r-transparent"
+                  )}
+                  onClick={() => setActivePage(page)}
+                >
+                  {label}
+                </button>
+              ))}
 
               {loggedIn && (
                 <button
