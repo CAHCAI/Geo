@@ -264,7 +264,7 @@ const AdminDashboard: React.FC = () => {
 
       {/* Coordinate Override Section */}
       <section
-        className="bg-gray-50 rounded-lg shadow-lg p-6 mb-6"
+        className="bg-gray-50 rounded-lg shadow-lg p-6 mb-6 mt-10"
         aria-label="Coordinate Override"
       >
         <h2 className="text-xl font-semibold text-gray-700 mb-4">
@@ -349,10 +349,7 @@ const AdminDashboard: React.FC = () => {
       )}
 
       {/* Dropdown Menu (above file upload) */}
-      <section
-        className="w-full"
-        aria-label="Geographical Selection Dropdown"
-      >
+      <section className="w-full" aria-label="Geographical Selection Dropdown">
         <label
           className="block text-gray-700 font-medium mb-2"
           htmlFor="select-option"
@@ -380,7 +377,9 @@ const AdminDashboard: React.FC = () => {
         className="bg-gray-50 rounded-lg shadow-lg p-6 mt-6"
         aria-label="File Upload"
       >
-        <h2 className="text-xl font-semibold text-gray-700 mb-4">File Upload</h2>
+        <h2 className="text-xl font-semibold text-gray-700 mb-4">
+          File Upload
+        </h2>
         <div className="flex flex-col items-center justify-center space-y-4">
           {/* Drag-and-drop area */}
           <div

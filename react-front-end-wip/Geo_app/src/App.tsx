@@ -40,7 +40,7 @@ const App: React.FC = () => {
         console.error("Error fetching data:", error);
       });
   }, []);
-  
+
   const handleOpenMenu = (isOpen: boolean) => {
     setIsOpenMenu(isOpen);
   };
@@ -63,30 +63,32 @@ const App: React.FC = () => {
     </div>
   );
 */
-const renderContent = () => {
-  switch (activePage) {
-    case "hpsa-search":
-      return <HpsaSearch />;
-    case "login":
-      return <Login setLoggedIn={setLoggedIn} loggedIn={loggedIn} />;
-    case "admin-dashboard":
-      return <AdminDashboard />;
-    case "home":
-      return <Home />;
-    case "test_cred":
-      return <TestAdminCredentials />;
-    case "licensed-healthcare":
-      return <LicensedHealthcareFacilities />;
-    case "api-reference":
-      return <APIReference />;
-    default:
-      return (
-        <div className="flex justify-center my-8">
-          <h1 className="text-3xl font-bold text-gray-700">Welcome to Geo!</h1>
-        </div>
-      ) 
-  }
-};
+  const renderContent = () => {
+    switch (activePage) {
+      case "hpsa-search":
+        return <HpsaSearch />;
+      case "login":
+        return <Login setLoggedIn={setLoggedIn} loggedIn={loggedIn} />;
+      case "admin-dashboard":
+        return <AdminDashboard />;
+      case "home":
+        return <Home />;
+      case "test_cred":
+        return <TestAdminCredentials />;
+      case "licensed-healthcare":
+        return <LicensedHealthcareFacilities />;
+      case "api-reference":
+        return <APIReference />;
+      default:
+        return (
+          <div className="flex justify-center my-8">
+            <h1 className="text-3xl font-bold text-gray-700">
+              Welcome to Geo!
+            </h1>
+          </div>
+        );
+    }
+  };
 
   return (
     <div className="bg-white">
@@ -146,12 +148,15 @@ const renderContent = () => {
 
               {loggedIn && (
                 <button
-                  className="bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 text-white px-4 py-2 rounded-md"
+                  className={cn(
+                    "hover:bg-black whitespace-nowrap text-white px-2 sm:px-4 py-3  text-sm sm:text-base",
+                    activePage === "admin-dashboard" && "bg-black"
+                  )}
                   onClick={() => setActivePage("admin-dashboard")}
                 >
                   Admin Dashboard
                 </button>
-              )} 
+              )}
               <Sheet>
                 <SheetTrigger className="hover:bg-black whitespace-nowrap text-white px-2 sm:px-4 py-3 text-sm sm:text-base rounded-md">
                   <AlignJustify className="text-white" />
@@ -160,14 +165,14 @@ const renderContent = () => {
                   <SheetHeader></SheetHeader>
                   <Login setLoggedIn={setLoggedIn} loggedIn={loggedIn} />
                 </SheetContent>
-              </Sheet> 
+              </Sheet>
             </div>
           </div>
         </div>
       </nav>
 
-            {/* Main Content */}
-            <main className="container mx-auto flex-grow p-4 ">
+      {/* Main Content */}
+      <main className="container mx-auto flex-grow p-4 ">
         {renderContent()}
       </main>
       <footer className="px-4 bg-gray-50 w-full border-t border-gray-300">
@@ -176,8 +181,6 @@ const renderContent = () => {
     </div>
   );
 };
-
-
 
 export default App;
 
