@@ -12,17 +12,26 @@ export const InputWithButton: React.FC<{
   isLoading: boolean;
 }> = ({ searchQuery, setSearchQuery, fetchResults, isLoading }) => (
   <div className="flex flex-col sm:flex-row w-full max-w-sm items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-4">
+    <label htmlFor="coordinates-input" className="sr-only">
+      Enter coordinates (latitude, longitude)
+    </label>
     <Input
+      id="coordinates-input"
       type="text"
       placeholder="Enter coordinates (lat, lng)..."
       value={searchQuery}
       onChange={(e) => setSearchQuery(e.target.value)}
-      className="w-full sm:w-auto"
+      className=" border-gray-300 border-2 bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 text-md"
+      aria-describedby="coordinate-hint"
     />
+    <p id="coordinate-hint" className="sr-only">
+      Example: 37.7749, -122.4194
+    </p>
     <Button
-      className="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white w-full sm:w-auto"
+      className="bg-blue-600  hover:bg-blue-800 text-white w-full sm:w-auto text-md"
       onClick={fetchResults}
-      disabled={isLoading} // Disable button when loading
+      disabled={isLoading}
+      aria-label="Search for HPSA data based on coordinates"
     >
       {isLoading ? "Loading..." : "Search"}
     </Button>
@@ -45,39 +54,45 @@ const HpsaSearchPage: React.FC = () => {
 
   const fetchResults = async () => {
     console.log("fetchResults function triggered.");
-  
+
     setError(null);
-  
+
     if (!searchQuery.trim()) {
       console.error("No search query provided.");
       setError("Please enter valid coordinates.");
       return;
     }
-  
+
     try {
       setIsLoading(true);
-      const [lat, lng] = searchQuery.split(",").map(coord => parseFloat(coord.trim()));
-  
+      const [lat, lng] = searchQuery
+        .split(",")
+        .map((coord) => parseFloat(coord.trim()));
+
       if (isNaN(lat) || isNaN(lng)) {
         console.error("Invalid coordinates:", lat, lng);
         setError("Invalid coordinate format. Use: lat, lng");
         return;
       }
-  
+
       const apiUrl = `http://localhost:8000/api/search?lat=${lat}&lng=${lng}`;
       console.log("Fetching from API:", apiUrl);
-  
+
       const response = await fetch(apiUrl, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
+          "X-API-KEY": "supersecret",
         },
       });
-  
+
       const data = await response.json();
       console.log("Fetched data:", data);
-  
-      if (Object.keys(data).length === 0 || (!data.senate && !data.assembly && !data.congressional)) {
+
+      if (
+        Object.keys(data).length === 0 ||
+        (!data.senate && !data.assembly && !data.congressional)
+      ) {
         console.warn("No results found.");
         setError("No results found.");
       } else {
@@ -91,7 +106,7 @@ const HpsaSearchPage: React.FC = () => {
       setIsLoading(false);
     }
   };
-  
+
   // Column definitions
   const baseTableColumns = [
     { Header: "MSSA ID", accessor: "ID" },
@@ -121,23 +136,22 @@ const HpsaSearchPage: React.FC = () => {
     { Header: "LA Service Planning Area", accessor: "LAServiceArea" },
   ];
   const assemblyDistrictColumns = [
-    { Header: "Name", accessor: "district_number" },
+    { Header: "Number", accessor: "district_number" },
     { Header: "District Label", accessor: "district_label" },
     { Header: "Population", accessor: "population" },
   ];
-  
+
   const senateDistrictColumns = [
-    { Header: "Name", accessor: "district_number" },
+    { Header: "Number", accessor: "district_number" },
     { Header: "District Label", accessor: "district_label" },
     { Header: "Population", accessor: "population" },
   ];
-  
+
   const congressionalDistrictColumns = [
-    { Header: "Name", accessor: "district_number" },
+    { Header: "Number", accessor: "district_number" },
     { Header: "District Label", accessor: "district_label" },
     { Header: "Population", accessor: "population" },
   ];
-  
 
   // Table data
   const baseTableData = [
@@ -188,131 +202,203 @@ const HpsaSearchPage: React.FC = () => {
   ];
 
   // Transpose the data for the required tables
-  const transposedAssemblyData = transposeData(searchResults?.assembly || [], assemblyDistrictColumns);
-  const transposedSenateData = transposeData(searchResults?.senate || [], senateDistrictColumns);
-  const transposedCongressionalData = transposeData(searchResults?.congressional || [], congressionalDistrictColumns);
+  const transposedAssemblyData = transposeData(
+    searchResults?.assembly || [],
+    assemblyDistrictColumns
+  );
+  const transposedSenateData = transposeData(
+    searchResults?.senate || [],
+    senateDistrictColumns
+  );
+  const transposedCongressionalData = transposeData(
+    searchResults?.congressional || [],
+    congressionalDistrictColumns
+  );
 
   return (
-    <div className="container mx-auto pt-5 px-4 space-y-4">
-      <InputWithButton 
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        fetchResults={fetchResults}
-        isLoading={isLoading} 
-      />
+    <>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 bg-white p-2 rounded"
+      >
+        Skip to main content
+      </a>
 
-      {/* Base Table */}
-      <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[350px] sm:max-h-[400px] overflow-auto">
-        <h3 className="text-lg font-bold text-gray-800 mb-3">Base Table</h3>
-        <div className="overflow-x-auto">
-          <Table columns={baseTableColumns} data={baseTableData} />
+      <header className="container mx-auto pt-5 px-4">
+        <h1 className="text-3xl font-bold text-gray-900">
+          Health Professional Shortage Areas (HPSA) Search
+        </h1>
+      </header>
+
+      <div className="container mx-auto pt-5 px-4 space-y-4">
+        <InputWithButton
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          fetchResults={fetchResults}
+          isLoading={isLoading}
+        />
+
+        {searchResults?.senate?.length > 0 && (
+          <>
+            {/* Base Table */}
+            <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white max-h-[350px] sm:max-h-[400px] overflow-auto">
+              <h3 className="text-lg font-bold text-gray-900 mb-3">
+                Base Table
+              </h3>
+              <div className="overflow-x-auto">
+                <Table columns={baseTableColumns} data={baseTableData} />
+              </div>
+            </div>
+
+            {/* Row 1 */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white max-h-[250px] sm:max-h-[300px] overflow-auto">
+                <h3 className="text-lg font-bold text-gray-900 mb-3">
+                  Primary Care
+                </h3>
+                <Table columns={primaryCareColumns} data={primaryCareData} />
+              </div>
+              <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white max-h-[250px] sm:max-h-[300px] overflow-auto">
+                <h3 className="text-lg font-bold text-gray-900 mb-3">
+                  Mental Health Care
+                </h3>
+                <Table
+                  columns={mentalHealthCareColumns}
+                  data={mentalHealthCareData}
+                />
+              </div>
+              <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white max-h-[250px] sm:max-h-[300px] overflow-auto">
+                <h3 className="text-lg font-bold text-gray-900 mb-3">
+                  Dental Health Care
+                </h3>
+                <Table
+                  columns={dentalHealthCareColumns}
+                  data={dentalHealthCareData}
+                />
+              </div>
+            </div>
+
+            {/* Row 2 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white max-h-[250px] sm:max-h-[300px] overflow-auto">
+                <h3 className="text-lg font-bold text-gray-900 mb-3">
+                  Health Service Area
+                </h3>
+                <Table
+                  columns={healthServiceAreaColumns}
+                  data={healthServiceAreaData}
+                />
+              </div>
+              <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white max-h-[250px] sm:max-h-[300px] overflow-auto">
+                <h3 className="text-lg font-bold text-gray-900 mb-3">
+                  LA Service Planning Area
+                </h3>
+                <Table
+                  columns={laServicePlanningAreaColumns}
+                  data={laServicePlanningAreaData}
+                />
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Row 3 - Using Transposed Data Needed to Make Rows Instead of Columns*/}
+        <div className="w-full space-y-4">
+          <div className="flex flex-wrap gap-4 pb-4">
+            {searchResults?.assembly?.length > 0 && (
+              <div className="relative">
+                <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white max-h-[400px] sm:max-h-[500px] overflow-auto resize-x min-w-[300px] w-fit max-w-[800px]">
+                  <h3 className="text-lg font-bold text-gray-900 mb-3 sticky top-0 bg-white">
+                    Assembly District
+                  </h3>
+                  <div className="space-y-2">
+                    {transposedAssemblyData.map((row, index) => (
+                      <div
+                        key={index}
+                        className={`py-2 ${
+                          index !== transposedAssemblyData.length - 1
+                            ? "border-b border-gray-300"
+                            : ""
+                        }`}
+                      >
+                        <div className="font-semibold text-gray-800">
+                          {row.Header}:
+                        </div>
+                        {row.rows.map((cell, idx) => (
+                          <div key={idx} className="text-gray-700">
+                            {cell}
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+            {searchResults?.senate?.length > 0 && (
+              <div className="relative">
+                <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white max-h-[400px] sm:max-h-[500px] overflow-auto resize-x min-w-[300px] w-fit max-w-[800px]">
+                  <h3 className="text-lg font-bold text-gray-900 mb-3 sticky top-0 bg-white">
+                    Senate District
+                  </h3>
+                  <div className="space-y-2">
+                    {transposedSenateData.map((row, index) => (
+                      <div
+                        key={index}
+                        className={`py-2 ${
+                          index !== transposedSenateData.length - 1
+                            ? "border-b border-gray-300"
+                            : ""
+                        }`}
+                      >
+                        <div className="font-semibold text-gray-800">
+                          {row.Header}:
+                        </div>
+                        {row.rows.map((cell, idx) => (
+                          <div key={idx} className="text-gray-700">
+                            {cell}
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+            {searchResults?.congressional?.length > 0 && (
+              <div className="relative">
+                <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white max-h-[400px] sm:max-h-[500px] overflow-auto resize-x min-w-[300px] w-fit max-w-[800px]">
+                  <h3 className="text-lg font-bold text-gray-900 mb-3 sticky top-0 bg-white">
+                    Congressional District
+                  </h3>
+                  <div className="space-y-2">
+                    {transposedCongressionalData.map((row, index) => (
+                      <div
+                        key={index}
+                        className={`py-2 ${
+                          index !== transposedCongressionalData.length - 1
+                            ? "border-b border-gray-300"
+                            : ""
+                        }`}
+                      >
+                        <div className="font-semibold text-gray-800">
+                          {row.Header}:
+                        </div>
+                        {row.rows.map((cell, idx) => (
+                          <div key={idx} className="text-gray-700">
+                            {cell}
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-
-      {/* Row 1 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
-          <h3 className="text-lg font-bold text-gray-800 mb-3">Primary Care</h3>
-          <Table columns={primaryCareColumns} data={primaryCareData} />
-        </div>
-        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
-          <h3 className="text-lg font-bold text-gray-800 mb-3">
-            Mental Health Care
-          </h3>
-          <Table
-            columns={mentalHealthCareColumns}
-            data={mentalHealthCareData}
-          />
-        </div>
-        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
-          <h3 className="text-lg font-bold text-gray-800 mb-3">
-            Dental Health Care
-          </h3>
-          <Table
-            columns={dentalHealthCareColumns}
-            data={dentalHealthCareData}
-          />
-        </div>
-      </div>
-
-      {/* Row 2 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
-          <h3 className="text-lg font-bold text-gray-800 mb-3">
-            Health Service Area
-          </h3>
-          <Table
-            columns={healthServiceAreaColumns}
-            data={healthServiceAreaData}
-          />
-        </div>
-        <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
-          <h3 className="text-lg font-bold text-gray-800 mb-3">
-            LA Service Planning Area
-          </h3>
-          <Table
-            columns={laServicePlanningAreaColumns}
-            data={laServicePlanningAreaData}
-          />
-        </div>
-      </div>
-
-{/* Row 3 - Using Transposed Data Needed to Make Rows Instead of Columns*/}
-<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-  <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
-  <h3 className="text-lg font-bold text-gray-800 mb-3"> Assembly District
-    </h3>
-    <div className="space-y-2">
-      {transposedAssemblyData.map((row, index) => (
-        <div
-          key={index}
-          className={`py-2 ${index !== transposedAssemblyData.length - 1 ? 'border-b border-gray-200' : ''}`}
-        >
-          <div className="font-semibold">{row.Header}:</div>
-          {row.rows.map((cell, idx) => (
-            <div key={idx} className="text-gray-700">{cell}</div>
-          ))}
-        </div>
-      ))}
-    </div>
-  </div>
-  <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
-  <h3 className="text-lg font-bold text-gray-800 mb-3"> Senate District
-    </h3>
-    <div className="space-y-2">
-      {transposedSenateData.map((row, index) => (
-        <div
-          key={index}
-          className={`py-2 ${index !== transposedSenateData.length - 1 ? 'border-b border-gray-200' : ''}`}
-        >
-          <div className="font-semibold">{row.Header}:</div>
-          {row.rows.map((cell, idx) => (
-            <div key={idx} className="text-gray-700">{cell}</div>
-          ))}
-        </div>
-      ))}
-    </div>
-  </div>
-  <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-gray-50 max-h-[250px] sm:max-h-[300px] overflow-auto">
-  <h3 className="text-lg font-bold text-gray-800 mb-3"> Congressional District
-    </h3>
-    <div className="space-y-2">
-      {transposedCongressionalData.map((row, index) => (
-        <div
-          key={index}
-          className={`py-2 ${index !== transposedCongressionalData.length - 1 ? 'border-b border-gray-200' : ''}`}
-        >
-          <div className="font-semibold">{row.Header}:</div>
-          {row.rows.map((cell, idx) => (
-            <div key={idx} className="text-gray-700">{cell}</div>
-          ))}
-        </div>
-      ))}
-    </div>
-  </div>
-</div>
-
-</div>
+    </>
   );
 };
 

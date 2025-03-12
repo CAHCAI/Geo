@@ -3,6 +3,9 @@
 from xxlimited import Str
 from ninja import Router, NinjaAPI, Form
 from ninja.security import APIKeyHeader
+from .models import APIKey
+from django.http import JsonResponse
+
 
 # Authentication API Key
 class APIKeyAuth(APIKeyHeader):
@@ -13,6 +16,14 @@ class APIKeyAuth(APIKeyHeader):
     def authenticate(self, request, key):
         if key == "supersecret":
             return key
+        
+def api_key_required(view_func):
+    def wrapper(request, *args, **kwargs):
+        api_key = request.headers.get("X-API-KEY")  # API key must be sent in headers
+        if not api_key or not APIKey.objects.filter(key=api_key).exists():
+            return JsonResponse({"error": "Unauthorized"}, status=401)
+        return view_func(request, *args, **kwargs)
+    return wrapper
 
     
     

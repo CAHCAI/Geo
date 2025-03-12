@@ -1,11 +1,23 @@
 import zipfile
 import os
 from tempfile import TemporaryDirectory
+from numpy import delete
 from osgeo import ogr
 from django.contrib.gis.gdal import DataSource
 from api.models import SenateDistrict, CongressionalDistrict, AssemblyDistrict
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.gis.geos import MultiPolygon, Polygon
+from django.db import connection
+
+cursor = connection.cursor()
+
+def to_dict(dist):
+    return {
+        "district_number": dist.district_number,
+        "district_label": dist.district_label,
+        "population": dist.population,
+        # Other information here if needed
+    }
 
 def extract_zip(file: str) -> TemporaryDirectory:
     """
@@ -86,6 +98,8 @@ def upload_senate_shapefile(layer: DataSource) -> None:
     """
     Uploads data from a Senate shapefile layer to the database.
     """
+    cursor.execute('TRUNCATE TABLE "{0}" CASCADE'.format(SenateDistrict._meta.db_table))
+    
     # Get field definitions from the layer
     field_names = layer.fields
 
@@ -124,6 +138,8 @@ def upload_congressional_shapefile(layer: DataSource) -> None:
     """
     Uploads data from a Congressional shapefile layer to the database.
     """
+    cursor.execute('TRUNCATE TABLE "{0}" CASCADE'.format(CongressionalDistrict._meta.db_table))
+    
     # Get field definitions from the layer
     field_names = layer.fields
 
@@ -163,6 +179,10 @@ def upload_assembly_shapefile(layer: DataSource) -> None:
     """
     Uploads data from an Assembly shapefile layer to the database.
     """
+    
+    # clear the existing data
+    cursor.execute('TRUNCATE TABLE "{0}" CASCADE'.format(AssemblyDistrict._meta.db_table))
+    
     # Get field definitions from the layer
     field_names = layer.fields
 

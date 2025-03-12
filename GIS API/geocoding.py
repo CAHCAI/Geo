@@ -49,6 +49,28 @@ def geocode_address(address):
         #Handling any exceptions that occur during the API call or response parsing
         print(f"An error occurred: {e}")
 
+#Reverse geocoding and getting address from latitude and longitude
+def reverse_geocode_coordinates(latitude, longitude):
+    try:
+        #Using the get_reverse_geocoding method of the MapsSearchClient to reverse geocode the given coordinates
+        result = maps_client.get_reverse_geocoding(coordinate=(latitude, longitude))
+
+        #Checking if the response contains 'address', because it holds the reverse geocoding data
+        if result and 'address' in result:
+            #Printing the full formatted address from the response
+            address_details = result['address']['formattedAddress']
+            print(f"Address: {address_details}")
+        else:
+            #If no results are found, notify the user
+            print("No results found.")
+    except Exception as e:
+        #Handling any exceptions that occur during the API call or response parsing
+        print(f"An error occurred: {e}")
+
 #Testing
 address = "6000 Jed Smith Dr, Sacramento, CA"
 geocode_address(address)
+
+latitude = 38.576572
+longitude = -121.493985
+reverse_geocode_coordinates(latitude, longitude)

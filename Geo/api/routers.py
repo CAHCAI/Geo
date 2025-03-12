@@ -13,10 +13,12 @@ from ninja import Router, File, Schema
 from ninja.files import UploadedFile
 from tempfile import TemporaryDirectory
 from .utils import (extract_zip, find_shapefile, get_shapefile_metadata, 
-identify_shapefile_type, upload_assembly_shapefile, upload_congressional_shapefile, upload_senate_shapefile, get_shapefile_layer)
+identify_shapefile_type, upload_assembly_shapefile, upload_congressional_shapefile, upload_senate_shapefile, get_shapefile_layer, to_dict)
 from django.db import connection
 from django.contrib.gis.db.models.functions import AsGeoJSON
 from .models import AssemblyDistrict, SenateDistrict, CongressionalDistrict
+import json
+from Geo.cache import cache, TTL
 
 # Directory to temporarily store uploaded shapefiles
 UPLOAD_DIR = os.path.join(settings.MEDIA_ROOT, "shapefiles")
@@ -31,6 +33,22 @@ def test(request):
     A simple test endpoint to verify the API is working.
     """
     return JsonResponse({"success": True, "message": "test api, successful."})
+
+@router.get("/test-cache")
+def test_cache(request):
+    """
+    A simple test endpoint to verify the API Redis cache is working. The intent is to call it twice:
+        1. The first request sets a value in redis because there is currently a cache miss for the cache value
+        2. The second request validates the cache hit after the value is set. 
+    """
+    try:
+        if cache.get("my_key"):
+            return JsonResponse({"success": True, "message": "test api, successful. Used cache."})
+        else:
+            cache.set("my_key", 1)
+            return JsonResponse({"success": True, "message": "test api, successful. Will use cache next time."})
+    except Exception as e:
+        return JsonResponse({"success": False, "message": f"Redis failed: {str(e)}"})
 
 # Field mapping: map model field names to shapefile field names.
 assembly_shp_mapping = {
@@ -438,9 +456,6 @@ def nearest_location(request, longitude: float, latitude: float):
     return JsonResponse({"success": True, "data": result})
 
 
-
-
-
 @router.get("/all-districts-data")
 def all_districts_data(request):
     """
@@ -491,25 +506,43 @@ def coordinate_search(request, lat: float, lng: float):
     """
     Search the district tables for polygons containing (lat, lng).
     """
+    
+    cache_key = f"{lat}_{lng}"
+    
+    # check if this point has been searched for recently in the cache
+    try:
+        cache_value = cache.get(cache_key)
+        if cache_value:    
+            cache_value = json.loads(cache_value)
+            cache_value["used_cache"] = True
+            return cache_value
+    except Exception as e:
+        return {"success": False, "message": f"Error: {e}"}
+        
+        
+        
+    # this runs if the lat long key was not found in the cache
     point = Point(lng, lat, srid=4326)
-
+    
     senate_matches = SenateDistrict.objects.filter(geom__contains=point).distinct("district_number")
     assembly_matches = AssemblyDistrict.objects.filter(geom__contains=point).distinct("district_number")
     congressional_matches = CongressionalDistrict.objects.filter(geom__contains=point).distinct("district_number")
-
-    def to_dict(dist):
-        return {
-            "district_number": dist.district_number,
-            "district_label": dist.district_label,
-            "population": dist.population,
-            # Other information here if needed
-        }
-
-    return {
+    
+    # Convert to lists of dictionaries before caching
+    cache_value = {
         "senate": [to_dict(d) for d in senate_matches],
         "assembly": [to_dict(d) for d in assembly_matches],
         "congressional": [to_dict(d) for d in congressional_matches],
     }
+    # Don't cache if all results are empty
+    if senate_matches.exists() or assembly_matches.exists() or congressional_matches.exists():
+        try:
+            # Create a cached value with a TTL
+            cache.set(cache_key, json.dumps(cache_value), ex=TTL)
+        except Exception as e:
+            return {"success": False, "message": f"Error: {e}"}
+
+    return cache_value
 
 
 

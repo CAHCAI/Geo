@@ -81,6 +81,9 @@ const AdminDashboard: React.FC = () => {
         {
           method: "POST",
           body: formData,
+          headers: {
+            "X-API-KEY": "supersecret",
+          },
         }
       );
 
@@ -118,7 +121,9 @@ const AdminDashboard: React.FC = () => {
     setAlerts((prevAlerts) => prevAlerts.filter((alert) => alert.id !== id));
   };
 
-  const handleCoordinatesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCoordinatesChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const value = event.target.value;
     const coordinatesRegex = /^-?\d{1,3}\.\d+,\s*-?\d{1,3}\.\d+$/;
     setCoordinates(value);
@@ -141,20 +146,26 @@ const AdminDashboard: React.FC = () => {
       const lon = parseFloat(coordinates.split(",")[1].trim());
 
       if (isNaN(lat) || isNaN(lon)) {
-        throw new Error("Invalid coordinate format. Ensure it is in 'lat, lon' format.");
+        throw new Error(
+          "Invalid coordinate format. Ensure it is in 'lat, lon' format."
+        );
       }
 
-      const response = await fetch("http://localhost:8000/api/override-location/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          lat: lat,
-          lon: lon,
-          address: address.trim(),
-        }),
-      });
+      const response = await fetch(
+        "http://localhost:8000/api/override-location/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-API-KEY": "supersecret",
+          },
+          body: JSON.stringify({
+            lat: lat,
+            lon: lon,
+            address: address.trim(),
+          }),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -162,7 +173,9 @@ const AdminDashboard: React.FC = () => {
         throw new Error(errorData.message || "Failed to update location.");
       }
 
-      alert(`Coordinates: ${coordinates}\nAddress: ${address}\nSuccessfully Updated!`);
+      alert(
+        `Coordinates: ${coordinates}\nAddress: ${address}\nSuccessfully Updated!`
+      );
     } catch (error) {
       console.error("Error updating location:", error);
       alert("Failed to update location. Please try again.");
@@ -177,14 +190,28 @@ const AdminDashboard: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto p-4">
+    // Wrap in a <main> with an aria-label to identify this primary region
+    <main
+      className="container mx-auto p-4"
+      aria-label="Admin Dashboard"
+      id="admin-dashboard"
+    >
       <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">
         Admin Dashboard
       </h1>
 
       {/* Alerts Section */}
-      <div className="bg-gray-50 rounded-lg shadow-lg p-6 mb-6">
-        <h2 className="text-xl font-semibold text-gray-700 mb-4">Alerts</h2>
+      <section
+        className="bg-gray-50 rounded-lg shadow-lg p-6 mb-6"
+        role="region"
+        aria-labelledby="alerts-heading"
+      >
+        <h2
+          id="alerts-heading"
+          className="text-xl font-semibold text-gray-700 mb-4"
+        >
+          Alerts
+        </h2>
         {alerts.length === 0 ? (
           <p className="text-gray-600">No new alerts at the moment.</p>
         ) : (
@@ -192,6 +219,7 @@ const AdminDashboard: React.FC = () => {
             {alerts.map((alert) => (
               <div
                 key={alert.id}
+                // Optionally add role="alert" if you'd like these to be read out immediately by screen readers.
                 className={`p-4 rounded-lg ${
                   alert.type === "error"
                     ? "bg-red-100 text-red-700"
@@ -205,10 +233,13 @@ const AdminDashboard: React.FC = () => {
             ))}
           </div>
         )}
-      </div>
+      </section>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Cards for Statistics */}
+      {/* Statistics Section */}
+      <section
+        className="grid grid-cols-1 md:grid-cols-3 gap-6"
+        aria-label="Statistics"
+      >
         <div className="bg-gray-50 rounded-lg shadow-lg p-6">
           <h3 className="text-lg font-medium text-gray-700">
             Total Users On The Site
@@ -229,44 +260,70 @@ const AdminDashboard: React.FC = () => {
           <h3 className="text-lg font-medium text-gray-700">Issues</h3>
           <p className="text-5xl font-bold text-red-500 mt-4">None</p>
         </div>
-      </div>
+      </section>
 
-      {/* Cords Input Section */} {/* Confirmation */}
-      <div className="bg-gray-50 rounded-lg shadow-lg p-6 mb-6">
-        <h2 className="text-xl font-semibold text-gray-700 mb-4">Coordinate Override</h2>
+      {/* Coordinate Override Section */}
+      <section
+        className="bg-gray-50 rounded-lg shadow-lg p-6 mb-6 mt-10"
+        aria-label="Coordinate Override"
+      >
+        <h2 className="text-xl font-semibold text-gray-700 mb-4">
+          Coordinate Override
+        </h2>
+        {/* Label for coordinates input (visually hidden) */}
+        <label htmlFor="coordinate-input" className="sr-only">
+          Enter coordinates (lat, lon)
+        </label>
         <input
+          id="coordinate-input"
           type="text"
           placeholder="Enter coordinates (lat, lon)"
           value={coordinates}
           onChange={handleCoordinatesChange}
           className="w-full p-3 border border-gray-300 rounded-lg mb-4"
         />
+
+        {/* Label for address input (visually hidden) */}
         {showAddressInput && (
-          <input
-            type="text"
-            placeholder="Enter new address"
-            value={address}
-            onChange={handleAddressChange}
-            className="w-full p-3 border border-gray-300 rounded-lg mb-4"
-          />
+          <>
+            <label htmlFor="address-input" className="sr-only">
+              Enter new address
+            </label>
+            <input
+              id="address-input"
+              type="text"
+              placeholder="Enter new address"
+              value={address}
+              onChange={handleAddressChange}
+              className="w-full p-3 border border-gray-300 rounded-lg mb-4"
+            />
+          </>
         )}
         {showSubmitButton && (
           <button
             onClick={handleSubmit}
             className={`px-6 py-3 bg-orange-500 text-white font-bold rounded-lg shadow-md transition ${
-              isSubmitting ? "animate-spin" : "hover:bg-orange-600"
+              isSubmitting ? "" : "hover:bg-orange-600"
             }`}
             disabled={isSubmitting}
           >
             {isSubmitting ? "Submitting..." : "Submit"}
           </button>
         )}
-      </div>
+      </section>
 
       {showConfirmation && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+        // Modal confirmation dialog
+        <div
+          className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="confirmation-heading"
+        >
           <div className="bg-white p-6 rounded-lg shadow-lg">
-            <h3 className="text-lg font-bold mb-4">Are you sure?</h3>
+            <h3 id="confirmation-heading" className="text-lg font-bold mb-4">
+              Are you sure?
+            </h3>
             <p className="mb-2">Coordinates: {coordinates}</p>
             <p className="mb-4">Address: {address}</p>
             <button
@@ -291,32 +348,40 @@ const AdminDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Dropdown Menu placed above the file upload option */}
-      <div className="w-full">
-            <label className="block text-gray-700 font-medium mb-2">
-              Select Option
-            </label>
-            <select
-              value={selectedOption}
-              onChange={(e) => setSelectedOption(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg"
-            >
-              <option value="senate">Senate</option>
-              <option value="assembly">Assembly</option>
-              <option value="congressional">Congressional</option>
-            </select>
-            <p className="text-sm text-gray-500 mt-2">
-              You have selected:{" "}
-              {selectedOption.charAt(0).toUpperCase() + selectedOption.slice(1)}
-            </p>
-          </div>
+      {/* Dropdown Menu (above file upload) */}
+      <section className="w-full" aria-label="Geographical Selection Dropdown">
+        <label
+          className="block text-gray-700 font-medium mb-2"
+          htmlFor="select-option"
+        >
+          Select Option
+        </label>
+        <select
+          id="select-option"
+          value={selectedOption}
+          onChange={(e) => setSelectedOption(e.target.value)}
+          className="w-full p-3 border border-gray-300 rounded-lg"
+        >
+          <option value="senate">Senate</option>
+          <option value="assembly">Assembly</option>
+          <option value="congressional">Congressional</option>
+        </select>
+        <p className="text-sm text-gray-500 mt-2">
+          You have selected:{" "}
+          {selectedOption.charAt(0).toUpperCase() + selectedOption.slice(1)}
+        </p>
+      </section>
 
       {/* File Upload Section */}
-      <div className="bg-gray-50 rounded-lg shadow-lg p-6 mt-6">
+      <section
+        className="bg-gray-50 rounded-lg shadow-lg p-6 mt-6"
+        aria-label="File Upload"
+      >
         <h2 className="text-xl font-semibold text-gray-700 mb-4">
           File Upload
         </h2>
         <div className="flex flex-col items-center justify-center space-y-4">
+          {/* Drag-and-drop area */}
           <div
             className={`border-2 border-dashed ${
               isDragging ? "border-blue-500" : "border-gray-300"
@@ -325,6 +390,7 @@ const AdminDashboard: React.FC = () => {
             onDragEnter={handleDragEnter}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
+            aria-label="Drag and drop your files here"
           >
             <p className="text-gray-600 mb-4">Drag and drop your files here</p>
             <input
@@ -346,6 +412,8 @@ const AdminDashboard: React.FC = () => {
               </p>
             )}
           </div>
+
+          {/* Upload button */}
           <button
             type="button"
             onClick={handleUpload}
@@ -360,8 +428,8 @@ const AdminDashboard: React.FC = () => {
           </button>
           <p className="text-sm text-gray-500">Shapefiles only.</p>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 };
 
