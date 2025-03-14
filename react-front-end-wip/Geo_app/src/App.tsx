@@ -117,7 +117,7 @@ const App: React.FC = () => {
                   className={cn(
                     "relative hover:bg-black whitespace-nowrap text-white px-2 sm:px-4 py-3 text-sm sm:text-base",
                     activePage === page &&
-                      "bg-black after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-0 after:h-0 after:border-l-8 after:border-r-8 after:border-b-8 after:border-t-gray-100 after:border-l-transparent after:border-r-transparent"
+                      "after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-0 after:h-0 after:border-l-8 after:border-r-8 after:border-b-8 after:border-t-gray-100 after:border-l-transparent after:border-r-transparent"
                   )}
                   onClick={() => setActivePage(page)}
                 >
