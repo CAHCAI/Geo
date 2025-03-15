@@ -72,6 +72,7 @@ const AdminDashboard: React.FC = () => {
 
     const formData = new FormData();
     formData.append("file", selectedFile);
+    formData.append("file_type", selectedOption);
 
     setIsUploading(true);
 
@@ -362,9 +363,14 @@ const AdminDashboard: React.FC = () => {
           onChange={(e) => setSelectedOption(e.target.value)}
           className="w-full p-3 border border-gray-300 rounded-lg"
         >
-          <option value="senate">Senate</option>
-          <option value="assembly">Assembly</option>
-          <option value="congressional">Congressional</option>
+          <option value="senate">Senate District</option>
+          <option value="assembly">Assembly District</option>
+          <option value="congressional">Congressional District</option>
+          <option value="laspa">LA Service Planning Area</option>
+          <option value="hsa">Health Service Area</option>
+          <option value="rnsa">Registered Nurse Shortage Area</option>
+          <option value="mssa">Medical Service Study Area</option>
+          <option value="pcsa">Primary Care Shortage Area</option>
         </select>
         <p className="text-sm text-gray-500 mt-2">
           You have selected:{" "}
