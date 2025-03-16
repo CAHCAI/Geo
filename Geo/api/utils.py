@@ -1,15 +1,12 @@
 import zipfile
 import os
 from tempfile import TemporaryDirectory
-from numpy import delete
 from osgeo import ogr
 from django.contrib.gis.gdal import DataSource
 from api.models import HealthServiceArea, LAServicePlanningArea, MedicalServiceStudyArea, PrimaryCareShortageArea, RegisteredNurseShortageArea, SenateDistrict, CongressionalDistrict, AssemblyDistrict
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.gis.geos import MultiPolygon, Polygon
 from django.db import connection
-
-cursor = connection.cursor()
 
 def to_dict(dist):
     return {
@@ -93,470 +90,253 @@ def get_geos_geometry(geometry: ogr.Geometry) -> MultiPolygon:
 
     return geos_geometry
 
-# upload functions
-def upload_senate_shapefile(layer: DataSource) -> None:
+# generalized uploader follows these steps:
+# 1. attempt to create Django model instances for all of the data
+# 2. if this is successful, truncate the existing data table
+# 3. finally, we save the records to the db table
+def generic_shapefile_uploader(layer: DataSource, model, create_instance_func, label: str) -> None:
     """
-    Uploads data from a Senate shapefile layer to the database.
-    """
-    cursor.execute('TRUNCATE TABLE "{0}" CASCADE'.format(SenateDistrict._meta.db_table))
+    Generalized uploader for shapefile layers.
     
-    # Get field definitions from the layer
+    Parameters:
+      layer: The DataSource layer from the shapefile.
+      model: The Django model class for insertion.
+      create_instance_func: Callable that takes (attributes, geos_geometry)
+                            and returns a model instance.
+      label: A string label for logging (e.g., "Senate").
+    """
     field_names = layer.fields
     temp_records = []
     
-    print("Testing Senate insertion...")
-
+    print(f"Testing {label} insertion...")
+    # Loop over features, build instance, and store in a temporary list.
     for feature in layer:
-        # Create a dictionary to map field names to values
-        attributes = {field_name: feature.get(field_name) for field_name in field_names}
+        attributes = {field: feature.get(field) for field in field_names}
         geometry = feature.geom
-
-        # Convert GDAL geometry to GEOSGeometry
         geos_geometry = get_geos_geometry(geometry)
-
-        # Populate the SenateDistrict model
         try:
-            obj = SenateDistrict(
-                district_number=attributes['DISTRICT'],  
-                area=attributes['AREA'],
-                members=attributes.get('MEMBERS'),  # Use .get() if optional
-                population=attributes['POPULATION'],
-                cvap_19=attributes['CVAP_19'],
-                hsp_cvap_1=attributes['HSP_CVAP_1'],
-                doj_nh_blk=attributes['DOJ_NH_BLK'],
-                doj_nh_asn=attributes['DOJ_NH_ASN'],
-                nh_wht_c=attributes['NH_WHT_CVA'],  
-                ideal_value=attributes['IDEAL_VALU'],
-                deviation=attributes['DEVIATION'],
-                f_deviation=attributes['F_DEVIATIO'],  
-                f_cvap_19=attributes['F_CVAP_19'],
-                f_hsp_cvap_1=attributes['F_HSP_CVAP'],
-                f_doj_nh_b=attributes['F_DOJ_NH_B'],
-                f_doj_nh_a=attributes['F_DOJ_NH_A'],
-                f_nh_wht_c=attributes['F_NH_WHT_C'],
-                district_label=attributes['DISTRICT_L'],
-                geom=geos_geometry
-            )
+            obj = create_instance_func(attributes, geos_geometry)
             temp_records.append(obj)
         except Exception as e:
             print(f"Error inserting feature: {e}")
-            return  # Exit early if any insert fails
-        # If all test inserts succeeded, proceed with truncation
+            return  # Exit if any feature fails
+    
     print("All test inserts passed. Truncating table...")
-    cursor.execute('TRUNCATE TABLE "{0}" CASCADE'.format(SenateDistrict._meta.db_table))
-
+    with connection.cursor() as cursor:
+        cursor.execute(f'TRUNCATE TABLE "{model._meta.db_table}" CASCADE')
+    
+    print("Re-inserting valid records...")
     try:
         for obj in temp_records:
-            obj.save()  # Actually save the objects to the database
+            obj.save()
     except Exception as e:
-            print(f"Error saving object: {e}")
-            return  # Exit early if any insert fails
-        
-    print(f"Successfully inserted {len(temp_records)} records into Senate.")
+        print(f"Error saving object: {e}")
+        return
+    
+    print(f"Successfully inserted {len(temp_records)} records into {label}.")
+    
+    
+def upload_senate_shapefile(layer: DataSource) -> None:
+    """Uploads Senate shapefile layer using the generic uploader."""
+    def create_instance(attributes, geos_geometry):
+        return SenateDistrict(
+            district_number=attributes['DISTRICT'],
+            area=attributes['AREA'],
+            members=attributes.get('MEMBERS'),
+            population=attributes['POPULATION'],
+            cvap_19=attributes['CVAP_19'],
+            hsp_cvap_1=attributes['HSP_CVAP_1'],
+            doj_nh_blk=attributes['DOJ_NH_BLK'],
+            doj_nh_asn=attributes['DOJ_NH_ASN'],
+            nh_wht_c=attributes['NH_WHT_CVA'],
+            ideal_value=attributes['IDEAL_VALU'],
+            deviation=attributes['DEVIATION'],
+            f_deviation=attributes['F_DEVIATIO'],
+            f_cvap_19=attributes['F_CVAP_19'],
+            f_hsp_cvap_1=attributes['F_HSP_CVAP'],
+            f_doj_nh_b=attributes['F_DOJ_NH_B'],
+            f_doj_nh_a=attributes['F_DOJ_NH_A'],
+            f_nh_wht_c=attributes['F_NH_WHT_C'],
+            district_label=attributes['DISTRICT_L'],
+            geom=geos_geometry
+        )
+    generic_shapefile_uploader(layer, SenateDistrict, create_instance, "Senate")
 
 def upload_congressional_shapefile(layer: DataSource) -> None:
     """
-    Uploads data from a Congressional shapefile layer to the database.
+    Uploads data from a Congressional shapefile layer to the database using the generic uploader.
     """    
-    # Get field definitions from the layer
-    field_names = layer.fields
-    temp_records = []
-    
-    print("Testing Congressional insertion...")
-
-    for feature in layer:
-        # Create a dictionary to map field names to values
-        attributes = {field_name: feature.get(field_name) for field_name in field_names}
-        geometry = feature.geom
-
-        # Convert GDAL geometry to GEOSGeometry and ensure it is a MultiPolygon
-        geos_geometry = get_geos_geometry(geometry)
-        try:
-            # Populate the CongressionalDistrict model
-            obj = CongressionalDistrict(
-                district_number=attributes['DISTRICT_N'],  
-                area=attributes['AREA'],
-                members=attributes.get('MEMBERS'),  # Use .get() if optional
-                population=attributes['POPULATION'],
-                cvap_19=attributes['CVAP_19'],
-                hsp_cvap_1=attributes['HSP_CVAP_1'],
-                doj_nh_blk=attributes['DOJ_NH_BLK'],
-                doj_nh_asn=attributes['DOJ_NH_ASN'],
-                nh_wht_cva=attributes['NH_WHT_CVA'],  
-                ideal_value=attributes['IDEAL_VALU'],
-                deviation=attributes['DEVIATION'],
-                f_deviatio=attributes['F_DEVIATIO'],
-                multiple_f=attributes.get('MULTIPLE_F'),  # Optional
-                f_cvap_19=attributes['F_CVAP_19'],
-                f_hsp_cvap=attributes['F_HSP_CVAP'],
-                f_doj_nh_b=attributes['F_DOJ_NH_B'],
-                f_doj_nh_a=attributes['F_DOJ_NH_A'],
-                f_nh_wht_c=attributes['F_NH_WHT_C'],
-                district_label=attributes['DISTRICT_L'],
-                geom=geos_geometry
-            )
-            temp_records.append(obj)
-        except Exception as e:
-            print(f"Error inserting feature: {e}")
-            return  # Exit early if any insert fails
-        
-    # If all test inserts succeeded, proceed with truncation
-    print("All test inserts passed. Truncating table...")
-    cursor.execute('TRUNCATE TABLE "{0}" CASCADE'.format(CongressionalDistrict._meta.db_table))
-    
-    try:
-        for obj in temp_records:
-            obj.save()  # Actually save the objects to the database
-    except Exception as e:
-            print(f"Error saving object: {e}")
-            return  # Exit early if any insert fails
-        
-    print(f"Successfully inserted {len(temp_records)} records into Congressional.")
+    def create_instance(attributes, geos_geometry):
+        return CongressionalDistrict(
+            district_number=attributes['DISTRICT_N'],  
+            area=attributes['AREA'],
+            members=attributes.get('MEMBERS'),  # Use .get() if optional
+            population=attributes['POPULATION'],
+            cvap_19=attributes['CVAP_19'],
+            hsp_cvap_1=attributes['HSP_CVAP_1'],
+            doj_nh_blk=attributes['DOJ_NH_BLK'],
+            doj_nh_asn=attributes['DOJ_NH_ASN'],
+            nh_wht_cva=attributes['NH_WHT_CVA'],  
+            ideal_value=attributes['IDEAL_VALU'],
+            deviation=attributes['DEVIATION'],
+            f_deviatio=attributes['F_DEVIATIO'],
+            multiple_f=attributes.get('MULTIPLE_F'),  # Optional
+            f_cvap_19=attributes['F_CVAP_19'],
+            f_hsp_cvap=attributes['F_HSP_CVAP'],
+            f_doj_nh_b=attributes['F_DOJ_NH_B'],
+            f_doj_nh_a=attributes['F_DOJ_NH_A'],
+            f_nh_wht_c=attributes['F_NH_WHT_C'],
+            district_label=attributes['DISTRICT_L'],
+            geom=geos_geometry
+        )
+    generic_shapefile_uploader(layer, CongressionalDistrict, create_instance, "Congressional")
 
 def upload_assembly_shapefile(layer: DataSource) -> None:
     """
-    Uploads data from an Assembly shapefile layer to the database.
+    Uploads data from an Assembly shapefile layer to the database using the generic uploader.
     """
-    # Get field definitions from the layer
-    field_names = layer.fields
-    temp_records = []
-    
-    print("Testing Assembly insertion...")
-
-    # First loop: Test inserts
-    for feature in layer:
-        # Create a dictionary to map field names to values
-        attributes = {field_name: feature.get(field_name) for field_name in field_names}
-        geometry = feature.geom
-
-        # Convert GDAL geometry to GEOSGeometry and ensure it is a MultiPolygon
-        geos_geometry = get_geos_geometry(geometry)
-
-        try:
-            # create assembly district object
-            obj = AssemblyDistrict(
-                district_number=attributes['DISTRICT'],  
-                area=attributes['AREA'],
-                members=attributes.get('MEMBERS'),   # Use .get() if optional
-                population=attributes['POPULATION'],
-                cvap_19=attributes['CVAP_19'],
-                hsp_cvap_1=attributes['HSP_CVAP_1'],
-                doj_nh_blk=attributes['DOJ_NH_BLK'],
-                doj_nh_asn=attributes['DOJ_NH_ASN'],
-                nh_wht_cva=attributes['NH_WHT_CVA'],  
-                ideal_value=attributes['IDEAL_VALU'],
-                deviation=attributes['DEVIATION'],
-                f_deviatio=attributes['F_DEVIATIO'],  
-                f_cvap_19=attributes['F_CVAP_19'],
-                f_hsp_cvap=attributes['F_HSP_CVAP'],
-                f_doj_nh_b=attributes['F_DOJ_NH_B'],
-                f_doj_nh_a=attributes['F_DOJ_NH_A'],
-                f_nh_wht_c=attributes['F_NH_WHT_C'],
-                district_label=attributes['DISTRICT_L'],
-                geom=geos_geometry
-            )
-            temp_records.append(obj)
-        except Exception as e:
-            print(f"Error inserting feature: {e}")
-            return  # Exit early if any insert fails
-    
-    # If all test inserts succeeded, proceed with truncation
-    print("All test inserts passed. Truncating table...")
-    # clear the existing data
-    cursor.execute('TRUNCATE TABLE "{0}" CASCADE'.format(AssemblyDistrict._meta.db_table))
-    
-    # Second loop: Final Insert
-    print("Re-inserting valid records...")
-
-    try:
-        for obj in temp_records:
-            obj.save()  # Actually save the objects to the database
-    except Exception as e:
-            print(f"Error saving object: {e}")
-            return  # Exit early if any insert fails
-
-    print(f"Successfully inserted {len(temp_records)} records into Assembly.")
+    def create_instance(attributes, geos_geometry):
+        return AssemblyDistrict(
+            district_number=attributes['DISTRICT'],  
+            area=attributes['AREA'],
+            members=attributes.get('MEMBERS'),   # Use .get() if optional
+            population=attributes['POPULATION'],
+            cvap_19=attributes['CVAP_19'],
+            hsp_cvap_1=attributes['HSP_CVAP_1'],
+            doj_nh_blk=attributes['DOJ_NH_BLK'],
+            doj_nh_asn=attributes['DOJ_NH_ASN'],
+            nh_wht_cva=attributes['NH_WHT_CVA'],  
+            ideal_value=attributes['IDEAL_VALU'],
+            deviation=attributes['DEVIATION'],
+            f_deviatio=attributes['F_DEVIATIO'],  
+            f_cvap_19=attributes['F_CVAP_19'],
+            f_hsp_cvap=attributes['F_HSP_CVAP'],
+            f_doj_nh_b=attributes['F_DOJ_NH_B'],
+            f_doj_nh_a=attributes['F_DOJ_NH_A'],
+            f_nh_wht_c=attributes['F_NH_WHT_C'],
+            district_label=attributes['DISTRICT_L'],
+            geom=geos_geometry
+        )
+    generic_shapefile_uploader(layer, AssemblyDistrict, create_instance, "Assembly")
         
 def upload_laspa_shapefile(layer: DataSource) -> None:
     """
-    Uploads data from a Los Angeles Service Planning Area shapefile layer to the database.
+    Uploads data from a Los Angeles Service Planning Area shapefile layer to the database using the generic uploader.
     """
-    field_names = layer.fields
-    temp_records = []  # Store successful inserts before final insert
+    def create_instance(attributes, geos_geometry):
+        return LAServicePlanningArea(
+            spa=attributes.get('SPA'),
+            spa_num=attributes.get('SPA_NUM'),
+            spa_name=attributes.get('SPA_NAME'),
+            shape_star=attributes.get('SHAPE_STAr'),
+            shape_stle=attributes.get('SHAPE_STLe'),
+            geom=geos_geometry,
+        )
+    generic_shapefile_uploader(layer, LAServicePlanningArea, create_instance, "laspa")
 
-    print("Testing LASPA insertion...")
-
-    # First loop: Test inserts
-    for feature in layer:
-        attributes = {field_name: feature.get(field_name) for field_name in field_names}
-        geometry = feature.geom
-        geos_geometry = get_geos_geometry(geometry)
-
-        try:
-            # Create object but do not save (use .save() later)
-            obj = LAServicePlanningArea(
-                spa=attributes.get('SPA'),
-                spa_num=attributes.get('SPA_NUM'),
-                spa_name=attributes.get('SPA_NAME'),
-                shape_star=attributes.get('SHAPE_STAr'),
-                shape_stle=attributes.get('SHAPE_STLe'),
-                geom=geos_geometry,
-            )
-            temp_records.append(obj)  # Store successful inserts
-        except Exception as e:
-            print(f"Error inserting feature: {e}")
-            return  # Exit early if any insert fails
-
-    # **If all test inserts succeeded, proceed with truncation**
-    print("All test inserts passed. Truncating table...")
-
-    with connection.cursor() as cursor:
-        cursor.execute(f'TRUNCATE TABLE "{LAServicePlanningArea._meta.db_table}" CASCADE')
-
-    # **Second loop: Final Insert**
-    print("Re-inserting valid records...")
-
-    try:
-        for obj in temp_records:
-            obj.save()  # Actually save the objects to the database
-    except Exception as e:
-            print(f"Error saving object: {e}")
-            return  # Exit early if any insert fails
-
-    print(f"Successfully inserted {len(temp_records)} records into LAServicePlanningArea.")
-    
 def upload_hsa_shapefile(layer: DataSource) -> None:
     """
     Uploads data from a Health Service Area shapefile layer to the database.
     """
-    field_names = layer.fields
-    temp_records = []  # Store successful inserts before final insert
-
-    print("Testing HSA insertion...")
-
-    # First loop: Test inserts
-    for feature in layer:
-        attributes = {field_name: feature.get(field_name) for field_name in field_names}
-        geometry = feature.geom
-        geos_geometry = get_geos_geometry(geometry)
-
-        try:
-            # Create object but do not save (use .save() later)
-            obj = HealthServiceArea(
-                count = attributes['COUNT_'],
-                hsa_number = attributes['HSA_NUMBER'],
-                hsa_code = attributes['HSA_CODE'],
-                hsa_name = attributes['HSA_NAME'],
-                area_sqmi = attributes['AREA_SQMI'],
-                pop2000 = attributes['POP2000'],
-                popdensity = attributes['POPDENSITY'],
-                shape_star = attributes['SHAPE_STAr'],
-                shape_stle = attributes['SHAPE_STLe'],
-                geom = geos_geometry
-            )
-            temp_records.append(obj)  # Store successful inserts
-        except Exception as e:
-            print(f"Error inserting feature: {e}")
-            return  # Exit early if any insert fails
-
-    # **If all test inserts succeeded, proceed with truncation**
-    print("All test inserts passed. Truncating table...")
-
-    with connection.cursor() as cursor:
-        cursor.execute(f'TRUNCATE TABLE "{HealthServiceArea._meta.db_table}" CASCADE')
-
-    # **Second loop: Final Insert**
-    print("Re-inserting valid records...")
-
-    try:
-        for obj in temp_records:
-            obj.save()  # Actually save the objects to the database
-    except Exception as e:
-            print(f"Error saving object: {e}")
-            return  # Exit early if any insert fails
-
-    print(f"Successfully inserted {len(temp_records)} records into HealthServiceArea.")
+    def create_instance(attributes, geos_geometry):
+        return HealthServiceArea(
+            count = attributes['COUNT_'],
+            hsa_number = attributes['HSA_NUMBER'],
+            hsa_code = attributes['HSA_CODE'],
+            hsa_name = attributes['HSA_NAME'],
+            area_sqmi = attributes['AREA_SQMI'],
+            pop2000 = attributes['POP2000'],
+            popdensity = attributes['POPDENSITY'],
+            shape_star = attributes['SHAPE_STAr'],
+            shape_stle = attributes['SHAPE_STLe'],
+            geom = geos_geometry
+        )
+    generic_shapefile_uploader(layer, HealthServiceArea, create_instance, "hsa")
 
 def upload_rnsa_shapefile(layer: DataSource) -> None:
     """
     Uploads data from a Registered Nurse Shortage Area shapefile layer to the database.
     """
-    field_names = layer.fields
-    temp_records = []  # Store successful inserts before final insert
+    def create_instance(attributes, geos_geometry):
+        return RegisteredNurseShortageArea(
+            rn_area_id = attributes['RN_Area_ID'],
+            trial_rn_a = attributes['Trial_RN_A'],
+            shape_leng = attributes['Shape_Leng'],
+            shape_area = attributes['Shape_Area'],
+            rn_area_na = attributes['RN_Area_Na'],
+            population = attributes['Population'],
+            rn_lic = attributes['RN_LIC'],
+            rm_emprate = attributes['RN_EMPRATE'],
+            employed_r = attributes['Employed_R'],
+            ratio = attributes['Ratio'],
+            target_rat = attributes['Target_Rat'],
+            rnsa = attributes['RNSA'],
+            severity = attributes['Severity'],
+            effective = attributes['Effective_'],
+            geom = geos_geometry
+        )
+    generic_shapefile_uploader(layer, RegisteredNurseShortageArea, create_instance, "rnsa")
 
-    print("Testing RNSA insertion...")
-
-    # First loop: Test inserts
-    for feature in layer:
-        attributes = {field_name: feature.get(field_name) for field_name in field_names}
-        geometry = feature.geom
-        geos_geometry = get_geos_geometry(geometry)
-
-        try:
-            # Create object but do not save (use .save() later)
-            obj = RegisteredNurseShortageArea(
-                rn_area_id = attributes['RN_Area_ID'],
-                trial_rn_a = attributes['Trial_RN_A'],
-                shape_leng = attributes['Shape_Leng'],
-                shape_area = attributes['Shape_Area'],
-                rn_area_na = attributes['RN_Area_Na'],
-                population = attributes['Population'],
-                rn_lic = attributes['RN_LIC'],
-                rm_emprate = attributes['RN_EMPRATE'],
-                employed_r = attributes['Employed_R'],
-                ratio = attributes['Ratio'],
-                target_rat = attributes['Target_Rat'],
-                rnsa = attributes['RNSA'],
-                severity = attributes['Severity'],
-                effective = attributes['Effective_'],
-                geom = geos_geometry
-            )
-            temp_records.append(obj)  # Store successful inserts
-        except Exception as e:
-            print(f"Error inserting feature: {e}")
-            return  # Exit early if any insert fails
-
-    # **If all test inserts succeeded, proceed with truncation**
-    print("All test inserts passed. Truncating table...")
-
-    with connection.cursor() as cursor:
-        cursor.execute(f'TRUNCATE TABLE "{RegisteredNurseShortageArea._meta.db_table}" CASCADE')
-
-    # **Second loop: Final Insert**
-    print("Re-inserting valid records...")
-
-    try:
-        for obj in temp_records:
-            obj.save()  # Actually save the objects to the database
-    except Exception as e:
-            print(f"Error saving object: {e}")
-            return  # Exit early if any insert fails
-
-    print(f"Successfully inserted {len(temp_records)} records into RegisteredNurseShortageArea.")
     
 def upload_mssa_shapefile(layer: DataSource) -> None:
     """
     Uploads data from a Medical Service Study Area shapefile layer to the database.
     """
-    field_names = layer.fields
-    temp_records = []  # Store successful inserts before final insert
-
-    print("Testing MSSA insertion...")
-
-    # First loop: Test inserts
-    for feature in layer:
-        attributes = {field_name: feature.get(field_name) for field_name in field_names}
-        geometry = feature.geom
-        geos_geometry = get_geos_geometry(geometry)
-
-        try:
-            # Create object but do not save (use .save() later)
-            obj = MedicalServiceStudyArea(
-                fid = attributes['FID'],
-                statefp = attributes['STATEFP'],
-                countyfp = attributes['COUNTYFP'],
-                county_nm = attributes['COUNTYNM'],
-                tractce = attributes['TRACTCE'],
-                geoid = attributes['GEOID'],
-                aland = attributes['ALAND'],
-                awater = attributes['AWATER'],
-                asqmi = attributes['ASQMI'],
-                intptlat = attributes['INTPTLAT'],
-                intptlon = attributes['INTPTLON'],
-                mssaid = attributes['MSSAID'],
-                mssanm = attributes['MSSANM'],
-                definition = attributes['DEFINITION'],
-                totalpovpo = attributes['TOTALPOVPO'],
-                shape_area = attributes['Shape__Are'],
-                shape_len = attributes['Shape__Len'],
-                geom = geos_geometry
-            )
-            temp_records.append(obj)  # Store successful inserts
-        except Exception as e:
-            print(f"Error inserting feature: {e}")
-            return
-
-    # **If all test inserts succeeded, proceed with truncation**
-    print("All test inserts passed. Truncating table...")
-
-    with connection.cursor() as cursor:
-        cursor.execute(f'TRUNCATE TABLE "{MedicalServiceStudyArea._meta.db_table}" CASCADE')
-
-    # **Second loop: Final Insert**
-    print("Re-inserting valid records...")
-
-    try:
-        for obj in temp_records:
-            obj.save()  # Actually save the objects to the database
-    except Exception as e:
-            print(f"Error saving object {obj}\n: {e}")
-            return
-
-    print(f"Successfully inserted {len(temp_records)} records into MedicalServiceStudyArea.")
+    def create_instance(attributes, geos_geometry):
+        return MedicalServiceStudyArea(
+            fid = attributes['FID'],
+            statefp = attributes['STATEFP'],
+            countyfp = attributes['COUNTYFP'],
+            county_nm = attributes['COUNTYNM'],
+            tractce = attributes['TRACTCE'],
+            geoid = attributes['GEOID'],
+            aland = attributes['ALAND'],
+            awater = attributes['AWATER'],
+            asqmi = attributes['ASQMI'],
+            intptlat = attributes['INTPTLAT'],
+            intptlon = attributes['INTPTLON'],
+            mssaid = attributes['MSSAID'],
+            mssanm = attributes['MSSANM'],
+            definition = attributes['DEFINITION'],
+            totalpovpo = attributes['TOTALPOVPO'],
+            shape_area = attributes['Shape__Are'],
+            shape_len = attributes['Shape__Len'],
+            geom = geos_geometry
+        )
+    generic_shapefile_uploader(layer, MedicalServiceStudyArea, create_instance, "mssa")
     
 def upload_pcsa_shapefile(layer: DataSource) -> None:
     """
     Uploads data from a Primary Care Shortage Area shapefile layer to the database.
     """
-    field_names = layer.fields
-    temp_records = []  # Store successful inserts before final insert
+    def create_instance(attributes, geos_geometry):
+        return PrimaryCareShortageArea(
+            fid = attributes['FID'],
+            objectid = attributes['OBJECTID'],
+            unit_count = attributes['UNIT_COUNT'],
+            cnty_fips = attributes['CNTY_FIPS'],
+            mssa_id = attributes['MSSA_ID'],
+            definition = attributes['DEFINITION'],
+            area_sqmi = attributes['AREA_SQMI'],
+            mssa_count = attributes['MSSA_COUNT'],
+            mssa_name = attributes['MSSA_NAME'],
+            total_popu = attributes['Total_Popu'],
+            est_physic = attributes['EST_Physic'],
+            est_fnppa = attributes['EST_FNPPA'],
+            est_provid = attributes['EST_Provid'],
+            provider_r = attributes['Provider_R'],
+            score_prov = attributes['Score_Pove'],
+            pop_fpl = attributes['Pop_100FPL'],
+            pct_fpl = attributes['PCT_100FPL'],
+            score_pove = attributes['Score_Pove'],
+            score_tota = attributes['Score_Tota'],
+            pcsa = attributes['PCSA'],
+            effective = attributes['Effective'],
+            shape_are = attributes['Shape__Are'],
+            shape_len = attributes['Shape__Len'],
+            geom = geos_geometry
+        )
+    generic_shapefile_uploader(layer, PrimaryCareShortageArea, create_instance, "pcsa")
 
-    print("Testing PCSA insertion...")
 
-    # First loop: Test inserts
-    for feature in layer:
-        attributes = {field_name: feature.get(field_name) for field_name in field_names}
-        geometry = feature.geom
-        geos_geometry = get_geos_geometry(geometry)
-
-        try:
-            # Create object but do not save (use .save() later)
-            obj = PrimaryCareShortageArea(
-                fid = attributes['FID'],
-                objectid = attributes['OBJECTID'],
-                unit_count = attributes['UNIT_COUNT'],
-                cnty_fips = attributes['CNTY_FIPS'],
-                mssa_id = attributes['MSSA_ID'],
-                definition = attributes['DEFINITION'],
-                area_sqmi = attributes['AREA_SQMI'],
-                mssa_count = attributes['MSSA_COUNT'],
-                mssa_name = attributes['MSSA_NAME'],
-                total_popu = attributes['Total_Popu'],
-                est_physic = attributes['EST_Physic'],
-                est_fnppa = attributes['EST_FNPPA'],
-                est_provid = attributes['EST_Provid'],
-                provider_r = attributes['Provider_R'],
-                score_prov = attributes['Score_Pove'],
-                pop_fpl = attributes['Pop_100FPL'],
-                pct_fpl = attributes['PCT_100FPL'],
-                score_pove = attributes['Score_Pove'],
-                score_tota = attributes['Score_Tota'],
-                pcsa = attributes['PCSA'],
-                effective = attributes['Effective'],
-                shape_are = attributes['Shape__Are'],
-                shape_len = attributes['Shape__Len'],
-                geom = geos_geometry
-            )
-            temp_records.append(obj)  # Store successful inserts
-        except Exception as e:
-            print(f"Error inserting feature: {e}")
-            return
-
-    # **If all test inserts succeeded, proceed with truncation**
-    print("All test inserts passed. Truncating table...")
-
-    with connection.cursor() as cursor:
-        cursor.execute(f'TRUNCATE TABLE "{PrimaryCareShortageArea._meta.db_table}" CASCADE')
-
-    # **Second loop: Final Insert**
-    print("Re-inserting valid records...")
-
-    try:
-        for obj in temp_records:
-            obj.save()  # Actually save the objects to the database
-    except Exception as e:
-            print(f"Error saving object {obj}\n: {e}")
-            return
-
-    print(f"Successfully inserted {len(temp_records)} records into PrimaryCareShortageArea.")
     
