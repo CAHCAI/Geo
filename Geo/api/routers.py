@@ -59,8 +59,6 @@ def upload_shapefile(request, file: UploadedFile = File(...), file_type: str = F
     """
     Upload a shapefile (as .zip) and populate the respective model.
     """
-    # validate the file type
-    print(file_type)
     # valid shapefile types for upload, any other files will get invalid filetype
     valid_types = {"assembly", "congressional", "senate", "laspa", "hsa", "rnsa", "mssa", "pcsa"}
     # lowercase the file type
@@ -83,6 +81,13 @@ def upload_shapefile(request, file: UploadedFile = File(...), file_type: str = F
         fields = get_shapefile_metadata(shapefile_path)
         
         layer = get_shapefile_layer(shapefile_path)
+        
+        # try to identify the shapefile type
+        validated_file_type = identify_shapefile_type(fields)
+        
+        if file_type != validated_file_type:
+            print(f"mismatched filetype | valid: {validated_file_type}, given: {file_type}")
+            return JsonResponse({"success": False, "error": "Invalid selected shapefile type."})
 
         # Process the shapefile based on its type
         try:    

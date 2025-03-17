@@ -52,15 +52,22 @@ def identify_shapefile_type(fields: list[str]) -> str:
     # Congressional-specific fields
     if 'DISTRICT_N' in fields and 'MULTIPLE_F' in fields:
         return 'congressional'
-
     # Senate-specific fields
     if 'DOJ_NH_IND' in fields and 'F_CVAP_19' in fields and 'DISTRICT_L' in fields:
         return 'senate'
-
     # Assembly-specific fields
     if 'DISTRICT_L' in fields and 'HSP_CVAP_1' in fields and 'NH_WHT_CVA' in fields:
         return 'assembly'
-
+    if 'PCSA' in fields:
+        return 'pcsa'
+    if 'SPA' in fields:
+        return 'laspa'
+    if 'MSSAID' in fields:
+        return 'mssa'
+    if 'RNSA' in fields:
+        return 'rnsa'
+    if 'HSA_NUMBER' in fields:
+        return 'hsa'
     return 'unknown'
 
 def get_shapefile_layer(shapefile_path: str) -> DataSource:
