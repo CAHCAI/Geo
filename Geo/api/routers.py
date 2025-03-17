@@ -87,7 +87,7 @@ def upload_shapefile(request, file: UploadedFile = File(...), file_type: str = F
         
         if file_type != validated_file_type:
             print(f"mismatched filetype | valid: {validated_file_type}, given: {file_type}")
-            return JsonResponse({"success": False, "error": "Invalid selected shapefile type."})
+            return JsonResponse({"success": False, "error": "Invalid selected shapefile type."}, status=400)
 
         # Process the shapefile based on its type
         try:    
@@ -108,14 +108,14 @@ def upload_shapefile(request, file: UploadedFile = File(...), file_type: str = F
             elif file_type == "pcsa":
                 upload_pcsa_shapefile(layer)
             else:
-                return JsonResponse({"success": False, "error": "Unknown shapefile type"})
+                return JsonResponse({"success": False, "error": "Unknown shapefile type", "status":400}, status=400)
         except Exception as e:
             print(f"Error uploading shapefile of type {file_type}: {e}")
-            return JsonResponse({"success" : False, "message": f"Shapefile of type '{file_type}' failed: {e}"})
+            return JsonResponse({"success" : False, "message": f"Shapefile of type '{file_type}' failed: {e}"}, status=400)
         # return on success
         return JsonResponse({"success" : True, "message": f"Shapefile of type '{file_type}' uploaded and processed successfully."})
     except Exception as e:
-        return JsonResponse({"success": False, "error": f"Error response {e}"})
+        return JsonResponse({"success": False, "error": f"Error response {e}"}, status=400)
     finally:
         # Cleanup the temporary directory
         tmp_dir.cleanup()
