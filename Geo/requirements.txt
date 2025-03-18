@@ -17,3 +17,7 @@ numpy>=1.0.0
 wheel>=0.37.0
 setuptools>=67.0.0
 gdal==3.4.1
+
+djangorestframework
+psycopg2
+openpyxl

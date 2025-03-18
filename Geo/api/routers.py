@@ -23,6 +23,12 @@ from django.contrib.gis.db.models.functions import AsGeoJSON
 from .models import AssemblyDistrict, SenateDistrict, CongressionalDistrict
 import json
 from Geo.cache import cache, TTL
+from typing import List, Optional
+import openpyxl
+from django.db import transaction
+from .models import OverrideLocation
+
+
 
 # Directory to temporarily store uploaded shapefiles
 UPLOAD_DIR = os.path.join(settings.MEDIA_ROOT, "shapefiles")
@@ -30,6 +36,7 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # Create a router instance
 router = Router()
+
 
 @router.get("/test")
 def test(request):
@@ -295,3 +302,108 @@ def override_location(request, data: OverrideLocationSchema):
     print(f"Received Data - Coordinates: ({data.lat}, {data.lon}), Address: {data.address}")
 
     return JsonResponse({"success": True, "message": "Coordinates and address logged successfully."})
+
+class OverrideLocationIn(Schema):
+    address: str
+    latitude: float
+    longitude: float
+    
+class OverrideLocationOut(Schema):
+    id: int
+    address: str
+    latitude: float
+    longitude: float
+    
+    
+@router.post("/manual-overrides/upload-xlsx")
+def upload_overrides_xlsx(request, file: UploadedFile = File(...)):
+    """
+    Expects an XLSX with:
+    1) Address
+    2) Latitude
+    3) Longitude
+
+    Example row: "123 Example St" | 40.7128 | -74.0060
+    """
+    try:
+        # Load the workbook in memory
+        wb = openpyxl.load_workbook(file.file)
+        sheet = wb.active  # or specify sheet name
+
+        new_overrides = []
+        # If row 1 is a header, start from row=2
+        for row in sheet.iter_rows(min_row=2, values_only=True):
+            address, lat, lon = row[0], row[1], row[2]
+            if address and lat is not None and lon is not None:
+                new_overrides.append(
+                    OverrideLocation(address=address, latitude=lat, longitude=lon)
+                )
+
+        if not new_overrides:
+            return {"success": False, "message": "No valid rows found in XLSX"}
+
+        with transaction.atomic():
+            OverrideLocation.objects.bulk_create(new_overrides)
+
+        return {
+            "success": True,
+            "message": f"Inserted {len(new_overrides)} overrides from XLSX."
+        }
+
+    except Exception as e:
+        return {"success": False, "message": str(e)}
+
+
+@router.get("/manual-overrides", response=List[OverrideLocationOut])
+def list_overrides(request):
+    """
+    GET /manual-overrides
+    Returns all override entries.
+    """
+    qs = OverrideLocation.objects.all()
+    return qs
+
+
+@router.post("/manual-overrides", response=OverrideLocationOut)
+def create_override(request, payload: OverrideLocationIn):
+    """
+    POST /manual-overrides
+    Creates a single override entry.
+    """
+    print(OverrideLocationIn)
+    obj = OverrideLocation.objects.create(**payload.dict())
+    return obj
+
+
+@router.get("/manual-overrides/{override_id}", response=OverrideLocationOut)
+def retrieve_override(request, override_id: int):
+    """
+    GET /manual-overrides/{override_id}
+    Retrieves a single override entry by its ID.
+    """
+    obj = OverrideLocation.objects.get(id=override_id)
+    return obj
+
+
+@router.put("/manual-overrides/{override_id}", response=OverrideLocationOut)
+def update_override(request, override_id: int, payload: OverrideLocationIn):
+    """
+    PUT /manual-overrides/{override_id}
+    Fully updates an override entry by its ID.
+    """
+    obj = OverrideLocation.objects.get(id=override_id)
+    for attr, value in payload.dict().items():
+        setattr(obj, attr, value)
+    obj.save()
+    return obj
+
+
+@router.delete("/manual-overrides/{override_id}")
+def delete_override(request, override_id: int):
+    """
+    DELETE /manual-overrides/{override_id}
+    Deletes an override entry by its ID.
+    """
+    obj = OverrideLocation.objects.get(id=override_id)
+    obj.delete()
+    return {"success": True, "message": f"Override {override_id} deleted"}
