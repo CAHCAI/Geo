@@ -18,6 +18,7 @@ identify_shapefile_type, upload_assembly_shapefile, upload_congressional_shapefi
 upload_laspa_shapefile, upload_senate_shapefile, get_shapefile_layer, to_dict, 
 upload_hsa_shapefile, upload_rnsa_shapefile, upload_mssa_shapefile, upload_pcsa_shapefile)
 # end utility functions
+from django.shortcuts import get_object_or_404
 from django.db import connection
 from django.contrib.gis.db.models.functions import AsGeoJSON
 from .models import AssemblyDistrict, SenateDistrict, CongressionalDistrict
@@ -326,33 +327,37 @@ def upload_overrides_xlsx(request, file: UploadedFile = File(...)):
     Example row: "123 Example St" | 40.7128 | -74.0060
     """
     try:
-        # Load the workbook in memory
         wb = openpyxl.load_workbook(file.file)
-        sheet = wb.active  # or specify sheet name
+        sheet = wb.active  # or specify a sheet name
 
         new_overrides = []
         # If row 1 is a header, start from row=2
         for row in sheet.iter_rows(min_row=2, values_only=True):
             address, lat, lon = row[0], row[1], row[2]
+            #print(f"Row data: address={address}, lat={lat}, lon={lon}")
             if address and lat is not None and lon is not None:
                 new_overrides.append(
                     OverrideLocation(address=address, latitude=lat, longitude=lon)
                 )
 
+        print(f"Parsed {len(new_overrides)} new overrides.")
+
         if not new_overrides:
+            print("No valid rows found in XLSX.")
             return {"success": False, "message": "No valid rows found in XLSX"}
 
         with transaction.atomic():
             OverrideLocation.objects.bulk_create(new_overrides)
 
+        print(f"Inserted {len(new_overrides)} overrides into the database.")
         return {
             "success": True,
             "message": f"Inserted {len(new_overrides)} overrides from XLSX."
         }
 
     except Exception as e:
-        return {"success": False, "message": str(e)}
-
+        print(f"Error during XLSX upload: {e}")
+        return {"success": False, "message": f"Error processing XLSX: {str(e)}"}
 
 @router.get("/manual-overrides", response=List[OverrideLocationOut])
 def list_overrides(request):
@@ -360,8 +365,14 @@ def list_overrides(request):
     GET /manual-overrides
     Returns all override entries.
     """
-    qs = OverrideLocation.objects.all()
-    return qs
+    try:
+        qs = OverrideLocation.objects.all()
+        count = qs.count()
+        print(f"Found {count} override(s) in the database.")
+        return qs
+    except Exception as e:
+        print(f"Error listing overrides: {e}")
+        return []  # or raise HttpError(400, f"Error: {e}")
 
 
 @router.post("/manual-overrides", response=OverrideLocationOut)
@@ -370,9 +381,17 @@ def create_override(request, payload: OverrideLocationIn):
     POST /manual-overrides
     Creates a single override entry.
     """
-    print(OverrideLocationIn)
-    obj = OverrideLocation.objects.create(**payload.dict())
-    return obj
+    print(f"Creating new override with data: {payload.dict()}")
+    try:
+        obj = OverrideLocation.objects.create(**payload.dict())
+        print(f"Override created with ID={obj.id}")
+        return obj
+    except Exception as e:
+        print(f"Error creating override: {e}")
+        # Return a fallback or raise an exception
+        # but we must conform to response=OverrideLocationOut
+        # So let's do a minimal approach:
+        raise Exception(f"Failed to create override: {str(e)}")
 
 
 @router.get("/manual-overrides/{override_id}", response=OverrideLocationOut)
@@ -381,8 +400,14 @@ def retrieve_override(request, override_id: int):
     GET /manual-overrides/{override_id}
     Retrieves a single override entry by its ID.
     """
-    obj = OverrideLocation.objects.get(id=override_id)
-    return obj
+    print(f"Retrieving override with ID={override_id}")
+    try:
+        obj = get_object_or_404(OverrideLocation, id=override_id)
+        print(f"Found override: {obj}")
+        return obj
+    except Exception as e:
+        print(f"Error retrieving override {override_id}: {e}")
+        raise Exception(f"Failed to retrieve override: {str(e)}")
 
 
 @router.put("/manual-overrides/{override_id}", response=OverrideLocationOut)
@@ -391,12 +416,17 @@ def update_override(request, override_id: int, payload: OverrideLocationIn):
     PUT /manual-overrides/{override_id}
     Fully updates an override entry by its ID.
     """
-    obj = OverrideLocation.objects.get(id=override_id)
-    for attr, value in payload.dict().items():
-        setattr(obj, attr, value)
-    obj.save()
-    return obj
-
+    print(f"Updating override with ID={override_id} using data={payload.dict()}")
+    try:
+        obj = get_object_or_404(OverrideLocation, id=override_id)
+        for attr, value in payload.dict().items():
+            setattr(obj, attr, value)
+        obj.save()
+        print(f"Override with ID={override_id} updated successfully.")
+        return obj
+    except Exception as e:
+        print(f"Error updating override {override_id}: {e}")
+        raise Exception(f"Failed to update override: {str(e)}")
 
 @router.delete("/manual-overrides/{override_id}")
 def delete_override(request, override_id: int):
@@ -404,6 +434,13 @@ def delete_override(request, override_id: int):
     DELETE /manual-overrides/{override_id}
     Deletes an override entry by its ID.
     """
-    obj = OverrideLocation.objects.get(id=override_id)
-    obj.delete()
-    return {"success": True, "message": f"Override {override_id} deleted"}
+    print(f"Deleting override with ID={override_id}")
+    try:
+        obj = get_object_or_404(OverrideLocation, id=override_id)
+        obj.delete()
+        msg = f"Override {override_id} deleted"
+        print(msg)
+        return {"success": True, "message": msg}
+    except Exception as e:
+        print(f"Error deleting override {override_id}: {e}")
+        return {"success": False, "message": f"Failed to delete: {str(e)}"}
