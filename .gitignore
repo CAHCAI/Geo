@@ -162,3 +162,5 @@ cython_debug/
 node_modules
 react-front-end-wip/Geo_app/package-lock.json
 react-front-end-wip/Geo_app/package.json
+package.json
+package-lock.json

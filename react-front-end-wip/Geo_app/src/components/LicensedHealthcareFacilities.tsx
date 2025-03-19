@@ -6,6 +6,9 @@ import { Input } from "@/components/ui/input";
 import { FixedSizeList as List } from "react-window";
 import debounce from "lodash.debounce";
 
+/**
+ * Defines the shape of facility data parsed from the Excel file.
+ */
 type FacilityData = {
   hcai_id: string;
   facility_id: string;
@@ -18,15 +21,18 @@ type FacilityData = {
   zipcode: string;
   county: string;
   status: string;
-  teaching_hospital: boolean; // Boolean values instead of string
-  rural_hospital: boolean; // Boolean values instead of string
+  teaching_hospital: boolean;
+  rural_hospital: boolean;
   license_category: string;
   control_type: string;
   license_type: string;
   control_type_category: string;
-  dsh: boolean; // Boolean values instead of string
+  dsh: boolean;
 };
 
+/**
+ * Columns for both desktop table and mobile card layout.
+ */
 const tableColumns = [
   { Header: "HCAI ID", accessor: "hcai_id" },
   { Header: "Facility ID", accessor: "facility_id" },
@@ -48,13 +54,21 @@ const tableColumns = [
   { Header: "DSH", accessor: "dsh" },
 ];
 
-// Updated filterData function
-const filterData = (data: FacilityData[], filters: Record<string, string>) => {
-  return data.filter((row) =>
+/**
+ * Filters the data based on:
+ *  1) Individual column filters (desktop).
+ *  2) A global search string that checks all columns.
+ */
+function filterData(
+  data: FacilityData[],
+  filters: Record<string, string>,
+  globalSearch: string
+) {
+  // First, apply column-based filters.
+  let filtered = data.filter((row) =>
     Object.entries(filters).every(([key, value]) => {
       if (value === "") return true;
 
-      // Handle boolean columns
       if (
         key === "teaching_hospital" ||
         key === "rural_hospital" ||
@@ -63,16 +77,53 @@ const filterData = (data: FacilityData[], filters: Record<string, string>) => {
         return row[key as keyof FacilityData] === (value === "true");
       }
 
-      // Handle string columns
       const rowValue = row[key as keyof FacilityData];
       if (typeof rowValue === "string") {
         return rowValue.toLowerCase().includes(value.toLowerCase());
       }
-
       return false;
     })
   );
-};
+
+  // Then, apply a global search if provided.
+  if (globalSearch.trim()) {
+    const searchLower = globalSearch.toLowerCase();
+    filtered = filtered.filter((row) =>
+      tableColumns.some((col) => {
+        const cellValue = row[col.accessor as keyof FacilityData];
+        if (typeof cellValue === "boolean") {
+          return cellValue.toString().toLowerCase().includes(searchLower);
+        }
+        return (cellValue as string)?.toLowerCase().includes(searchLower);
+      })
+    );
+  }
+
+  return filtered;
+}
+
+/**
+ * Highlights any substring of 'text' that matches 'search' (case-insensitive).
+ */
+function highlightText(text: string, search: string): React.ReactNode {
+  if (!search.trim()) return text;
+  const regex = new RegExp(`(${search})`, "gi");
+  const parts = text.split(regex);
+
+  return (
+    <>
+      {parts.map((part, i) =>
+        regex.test(part) ? (
+          <mark key={i} className="bg-yellow-200">
+            {part}
+          </mark>
+        ) : (
+          part
+        )
+      )}
+    </>
+  );
+}
 
 const LicensedHealthcareFacilities: React.FC = () => {
   const [filters, setFilters] = useState<Record<string, string>>(
@@ -80,10 +131,14 @@ const LicensedHealthcareFacilities: React.FC = () => {
   );
   const [tableData, setTableData] = useState<FacilityData[]>([]);
   const [originalData, setOriginalData] = useState<FacilityData[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true); // Add loading state
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [globalSearch, setGlobalSearch] = useState<string>("");
 
+  /**
+   * Loads Excel data on mount, then parses it into JSON.
+   */
   useEffect(() => {
-    const fetchData = async () => {
+    async function fetchData() {
       try {
         const response = await fetch("/Health-Care-Facilities.xlsx");
         const blob = await response.blob();
@@ -93,35 +148,39 @@ const LicensedHealthcareFacilities: React.FC = () => {
           workbook.Sheets[sheetName]
         );
         setTableData(jsonData);
-        setOriginalData(jsonData); // Save the original data
-        setIsLoading(false); // Set loading to false after data is loaded
+        setOriginalData(jsonData);
       } catch (error) {
         console.error("Error loading XLSX data:", error);
-        setIsLoading(false); // Set loading to false in case of error as well
+      } finally {
+        setIsLoading(false);
       }
-    };
-
+    }
     fetchData();
   }, []);
 
-  // Debounce function for filter updates
+  /**
+   * Debounced input handler for column-based filters.
+   */
   const handleFilterChange = debounce((accessor: string, value: string) => {
     setFilters((prev) => ({ ...prev, [accessor]: value }));
   }, 300);
 
-  // Memoize the filtered data to avoid recalculating on each render
+  /**
+   * Memoized filtered data for both desktop & mobile usage.
+   */
   const filteredData = useMemo(
-    () => filterData(originalData, filters),
-    [filters, originalData]
+    () => filterData(originalData, filters, globalSearch),
+    [filters, originalData, globalSearch]
   );
 
+  /**
+   * Renders the header row for the desktop table (with filter inputs).
+   */
   const HeaderRow = () => (
     <div className="grid grid-flow-col grid-cols-17 gap-x-4 bg-white sticky top-0 z-10 p-2 border-b border-gray-200">
       {tableColumns.map((col) => (
         <div key={col.accessor} className="min-w-[150px]">
-          <label className="text-sm text-gray-700 font-bold">
-            {col.Header}
-          </label>
+          <label className="text-sm text-gray-700 font-bold">{col.Header}</label>
           <Input
             placeholder={`Filter ${col.Header}`}
             value={filters[col.accessor]}
@@ -133,6 +192,9 @@ const LicensedHealthcareFacilities: React.FC = () => {
     </div>
   );
 
+  /**
+   * Desktop table row for each item (react-window).
+   */
   const Row = ({
     index,
     style,
@@ -154,7 +216,6 @@ const LicensedHealthcareFacilities: React.FC = () => {
             className="min-w-[150px] truncate"
             title={row[col.accessor as keyof FacilityData]?.toString()}
           >
-            {/* Display boolean columns as true/false strings */}
             {typeof row[col.accessor as keyof FacilityData] === "boolean"
               ? row[col.accessor as keyof FacilityData]
                 ? "true"
@@ -166,9 +227,46 @@ const LicensedHealthcareFacilities: React.FC = () => {
     );
   };
 
+  /**
+   * Mobile card layout row for each item (react-window).
+   */
+  const CardRow = ({
+    index,
+    style,
+  }: {
+    index: number;
+    style: React.CSSProperties;
+  }) => {
+    const row = filteredData[index];
+    return (
+      <div
+        style={style}
+        className={`p-4 mb-4 shadow-md rounded border ${
+          index % 2 === 0 ? "bg-white" : "bg-gray-50"
+        }`}
+      >
+        {tableColumns.map((col) => {
+          const cellValue = row[col.accessor as keyof FacilityData];
+          const text =
+            typeof cellValue === "boolean"
+              ? cellValue
+                ? "true"
+                : "false"
+              : (cellValue ?? "").toString();
+          return (
+            <p key={col.accessor} className="text-sm text-gray-700 mb-1 break-words">
+              <strong>{col.Header}:</strong> {highlightText(text, globalSearch)}
+            </p>
+          );
+        })}
+      </div>
+    );
+  };
+
   return (
     <main className="container mx-auto pt-5 px-4 space-y-4">
-      <section className="border border-gray-300 rounded-lg p-4 shadow-md bg-white overflow-x-auto">
+      {/* Desktop layout */}
+      <section className="hidden md:block border border-gray-300 rounded-lg p-4 shadow-md bg-white overflow-x-auto">
         <div className="w-full min-w-[1810px]">
           {isLoading ? (
             <div className="flex justify-center items-center h-64">
@@ -177,12 +275,7 @@ const LicensedHealthcareFacilities: React.FC = () => {
           ) : (
             <>
               <HeaderRow />
-              <List
-                height={600}
-                itemCount={filteredData.length}
-                itemSize={40}
-                width="166%"
-              >
+              <List height={600} itemCount={filteredData.length} itemSize={40} width="166%">
                 {Row}
               </List>
               {filteredData.length === 0 && (
@@ -193,6 +286,35 @@ const LicensedHealthcareFacilities: React.FC = () => {
             </>
           )}
         </div>
+      </section>
+
+      {/* Mobile layout */}
+      <section className="md:hidden">
+        <div className="mb-4">
+          <Input
+            placeholder="Search..."
+            value={globalSearch}
+            onChange={(e) => setGlobalSearch(e.target.value)}
+            className="w-full px-3 py-2 border rounded"
+          />
+        </div>
+        {isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
+          </div>
+        ) : (
+          <>
+            {filteredData.length === 0 ? (
+              <div className="text-center py-4 text-gray-500">
+                No facilities found matching the current filters
+              </div>
+            ) : (
+              <List height={600} itemCount={filteredData.length} itemSize={490} width="100%">
+                {CardRow}
+              </List>
+            )}
+          </>
+        )}
       </section>
     </main>
   );
