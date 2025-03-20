@@ -5,6 +5,12 @@ import { Input } from "@/components/ui/input";
 import Table from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 
+interface Alert {
+  id: number;
+  type: "error" | "success" | "info";
+  message: string;
+}
+
 export const InputWithButton: React.FC<{
   searchQuery: string;
   setSearchQuery: (value: string) => void;
@@ -51,15 +57,16 @@ const HpsaSearchPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchResults, setSearchResults] = useState<any>(null);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
 
   const fetchResults = async () => {
     console.log("fetchResults function triggered.");
-
     setError(null);
 
     if (!searchQuery.trim()) {
       console.error("No search query provided.");
       setError("Please enter valid coordinates.");
+      addAlert("error", "Please enter valid coordinates.");
       return;
     }
 
@@ -72,6 +79,7 @@ const HpsaSearchPage: React.FC = () => {
       if (isNaN(lat) || isNaN(lng)) {
         console.error("Invalid coordinates:", lat, lng);
         setError("Invalid coordinate format. Use: lat, lng");
+        addAlert("error", "Invalid coordinate format. Use: lat, lng");
         return;
       }
 
@@ -95,16 +103,39 @@ const HpsaSearchPage: React.FC = () => {
       ) {
         console.warn("No results found.");
         setError("No results found.");
+        addAlert("error", "No results found.");
       } else {
         setSearchResults(data);
         console.table(data);
+        addAlert("success", "Search results retrieved successfully.");
       }
     } catch (error) {
       console.error("Error fetching search results:", error);
       setError("Failed to retrieve data.");
+      addAlert("error", "Failed to retrieve data.");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Add a new alert
+  const addAlert = (type: Alert["type"], message: string) => {
+    const newAlert: Alert = {
+      id: Date.now(),
+      type,
+      message,
+    };
+    setAlerts((prevAlerts) => [...prevAlerts, newAlert]);
+
+    // Automatically remove the alert after 10 seconds
+    setTimeout(() => {
+      removeAlert(newAlert.id);
+    }, 10000);
+  };
+
+  // Remove an alert by id
+  const removeAlert = (id: number) => {
+    setAlerts((prevAlerts) => prevAlerts.filter((alert) => alert.id !== id));
   };
 
   // Column definitions
@@ -254,6 +285,40 @@ const HpsaSearchPage: React.FC = () => {
       </header>
 
       <div className="container mx-auto pt-5 px-4 space-y-4">
+        {/* Alerts Section */}
+        <section
+          className="bg-gray-50 rounded-lg shadow-lg p-6 mb-6"
+          role="region"
+          aria-labelledby="alerts-heading"
+        >
+          <h2
+            id="alerts-heading"
+            className="text-xl font-semibold text-gray-700 mb-4"
+          >
+            Alerts
+          </h2>
+          {alerts.length === 0 ? (
+            <p className="text-gray-600">No new alerts at the moment.</p>
+          ) : (
+            <div className="space-y-2">
+              {alerts.map((alert) => (
+                <div
+                  key={alert.id}
+                  className={`p-4 rounded-lg ${
+                    alert.type === "error"
+                      ? "bg-red-100 text-red-700"
+                      : alert.type === "success"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-blue-100 text-blue-700"
+                  }`}
+                >
+                  <p>{alert.message}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
         <InputWithButton
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
