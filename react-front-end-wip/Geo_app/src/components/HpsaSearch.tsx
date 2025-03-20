@@ -91,7 +91,7 @@ const HpsaSearchPage: React.FC = () => {
 
       if (
         Object.keys(data).length === 0 ||
-        (!data.senate && !data.assembly && !data.congressional)
+        (!data.senate && !data.assembly && !data.congressional && !data.hsa)
       ) {
         console.warn("No results found.");
         setError("No results found.");
@@ -133,7 +133,7 @@ const HpsaSearchPage: React.FC = () => {
     { Header: "Health Service Area", accessor: "HealthServiceArea" },
   ];
   const laServicePlanningAreaColumns = [
-    { Header: "LA Service Planning Area", accessor: "LAServiceArea" },
+    { Header: "LA Service Planning Area", accessor: "spa_name" },
   ];
   const assemblyDistrictColumns = [
     { Header: "Number", accessor: "district_number" },
@@ -164,7 +164,11 @@ const HpsaSearchPage: React.FC = () => {
       MUA: "No",
       MUP: "No",
       PCSA: "Yes (7)",
-      RNSA: "No",
+      RNSA: searchResults?.RegisteredNurseShortageArea?.length
+      ? searchResults.RegisteredNurseShortageArea.map(item => 
+          `${item.rnsa} (${item.Effective})`
+        )
+      : "N/A",
     },
   ];
 
@@ -215,6 +219,25 @@ const HpsaSearchPage: React.FC = () => {
     congressionalDistrictColumns
   );
 
+  const transposedHealthServiceAreaData = transposeData(
+    searchResults?.healthservicearea?.length
+      ? searchResults.healthservicearea
+      : [{ hsa_name: "N/A" }],
+    healthServiceAreaColumns
+  );
+
+  const transposedLAServicePlanningData = transposeData(
+    searchResults?.laplanning || [],
+    laServicePlanningAreaColumns
+  );
+ 
+  const transposedRNSAData = transposeData(
+    searchResults?.RegisteredNurseShortageArea?.length
+      ? searchResults.RegisteredNurseShortageArea.map(item => ({ rnsa: item.rnsa }))
+      : [{ rnsa: "N/A" }],
+    [{ Header: "RNSA", accessor: "rnsa" }]
+  );
+  
   return (
     <>
       <a
@@ -285,8 +308,10 @@ const HpsaSearchPage: React.FC = () => {
                   Health Service Area
                 </h3>
                 <Table
-                  columns={healthServiceAreaColumns}
-                  data={healthServiceAreaData}
+                  columns={[{ Header: "Health Service Area", accessor: "hsa_name" }]}
+                  data={searchResults?.healthservicearea?.length? searchResults.healthservicearea.map(item => ({hsa_name: item.hsa_name,}))
+                  : [{ hsa_name: "N/A" }]
+                  }
                 />
               </div>
               <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white max-h-[250px] sm:max-h-[300px] overflow-auto">
@@ -294,8 +319,10 @@ const HpsaSearchPage: React.FC = () => {
                   LA Service Planning Area
                 </h3>
                 <Table
-                  columns={laServicePlanningAreaColumns}
-                  data={laServicePlanningAreaData}
+                  columns={[{ Header: "LA Service Planning Area", accessor: "spa_name" }]}
+                  data={searchResults?.LaServicePlanning?.length? searchResults.LaServicePlanning.map(item => ({ spa_name: item.spa_name }))
+                  : [{ spa_name: "N/A" }]
+                  }
                 />
               </div>
             </div>

@@ -263,7 +263,7 @@ def all_districts_data(request):
         RegisteredNurseShortageArea.objects
         .annotate(geom_geojson=AsGeoJSON('geom'))
         .values(
-            'rnsa','population', 'geom_geojson'
+            'rnsa','severity', 'geom_geojson'
         )
     )
     rnsa_data = list(rnsa_qs)
@@ -302,11 +302,22 @@ def all_districts_data(request):
 def coordinate_search(request, lat: float, lng: float):
     """
     Search the district tables for polygons containing (lat, lng).
-    """ 
-    # ✅ Create a GIS point
+    """
+    
+    cache_key = f"{lat}_{lng}"
+    
+    try:
+        cache_value = cache.get(cache_key)
+        if cache_value:    
+            cache_value = json.loads(cache_value)
+            cache_value["used_cache"] = True
+            return JsonResponse(cache_value, safe=False) 
+    except Exception as e:
+        return JsonResponse({"success": False, "message": f"Error: {e}"}, safe=False)
+        
+    
     point = Point(lng, lat, srid=4326)
 
-    # ✅ Run spatial queries
     senate_matches = SenateDistrict.objects.filter(geom__contains=point)
     assembly_matches = AssemblyDistrict.objects.filter(geom__contains=point)
     congressional_matches = CongressionalDistrict.objects.filter(geom__contains=point)
@@ -316,7 +327,7 @@ def coordinate_search(request, lat: float, lng: float):
     medicalservicestudyarea_matches = MedicalServiceStudyArea.objects.filter(geom__contains=point)
     primarycareshortagearea_matches = PrimaryCareShortageArea.objects.filter(geom__contains=point)
 
-    response_value = {
+    cache_value = {
         "senate": [to_dict(d) for d in senate_matches],
         "assembly": [to_dict(d) for d in assembly_matches],
         "congressional": [to_dict(d) for d in congressional_matches],
@@ -327,7 +338,14 @@ def coordinate_search(request, lat: float, lng: float):
         "PrimaryCareShortageArea": [to_pcsa_dict(d) for d in primarycareshortagearea_matches], 
     }
 
-    return JsonResponse(response_value, safe=False)
+    if any(cache_value.values()):  # Check if any list has data
+        try:
+            cache.set(cache_key, json.dumps(cache_value), ex=TTL)  #Stores in cache
+        except Exception as e:
+            return JsonResponse({"success": False, "message": f"Cache error: {e}"}, safe=False)
+
+    return JsonResponse(cache_value, safe=False) 
+
 
 # Define a schema for expected data
 class OverrideLocationSchema(Schema):
@@ -507,6 +525,7 @@ def to_rnsa_dict(obj):
 
     return {
         "rnsa": obj.rnsa,
+        "Effective": obj.severity,
     }
 
 def to_mssa_dict(obj):
