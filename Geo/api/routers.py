@@ -21,7 +21,7 @@ upload_hsa_shapefile, upload_rnsa_shapefile, upload_mssa_shapefile, upload_pcsa_
 from django.shortcuts import get_object_or_404
 from django.db import connection
 from django.contrib.gis.db.models.functions import AsGeoJSON
-from .models import AssemblyDistrict, SenateDistrict, CongressionalDistrict
+from .models import AssemblyDistrict, SenateDistrict, CongressionalDistrict, HealthServiceArea, MedicalServiceStudyArea,RegisteredNurseShortageArea, LAServicePlanningArea, PrimaryCareShortageArea
 import json
 from Geo.cache import cache, TTL
 from typing import List, Optional
@@ -240,54 +240,94 @@ def all_districts_data(request):
     )
     congress_data = list(congress_qs)
 
+    # HSA with GeoJSON
+    hsa_qs = (
+        HealthServiceArea.objects
+        .annotate(geom_geojson=AsGeoJSON('geom'))
+        .values(
+            'hsa_name', 'geom_geojson'
+        )
+    )
+    hsa_data = list(hsa_qs)
+
+    laspa_qs = (
+        LAServicePlanningArea.objects
+        .annotate(geom_geojson=AsGeoJSON('geom'))
+        .values(
+            'spa_name', 'geom_geojson'
+        )
+    )
+    laspa_data = list(laspa_qs)
+
+    rnsa_qs = (
+        RegisteredNurseShortageArea.objects
+        .annotate(geom_geojson=AsGeoJSON('geom'))
+        .values(
+            'rnsa','population', 'geom_geojson'
+        )
+    )
+    rnsa_data = list(rnsa_qs)
+
+    mssa_qs = (
+        MedicalServiceStudyArea.objects
+        .annotate(geom_geojson=AsGeoJSON('geom'))
+        .values(
+            'mssaid', 'geom_geojson'
+        )
+    )
+    mssa_data = list(mssa_qs)
+
+    pcsa_qs = (
+        PrimaryCareShortageArea.objects
+        .annotate(geom_geojson=AsGeoJSON('geom'))
+        .values(
+            'pcsa', 'geom_geojson'
+        )
+    )
+    pcsa_data = list(pcsa_qs)
+
+
     return JsonResponse({
         "assembly_districts": assembly_data,
         "senate_districts": senate_data,
         "congressional_districts": congress_data,
+        "health_service_data": hsa_data,
+        "la_service_planning": laspa_data,
+        "rnsa": rnsa_data,
+        "mssa": mssa_data,
+        "pcsa": pcsa_data,
     })
 
 @router.get("/search")
 def coordinate_search(request, lat: float, lng: float):
     """
     Search the district tables for polygons containing (lat, lng).
-    """
-    
-    cache_key = f"{lat}_{lng}"
-    
-    # check if this point has been searched for recently in the cache
-    try:
-        cache_value = cache.get(cache_key)
-        if cache_value:    
-            cache_value = json.loads(cache_value)
-            cache_value["used_cache"] = True
-            return cache_value
-    except Exception as e:
-        return {"success": False, "message": f"Error: {e}"}
-        
-    # this runs if the lat long key was not found in the cache
+    """ 
+    # ✅ Create a GIS point
     point = Point(lng, lat, srid=4326)
-    
-    senate_matches = SenateDistrict.objects.filter(geom__contains=point).distinct("district_number")
-    assembly_matches = AssemblyDistrict.objects.filter(geom__contains=point).distinct("district_number")
-    congressional_matches = CongressionalDistrict.objects.filter(geom__contains=point).distinct("district_number")
-    
-    # Convert to lists of dictionaries before caching
-    cache_value = {
+
+    # ✅ Run spatial queries
+    senate_matches = SenateDistrict.objects.filter(geom__contains=point)
+    assembly_matches = AssemblyDistrict.objects.filter(geom__contains=point)
+    congressional_matches = CongressionalDistrict.objects.filter(geom__contains=point)
+    healthservicearea_matches = HealthServiceArea.objects.filter(geom__contains=point)
+    laserviceplanningarea_matches = LAServicePlanningArea.objects.filter(geom__contains=point)
+    registerednurseshortagearea_matches = RegisteredNurseShortageArea.objects.filter(geom__contains=point)
+    medicalservicestudyarea_matches = MedicalServiceStudyArea.objects.filter(geom__contains=point)
+    primarycareshortagearea_matches = PrimaryCareShortageArea.objects.filter(geom__contains=point)
+
+    response_value = {
         "senate": [to_dict(d) for d in senate_matches],
         "assembly": [to_dict(d) for d in assembly_matches],
         "congressional": [to_dict(d) for d in congressional_matches],
+        "healthservicearea": [to_hsa_dict(d) for d in healthservicearea_matches],
+        "LaServicePlanning": [to_laspa_dict(d) for d in laserviceplanningarea_matches],  
+        "RegisteredNurseShortageArea": [to_rnsa_dict(d) for d in registerednurseshortagearea_matches],
+        "MedicalServiceStudyArea": [to_mssa_dict(d) for d in medicalservicestudyarea_matches],
+        "PrimaryCareShortageArea": [to_pcsa_dict(d) for d in primarycareshortagearea_matches], 
     }
-    # Don't cache if all results are empty
-    if senate_matches.exists() or assembly_matches.exists() or congressional_matches.exists():
-        try:
-            # Create a cached value with a TTL
-            cache.set(cache_key, json.dumps(cache_value), ex=TTL)
-        except Exception as e:
-            return {"success": False, "message": f"Error: {e}"}
 
-    return cache_value
-
-
+    return JsonResponse(response_value, safe=False)
 
 # Define a schema for expected data
 class OverrideLocationSchema(Schema):
@@ -444,3 +484,44 @@ def delete_override(request, override_id: int):
     except Exception as e:
         print(f"Error deleting override {override_id}: {e}")
         return {"success": False, "message": f"Failed to delete: {str(e)}"}
+    
+def to_hsa_dict(obj):
+    if not obj:
+        return {"N/A"}
+
+    return {
+        "hsa_name": obj.hsa_name,
+    }
+
+def to_laspa_dict(obj):
+    if not obj:
+        return {}
+
+    return {
+        "spa_name": obj.spa_name,
+    }
+
+def to_rnsa_dict(obj):
+    if not obj:
+        return {}
+
+    return {
+        "rnsa": obj.rnsa,
+    }
+
+def to_mssa_dict(obj):
+    if not obj:
+        return {}
+
+    return {
+        "mssaid": obj.mssaid,
+    }
+
+def to_pcsa_dict(obj):
+    if not obj:
+        return {}
+
+    return {
+        "pcsa": obj.pcsa,
+        #add more object if needed
+    }
