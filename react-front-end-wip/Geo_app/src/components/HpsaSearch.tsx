@@ -11,6 +11,14 @@ interface Alert {
   message: string;
 }
 
+interface RegisteredNurseShortageAreaItem {
+  rnsa: string;
+  Effective: string;
+  hsa_name: string;
+  spa_name: string;
+}
+
+
 export const InputWithButton: React.FC<{
   searchQuery: string;
   setSearchQuery: (value: string) => void;
@@ -196,7 +204,7 @@ const HpsaSearchPage: React.FC = () => {
       MUP: "No",
       PCSA: "Yes (7)",
       RNSA: searchResults?.RegisteredNurseShortageArea?.length
-      ? searchResults.RegisteredNurseShortageArea.map(item => 
+      ? searchResults.RegisteredNurseShortageArea.map((item : RegisteredNurseShortageAreaItem) => 
           `${item.rnsa} (${item.Effective})`
         )
       : "N/A",
@@ -264,7 +272,7 @@ const HpsaSearchPage: React.FC = () => {
  
   const transposedRNSAData = transposeData(
     searchResults?.RegisteredNurseShortageArea?.length
-      ? searchResults.RegisteredNurseShortageArea.map(item => ({ rnsa: item.rnsa }))
+      ? searchResults.RegisteredNurseShortageArea.map((item : RegisteredNurseShortageAreaItem) => ({ rnsa: item.rnsa }))
       : [{ rnsa: "N/A" }],
     [{ Header: "RNSA", accessor: "rnsa" }]
   );
@@ -287,19 +295,12 @@ const HpsaSearchPage: React.FC = () => {
       <div className="container mx-auto pt-5 px-4 space-y-4">
         {/* Alerts Section */}
         <section
-          className="bg-gray-50 rounded-lg shadow-lg p-6 mb-6"
+          className="p-0 mb-1"
           role="region"
           aria-labelledby="alerts-heading"
         >
-          <h2
-            id="alerts-heading"
-            className="text-xl font-semibold text-gray-700 mb-4"
-          >
-            Alerts
-          </h2>
-          {alerts.length === 0 ? (
-            <p className="text-gray-600">No new alerts at the moment.</p>
-          ) : (
+         
+      
             <div className="space-y-2">
               {alerts.map((alert) => (
                 <div
@@ -316,7 +317,7 @@ const HpsaSearchPage: React.FC = () => {
                 </div>
               ))}
             </div>
-          )}
+          
         </section>
 
         <InputWithButton
@@ -374,7 +375,7 @@ const HpsaSearchPage: React.FC = () => {
                 </h3>
                 <Table
                   columns={[{ Header: "Health Service Area", accessor: "hsa_name" }]}
-                  data={searchResults?.healthservicearea?.length? searchResults.healthservicearea.map(item => ({hsa_name: item.hsa_name,}))
+                  data={searchResults?.healthservicearea?.length? searchResults.healthservicearea.map((item : RegisteredNurseShortageAreaItem) => ({hsa_name: item.hsa_name,}))
                   : [{ hsa_name: "N/A" }]
                   }
                 />
@@ -385,7 +386,7 @@ const HpsaSearchPage: React.FC = () => {
                 </h3>
                 <Table
                   columns={[{ Header: "LA Service Planning Area", accessor: "spa_name" }]}
-                  data={searchResults?.LaServicePlanning?.length? searchResults.LaServicePlanning.map(item => ({ spa_name: item.spa_name }))
+                  data={searchResults?.LaServicePlanning?.length? searchResults.LaServicePlanning.map((item : RegisteredNurseShortageAreaItem) => ({ spa_name: item.spa_name }))
                   : [{ spa_name: "N/A" }]
                   }
                 />
