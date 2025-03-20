@@ -10,6 +10,7 @@ import MainNav from "./components/headers/MainNav";
 import MobileNav from "./components/headers/MobileNav";
 import SearchBar from "./components/headers/SearchBar";
 import TopNavBar from "./components/headers/TopNavBar";
+import CordOverride from "./components/CordOverride";
 import Home from "./components/Home";
 import LicensedHealthcareFacilities from "./components/LicensedHealthcareFacilities";
 import Login from "./components/Login";
@@ -79,6 +80,8 @@ const App: React.FC = () => {
         return <LicensedHealthcareFacilities />;
       case "api-reference":
         return <APIReference />;
+      case "cord-override":
+        return <CordOverride />;
       default:
         return <Home />;
     }
@@ -134,6 +137,17 @@ const App: React.FC = () => {
                   onClick={() => setActivePage("admin-dashboard")}
                 >
                   Admin Dashboard
+                </button>
+              )}
+              {loggedIn && (
+                <button
+                  className={cn(
+                    "hover:bg-black whitespace-nowrap text-white px-2 sm:px-4 py-3  text-sm sm:text-base",
+                    activePage === "cord-override" && "bg-black"
+                  )}
+                  onClick={() => setActivePage("cord-override")}
+                >
+                  Cordinate Override
                 </button>
               )}
               <Sheet>
