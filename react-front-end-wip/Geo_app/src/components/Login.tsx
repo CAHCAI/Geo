@@ -46,6 +46,7 @@ export default function Login({ loggedIn, setLoggedIn }: LoginProps) {
       }
     } catch (err) {
       setError("Invalid credentials.");
+      
     } finally {
       setLoading(false);
     }
