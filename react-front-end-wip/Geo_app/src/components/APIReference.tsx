@@ -284,7 +284,25 @@ const APIReference: React.FC = () => {
       "district_label": "38|-0%",
       "population": 760065
     }
-  ]
+  ],
+  "healthservicearea": [
+    {
+      "hsa_name": "Los Angeles"
+    }
+  ],
+  "LaServicePlanning": [
+    {
+      "spa_name": "San Gabriel"
+    }
+  ],
+  "RegisteredNurseShortageArea": [
+    {
+      "rnsa": "Yes",
+      "Effective": "Low"
+    }
+  ],
+  "MedicalServiceStudyArea": [],
+  "PrimaryCareShortageArea": []
 }`}
           </pre>
         </section>
@@ -386,7 +404,25 @@ const APIReference: React.FC = () => {
       "district_label": "38|-0%",
       "population": 760065
     }
-  ]
+  ],
+  "healthservicearea": [
+    {
+      "hsa_name": "Los Angeles"
+    }
+  ],
+  "LaServicePlanning": [
+    {
+      "spa_name": "San Gabriel"
+    }
+  ],
+  "RegisteredNurseShortageArea": [
+    {
+      "rnsa": "Yes",
+      "Effective": "Low"
+    }
+  ],
+  "MedicalServiceStudyArea": [],
+  "PrimaryCareShortageArea": []
 }`}
           </pre>
         </section>
