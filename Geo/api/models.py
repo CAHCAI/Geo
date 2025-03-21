@@ -195,7 +195,62 @@ class HealthServiceArea(models.Model):
     
     def __str__(self):
         return f"Health Service Area: {self.hsa_name}"
-    
+
+class HealthProfessionalShortageArea(models.Model):
+    hpsa_name = models.CharField(max_length=255, null=True, blank=True)
+    hpsa_id = models.CharField(max_length=50, null=True, blank=True)
+    designation_type = models.CharField(max_length=100, null=True, blank=True)
+    hpsa_discipline_class = models.CharField(max_length=100, null=True, blank=True)
+    hpsa_score = models.IntegerField(null=True, blank=True)
+    primary_state_abbreviation = models.CharField(max_length=10, null=True, blank=True)
+    hpsa_status = models.CharField(max_length=50, null=True, blank=True)
+    hpsa_designation_date = models.DateField(null=True, blank=True)
+    hpsa_designation_last_update_date = models.DateField(null=True, blank=True)
+    metropolitan_indicator = models.CharField(max_length=50, null=True, blank=True)
+    hpsa_geography_id = models.CharField(max_length=50, null=True, blank=True)
+    hpsa_degree_of_shortage = models.CharField(max_length=50, null=True, blank=True)
+    withdrawn_date = models.DateField(null=True, blank=True)
+    hpsa_fte = models.FloatField(null=True, blank=True)
+    hpsa_designation_population = models.IntegerField(null=True, blank=True)
+    percent_population_below_poverty = models.FloatField(null=True, blank=True)
+    hpsa_formal_ratio = models.CharField(max_length=50, null=True, blank=True)
+    hpsa_population_type = models.CharField(max_length=100, null=True, blank=True)
+    rural_status = models.CharField(max_length=50, null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+    latitude = models.FloatField(null=True, blank=True)
+    common_county_name = models.CharField(max_length=100, null=True, blank=True)
+    common_postal_code = models.CharField(max_length=20, null=True, blank=True)
+    common_state_name = models.CharField(max_length=100, null=True, blank=True)
+    county_equivalent_name = models.CharField(max_length=100, null=True, blank=True)
+    provider_type = models.CharField(max_length=100, null=True, blank=True)
+    hpsa_provider_ratio_goal = models.CharField(max_length=50, null=True, blank=True)
+    hpsa_resident_civilian_population = models.IntegerField(null=True, blank=True)
+    hpsa_shortage = models.CharField(max_length=50, null=True, blank=True)
+    hpsa_status_code = models.CharField(max_length=50, null=True, blank=True)
+    hpsa_type_code = models.CharField(max_length=50, null=True, blank=True)
+    hpsa_withdrawn_date_string = models.CharField(max_length=50, null=True, blank=True)
+    primary_state_fips_code = models.CharField(max_length=10, null=True, blank=True)
+    state_fips_code = models.CharField(max_length=10, null=True, blank=True)
+    state_name = models.CharField(max_length=100, null=True, blank=True)
+    us_mexico_border_100km_indicator = models.CharField(max_length=10, null=True, blank=True)
+    us_mexico_border_county_indicator = models.CharField(max_length=10, null=True, blank=True)
+    data_warehouse_record_create_date = models.DateField(null=True, blank=True)
+
+    class Meta:
+        abstract = True
+
+
+class HPSA_DentalHealthShortageArea(HealthProfessionalShortageArea):
+    pass
+
+
+class HPSA_MentalHealthShortageArea(HealthProfessionalShortageArea):
+    pass
+
+
+class HPSA_PrimaryCareShortageArea(HealthProfessionalShortageArea):
+    pc_mcta_score = models.IntegerField(null=True, blank=True)
+
 
 def generate_api_key():
     return str(uuid.uuid4()).replace('-', '')  # Generates a unique API key

@@ -16,7 +16,7 @@ from tempfile import TemporaryDirectory
 from .utils import (extract_zip, find_shapefile, get_shapefile_metadata, 
 identify_shapefile_type, upload_assembly_shapefile, upload_congressional_shapefile,
 upload_laspa_shapefile, upload_senate_shapefile, get_shapefile_layer, to_dict, 
-upload_hsa_shapefile, upload_rnsa_shapefile, upload_mssa_shapefile, upload_pcsa_shapefile)
+upload_hsa_shapefile, upload_rnsa_shapefile, upload_mssa_shapefile, upload_pcsa_shapefile, handle_csv_upload)
 # end utility functions
 from django.shortcuts import get_object_or_404
 from django.db import connection
@@ -67,17 +67,26 @@ def upload_shapefile(request, file: UploadedFile = File(...), file_type: str = F
     """
     Upload a shapefile (as .zip) and populate the respective model.
     """
+    print("handling upload")
     # valid shapefile types for upload, any other files will get invalid filetype
-    valid_types = {"assembly", "congressional", "senate", "laspa", "hsa", "rnsa", "mssa", "pcsa"}
+    valid_types = {"assembly", "congressional", "senate", "laspa", "hsa", "rnsa", "mssa", "pcsa", "hpsa"}
     # lowercase the file type
     file_type = file_type.lower()
     if file_type not in valid_types:
         return JsonResponse({"success" : False, "message" : "Invalid file type specifier"})
+    print("validated file")
+    if (file_type == "hpsa"):
+        handle_csv_upload(file)
+        print("handled csv upload")
+        return JsonResponse({"success" : True, "message" : "HPSA data uploaded"}, status=200)
+    elif (file_type != "hpsa" and file.name.lower().endswith(".csv")):
+        return JsonResponse({"success" : False, "message" : "CSV must be uploaded under Health Provider Shortage Areas (HPSA)"}, status=500)
     
-    # Extract the zip file
-    tmp_dir = extract_zip(file)
-
-    try:
+    
+    try:   
+        # Extract the zip file
+        tmp_dir = extract_zip(file)
+    
         # Get the path to the shapefile (.shp)
         shapefile_path = find_shapefile(tmp_dir.name)
 
@@ -126,7 +135,8 @@ def upload_shapefile(request, file: UploadedFile = File(...), file_type: str = F
         return JsonResponse({"success": False, "error": f"Error response {e}"}, status=400)
     finally:
         # Cleanup the temporary directory
-        tmp_dir.cleanup()
+        if tmp_dir:
+            tmp_dir.cleanup()
 
 def process_uploaded_zip(file, expected_filename):
     """
@@ -326,6 +336,10 @@ def coordinate_search(request, lat: float, lng: float):
     registerednurseshortagearea_matches = RegisteredNurseShortageArea.objects.filter(geom__contains=point)
     medicalservicestudyarea_matches = MedicalServiceStudyArea.objects.filter(geom__contains=point)
     primarycareshortagearea_matches = PrimaryCareShortageArea.objects.filter(geom__contains=point)
+    
+    # query is getting 0 results
+    print(f"PCSA {len(primarycareshortagearea_matches)}")
+    print(f"MSSA {len(medicalservicestudyarea_matches)}")
 
     cache_value = {
         "senate": [to_dict(d) for d in senate_matches],

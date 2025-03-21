@@ -55,7 +55,7 @@ const AdminDashboard: React.FC = () => {
 
   // Validate and set the selected file
   const validateAndSetFile = (file: File) => {
-    if (file.type === "application/zip" || file.name.endsWith(".zip")) {
+    if (file.type === "application/zip" || file.name.endsWith(".zip") || file.type === "application/csv" || file.name.endsWith(".csv")) {
       setSelectedFile(file);
       addAlert("info", `Selected file: ${file.name}`);
     } else {
@@ -87,6 +87,8 @@ const AdminDashboard: React.FC = () => {
           },
         }
       );
+
+      console.log(response)
 
       if (!response.ok) {
         throw new Error("Upload failed.");
@@ -285,6 +287,7 @@ const AdminDashboard: React.FC = () => {
           <option value="rnsa">Registered Nurse Shortage Area</option>
           <option value="mssa">Medical Service Study Area</option>
           <option value="pcsa">Primary Care Shortage Area</option>
+          <option value="hpsa">Health Professional Shortage Area (.csv only)</option>
         </select>
         <p className="text-sm text-gray-500 mt-2">
           You have selected:{" "}
@@ -318,7 +321,7 @@ const AdminDashboard: React.FC = () => {
               id="file-upload"
               className="hidden"
               onChange={handleFileChange}
-              accept=".zip"
+              accept=".zip,.csv"
             />
             <label
               htmlFor="file-upload"
@@ -346,7 +349,7 @@ const AdminDashboard: React.FC = () => {
           >
             {isUploading ? "Uploading..." : "Upload File"}
           </button>
-          <p className="text-sm text-gray-500">Shapefiles only.</p>
+          <p className="text-sm text-gray-500">Shapefiles & .csv only.</p>
         </div>
       </section>
     </main>

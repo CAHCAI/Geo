@@ -1,3 +1,4 @@
+from ast import parse
 import zipfile
 import os
 from tempfile import TemporaryDirectory
@@ -7,6 +8,168 @@ from api.models import HealthServiceArea, LAServicePlanningArea, MedicalServiceS
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.gis.geos import MultiPolygon, Polygon
 from django.db import connection
+from django.db import transaction
+import tempfile
+
+import csv
+
+from datetime import datetime
+
+def parse_date(date_str):
+    """
+    Given a string like '10/20/2005' or '2005-10-20',
+    return a Python date object (or None if invalid/empty).
+    """
+    if not date_str:
+        return None
+    
+    for fmt in ("%Y-%m-%d", "%m/%d/%Y", "%m/%d/%y"):
+        try:
+            return datetime.strptime(date_str, fmt).date()
+        except ValueError:
+            pass
+    
+    return None
+
+
+from .models import (
+    HPSA_DentalHealthShortageArea,
+    HPSA_MentalHealthShortageArea,
+    HPSA_PrimaryCareShortageArea
+)
+
+import csv
+import tempfile
+from datetime import datetime
+from django.db import connection, transaction
+from .models import (
+    HPSA_DentalHealthShortageArea,
+    HPSA_MentalHealthShortageArea,
+    HPSA_PrimaryCareShortageArea
+)
+
+
+def parse_date(date_str):
+    """
+    Given a string like '10/20/2005' or '2005-10-20',
+    return a Python date object (or None if invalid/empty).
+    """
+    if not date_str:
+        return None
+    for fmt in ("%Y-%m-%d", "%m/%d/%Y", "%m/%d/%y"):
+        try:
+            return datetime.strptime(date_str, fmt).date()
+        except ValueError:
+            pass
+    return None
+
+
+def handle_csv_upload(uploaded_file):
+    """
+    Saves the uploaded file to disk, then processes it with handle_csv.
+    """
+    print("inside handle_csv_upload")
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".csv") as tmp:
+            for chunk in uploaded_file.chunks():
+                tmp.write(chunk)
+            tmp_path = tmp.name  # The path to the saved file
+
+        return handle_csv(tmp_path)
+    except Exception as e:
+        print(e)
+
+
+def handle_csv(file_path):
+    """
+    Reads a CSV file, determines the HPSA discipline (dental, mental, primary)
+    from 'HPSA Discipline Class', and then does a bulk insert into the DB.
+    
+    This approach:
+      1) Reads every row and sorts them into separate lists by discipline
+      2) For each discipline that actually has data, we TRUNCATE once
+      3) Bulk insert the rows for that discipline
+    """
+    print("handling csv file")
+    try:
+        # Separate lists for each discipline
+        dental_rows = []
+        mental_rows = []
+        primary_rows = []
+
+        # Read CSV
+        with open(file_path, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                discipline_class = row.get("HPSA Discipline Class", "").lower()
+
+                if "dental" in discipline_class:
+                    instance = HPSA_DentalHealthShortageArea(
+                        hpsa_name=row.get("HPSA Name", ""),
+                        hpsa_id=row.get("HPSA ID", ""),
+                        designation_type=row.get("Designation Type", ""),
+                        hpsa_discipline_class=row.get("HPSA Discipline Class", ""),
+                        hpsa_score=row.get("HPSA Score", "0") or 0,
+                        primary_state_abbreviation=row.get("Primary State Abbreviation", ""),
+                        hpsa_status=row.get("HPSA Status", ""),
+                        hpsa_designation_date=parse_date(row.get("HPSA Designation Date", "")),
+                        hpsa_designation_last_update_date=parse_date(row.get("HPSA Designation Last Update Date", "")),
+                        withdrawn_date=parse_date(row.get("Withdrawn Date", "")),
+                        hpsa_fte=float(row.get("HPSA FTE", "0") or 0),
+                        hpsa_designation_population=float(row.get("HPSA Designation Population", "0") or 0),
+                        percent_population_below_poverty=float(row.get("% of Population Below 100% Poverty", "0") or 0),
+                        longitude=float(row.get("Longitude", "0") or 0),
+                        latitude=float(row.get("Latitude", "0") or 0),
+                        hpsa_shortage=row.get("HPSA Shortage", ""),
+                        data_warehouse_record_create_date=parse_date(row.get("Data Warehouse Record Create Date", "")),
+                        # Add more fields as needed
+                    )
+                    dental_rows.append(instance)
+
+                elif "mental" in discipline_class:
+                    instance = HPSA_MentalHealthShortageArea(
+                        # same approach as above
+                        hpsa_name=row.get("HPSA Name", ""),
+                        # ...
+                        data_warehouse_record_create_date=parse_date(row.get("Data Warehouse Record Create Date", "")),
+                    )
+                    mental_rows.append(instance)
+
+                elif "primary" in discipline_class:
+                    instance = HPSA_PrimaryCareShortageArea(
+                        # same approach as above
+                        hpsa_name=row.get("HPSA Name", ""),
+                        # ...
+                        data_warehouse_record_create_date=parse_date(row.get("Data Warehouse Record Create Date", "")),
+                    )
+                    primary_rows.append(instance)
+
+                # else skip unknown discipline_class
+
+        # Now bulk-insert for each discipline that actually has data.
+        # We also TRUNCATE each table only once per discipline.
+        with transaction.atomic():
+            if dental_rows:
+                with connection.cursor() as cursor:
+                    cursor.execute(f'TRUNCATE TABLE "{HPSA_DentalHealthShortageArea._meta.db_table}" CASCADE')
+                HPSA_DentalHealthShortageArea.objects.bulk_create(dental_rows, batch_size=1000)
+                print(f"Inserted {len(dental_rows)} dental rows.")
+
+            if mental_rows:
+                with connection.cursor() as cursor:
+                    cursor.execute(f'TRUNCATE TABLE "{HPSA_MentalHealthShortageArea._meta.db_table}" CASCADE')
+                HPSA_MentalHealthShortageArea.objects.bulk_create(mental_rows, batch_size=1000)
+                print(f"Inserted {len(mental_rows)} mental rows.")
+
+            if primary_rows:
+                with connection.cursor() as cursor:
+                    cursor.execute(f'TRUNCATE TABLE "{HPSA_PrimaryCareShortageArea._meta.db_table}" CASCADE')
+                HPSA_PrimaryCareShortageArea.objects.bulk_create(primary_rows, batch_size=1000)
+                print(f"Inserted {len(primary_rows)} primary rows.")
+
+    except Exception as e:
+        print(f"Error in handle_csv: {e}")
+
 
 def to_dict(dist):
     return {
