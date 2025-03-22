@@ -106,7 +106,7 @@ const APIReference: React.FC = () => {
 
       {/* Sidebar */}
       <nav
-        className={`w-full md:w-1/4 bg-gray-100 shadow-md p-6 md:sticky md:top-20 md:h-[calc(100vh-8rem)] overflow-y-auto ${
+        className={`w-full md:w-1/4 bg-gray-100 shadow-md p-6 md:sticky md:h-[calc(100vh-8rem)] overflow-y-auto ${
           !showSidebar ? "hidden" : "block"
         } md:block`}
       >
@@ -168,10 +168,11 @@ const APIReference: React.FC = () => {
 
           <p className="text-gray-700">
             Geocode Web service is designed get an address's geographic
-            coordinates. This method can also be used to validate and standardize
-            an address even if you don't need geographic coordinates. This web
-            service is also able to return health profession shortage designations
-            of an address that is in California.
+            coordinates. This method can also be used to validate and
+            standardize an address even if you don't need geographic
+            coordinates. This web service is also able to return health
+            profession shortage designations of an address that is in
+            California.
           </p>
 
           <p className="text-gray-700 mt-2">
@@ -206,7 +207,9 @@ const APIReference: React.FC = () => {
             </li>
 
             <li className="p-3 bg-gray-50 rounded-md shadow-sm">
-              <div className="text-blue-800 font-semibold">address (required)</div>
+              <div className="text-blue-800 font-semibold">
+                address (required)
+              </div>
               <p className="text-gray-700 mt-1">Input address.</p>
             </li>
 
@@ -219,10 +222,12 @@ const APIReference: React.FC = () => {
             </li>
 
             <li className="p-3 bg-gray-50 rounded-md shadow-sm">
-              <div className="text-blue-800 font-semibold">findshortagedesignations</div>
+              <div className="text-blue-800 font-semibold">
+                findshortagedesignations
+              </div>
               <p className="text-gray-700 mt-1">
-                When set to true, the response will include shortage designations
-                for each address returned.
+                When set to true, the response will include shortage
+                designations for each address returned.
               </p>
             </li>
 
@@ -230,20 +235,26 @@ const APIReference: React.FC = () => {
               <div className="text-blue-800 font-semibold">calreachdoctype</div>
               <p className="text-gray-700 mt-1">
                 Given this parameter, the{" "}
-                <code className="bg-gray-200 px-1 py-0.5 rounded text-sm">in_umn</code>
+                <code className="bg-gray-200 px-1 py-0.5 rounded text-sm">
+                  in_umn
+                </code>
                 flag may be determined differently. Currently, the SongBrown
                 program may require this flag to be computed differently for
                 various programs. For example, an address’s{" "}
-                <code className="bg-gray-200 px-1 py-0.5 rounded text-sm">in_umn</code>
+                <code className="bg-gray-200 px-1 py-0.5 rounded text-sm">
+                  in_umn
+                </code>
                 flag for a Registered Nurse Special Program’s application only
                 considers{" "}
-                <code className="bg-gray-200 px-1 py-0.5 rounded text-sm">rnsa</code>
+                <code className="bg-gray-200 px-1 py-0.5 rounded text-sm">
+                  rnsa
+                </code>
                 (Registered Nurse Shortage Area).
               </p>
             </li>
           </ul>
         </section>
-        
+
         {/* Response Section (Subsection of Geocode) */}
         <section
           id="response"
@@ -319,8 +330,8 @@ const APIReference: React.FC = () => {
             GetHPSDesignations
           </h2>
           <p className="text-gray-700">
-            The GetHPSDesignations service retrieves health professional shortage
-            area (HPSA) designations for a given location.
+            The GetHPSDesignations service retrieves health professional
+            shortage area (HPSA) designations for a given location.
           </p>
           <h3 className="text-xl font-semibold mt-4">Example API Request</h3>
           <code className="block bg-gray-200 p-3 rounded-lg text-sm break-words overflow-x-auto w-full">
@@ -340,32 +351,32 @@ const APIReference: React.FC = () => {
           <h2 className="text-2xl font-bold text-blue-600 mb-2">Parameters</h2>
           <ul className="list-disc ml-6 space-y-2 text-gray-700">
             <li>
-              <strong>key (required):</strong> An API key must be provided to use
-              this service. The API is for HCAI applications only and not open to
-              the public.
+              <strong>key (required):</strong> An API key must be provided to
+              use this service. The API is for HCAI applications only and not
+              open to the public.
             </li>
             <li>
               <strong>latitude (required):</strong> Latitude of the address that
               you want to find the shortage designations for.
             </li>
             <li>
-              <strong>longitude (required):</strong> Longitude of the address that
-              you want to find the shortage designations for
+              <strong>longitude (required):</strong> Longitude of the address
+              that you want to find the shortage designations for
             </li>
             <li>
-              <strong>calreachdoctype:</strong> Given this parameter, the Area of
-              Unmet Need (in_umn) flag may be determined differently. Currently
-              SongBrown program may require this flag to be computed differently
-              for various programs. For example, an address’s Area of Unmet Need
-              flag(in_umn) Registered Nurse Special Program's application doesn't
-              care about any other flags other than Registered Nurse Shortage Area
-              (rnsa).
+              <strong>calreachdoctype:</strong> Given this parameter, the Area
+              of Unmet Need (in_umn) flag may be determined differently.
+              Currently SongBrown program may require this flag to be computed
+              differently for various programs. For example, an address’s Area
+              of Unmet Need flag(in_umn) Registered Nurse Special Program's
+              application doesn't care about any other flags other than
+              Registered Nurse Shortage Area (rnsa).
               <br />
               <br />
               <strong>Example:</strong> An address's Area of Unmet Need flag (
               <code>in_umn</code>) for the Registered Nurse Special Program's
-              application does not consider any other flags except the Registered
-              Nurse Shortage Area (<code>rnsa</code>).
+              application does not consider any other flags except the
+              Registered Nurse Shortage Area (<code>rnsa</code>).
             </li>
           </ul>
         </section>
@@ -374,8 +385,7 @@ const APIReference: React.FC = () => {
         <section
           id="hps-response"
           ref={(el) =>
-            (sectionRefs.current["hps-response"] =
-              el as HTMLDivElement | null)
+            (sectionRefs.current["hps-response"] = el as HTMLDivElement | null)
           }
           className="p-6 bg-white shadow-md rounded-lg"
         >

@@ -10,7 +10,6 @@ import { OverrideLocationIn, OverrideLocationOut } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Dialog } from "@headlessui/react";
 
-
 const OverridesPage: React.FC = () => {
   //overrides list
   const [overrides, setOverrides] = useState<OverrideLocationOut[]>([]);
@@ -18,7 +17,9 @@ const OverridesPage: React.FC = () => {
 
   // Add/Edit Modal
   const [showModal, setShowModal] = useState(false);
-  const [editingItem, setEditingItem] = useState<OverrideLocationOut | null>(null);
+  const [editingItem, setEditingItem] = useState<OverrideLocationOut | null>(
+    null
+  );
   const [newOverride, setNewOverride] = useState<OverrideLocationIn>({
     address: "",
     latitude: 0,
@@ -32,7 +33,6 @@ const OverridesPage: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-
 
   // Coordinate Override states
   const [coordinates, setCoordinates] = useState<string>("");
@@ -95,7 +95,6 @@ const OverridesPage: React.FC = () => {
     }
   };
 
-
   // Drag & Drop / Validate Excel
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -150,7 +149,6 @@ const OverridesPage: React.FC = () => {
     }
   };
 
-
   // Coordinate Override logic
   const handleCoordinatesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -179,14 +177,14 @@ const OverridesPage: React.FC = () => {
       const [latStr, lonStr] = coordinates.split(",");
       const latNum = parseFloat(latStr?.trim() ?? "");
       const lonNum = parseFloat(lonStr?.trim() ?? "");
-  
+
       // Build the payload directly
       const payload = {
         address,
         latitude: isNaN(latNum) ? 0 : latNum,
-        longitude: isNaN(lonNum) ? 0 : lonNum
+        longitude: isNaN(lonNum) ? 0 : lonNum,
       };
-  
+
       // Decide if we are creating or updating
       if (editingItem) {
         // If editing an existing override
@@ -197,10 +195,10 @@ const OverridesPage: React.FC = () => {
         await createOverride(payload);
         console.log("Created new override with coords & address");
       }
-  
+
       // Refresh overrides
       fetchOverrides();
-  
+
       // Reset local states
       setCoordinates("");
       setAddress("");
@@ -215,18 +213,18 @@ const OverridesPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center p-6">
+    <div className="min-h-screen flex flex-col items-center p-6">
       <h1 className="text-3xl font-semibold text-gray-800">Manual Overrides</h1>
 
       {/* Excel File Upload Section */}
       <section
-        className="bg-gray-50 rounded-lg shadow-lg p-6 mt-6 w-full max-w-2xl mx-auto"
+        className="bg-gray-50 rounded-lg shadow-lg p-6 mt-6 w-full max-w-3xl mx-auto"
         aria-label="File Upload"
       >
         <h2 className="text-xl font-semibold text-gray-700 mb-4">
           Excel File Upload
         </h2>
-        <div className="flex flex-col items-center justify-center space-y-4">
+        <div className="bg-gray-50 flex flex-col items-center justify-center space-y-4">
           {/* Drag-and-drop area */}
           <div
             className={`border-2 border-dashed ${
@@ -283,7 +281,7 @@ const OverridesPage: React.FC = () => {
 
       {/* Coordinate Override Section */}
       <section
-        className="bg-gray-50 rounded-lg shadow-lg p-6 mb-6 mt-10 w-full max-w-2xl mx-auto"
+        className="bg-gray-50 rounded-lg shadow-lg p-6 mb-6 mt-10 w-full max-w-3xl mx-auto"
         aria-label="Coordinate Override"
       >
         <h2 className="text-xl font-semibold text-gray-700 mb-4">
@@ -331,14 +329,14 @@ const OverridesPage: React.FC = () => {
       </section>
 
       {/* Overrides List */}
-      <div className="mt-6 w-full max-w-3xl space-y-2">
+      <div className="bg-gray-50 rounded-lg shadow-lg p-6 mt-6 w-full max-w-3xl mx-auto max-h-[40vh] overflow-y-auto">
         {isLoading ? (
           <p className="text-center text-gray-600">Loading...</p>
         ) : (
           overrides.map((override) => (
             <motion.div
               key={override.id}
-              className="bg-white shadow-md p-4 rounded-lg flex justify-between items-center"
+              className="bg-gray-50 shadow-md p-4 rounded-lg flex justify-between items-center"
               whileHover={{ scale: 1.02 }}
             >
               {/* Address & Coordinates */}
@@ -379,7 +377,10 @@ const OverridesPage: React.FC = () => {
       </div>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteItemId !== null} onClose={() => setDeleteItemId(null)}>
+      <Dialog
+        open={deleteItemId !== null}
+        onClose={() => setDeleteItemId(null)}
+      >
         <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg">
             <Dialog.Title className="text-lg font-medium">
