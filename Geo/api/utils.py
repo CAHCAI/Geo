@@ -245,16 +245,21 @@ def get_shapefile_layer(shapefile_path: str) -> DataSource:
 def get_geos_geometry(geometry: ogr.Geometry) -> MultiPolygon:
     """
     Converts an OGR geometry to a GEOS MultiPolygon.
+    Fixes projection issues if coordinates are stored in the wrong projection.
     """
-    # Convert geometry to MultiPolygon if it's a Polygon
-    # This is needed because our PostGIS DB can only store one or the other, not both in a column
 
-    # Convert GDAL geometry to GEOSGeometry
     geos_geometry = GEOSGeometry(geometry.wkt)
 
-    # Ensure the geometry is a MultiPolygon
+    # Detect if coordinates are likely in Web Mercator by bounding box
+    # EPSG:4326 should have lon between -180 and 180, lat between -90 and 90
+    minx, miny, maxx, maxy = geos_geometry.extent
+    if abs(minx) > 180 or abs(maxx) > 180 or abs(miny) > 90 or abs(maxy) > 90:
+        # Stored in meters, but marked as 4326 — assume it's actually EPSG:3857
+        geos_geometry.srid = 3857
+        geos_geometry.transform(4326)  # Fix projection
+
     if isinstance(geos_geometry, Polygon):
-        geos_geometry = MultiPolygon(geos_geometry)  # Convert Polygon to MultiPolygon
+        geos_geometry = MultiPolygon(geos_geometry)
     elif not isinstance(geos_geometry, MultiPolygon):
         raise TypeError(f"Unsupported geometry type: {type(geos_geometry)}")
 

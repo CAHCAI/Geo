@@ -384,10 +384,6 @@ def coordinate_search(request, lat: float, lng: float):
     registerednurseshortagearea_matches = RegisteredNurseShortageArea.objects.filter(geom__contains=point)
     medicalservicestudyarea_matches = MedicalServiceStudyArea.objects.filter(geom__contains=point)
     primarycareshortagearea_matches = PrimaryCareShortageArea.objects.filter(geom__contains=point)
-    
-    # query is getting 0 results
-    print(f"PCSA {len(primarycareshortagearea_matches)}")
-    print(f"MSSA {len(medicalservicestudyarea_matches)}")
 
     cache_value = {
         "senate": [to_dict(d) for d in senate_matches],
