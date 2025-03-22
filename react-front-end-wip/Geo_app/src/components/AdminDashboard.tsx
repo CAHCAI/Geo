@@ -1,6 +1,6 @@
 import { TrashIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { getActiveSessions, ActiveSessionsResponse  } from "@/lib/utils"; 
+import { getActiveSessions, ActiveSessionsResponse } from "@/lib/utils";
 
 interface Alert {
   id: number;
@@ -23,76 +23,77 @@ const AdminDashboard: React.FC = () => {
   const [adminCount, setAdminCount] = useState<number | null>(null);
   const [normalCount, setNormalCount] = useState<number | null>(null);
 
+  interface AdminError {
+    id: number;
+    error_code: number;
+    error_description: string;
+    created_at: string;
+  }
 
-interface AdminError {
-  id: number
-  error_code: number;
-  error_description: string;
-  created_at: string;
-}
+  const [issues, setIssues] = useState<AdminError[]>([]);
+  const [refreshCounter, setRefreshCounter] = useState(0);
 
-const [issues, setIssues] = useState<AdminError[]>([]);
-const [refreshCounter, setRefreshCounter] = useState(0);
+  useEffect(() => {
+    const fetchInterval = setInterval(() => {
+      setRefreshCounter((prev) => prev + 1);
+    }, 10000); // Poll every 10 seconds
 
-useEffect(() => {
-  const fetchInterval = setInterval(() => {
-    setRefreshCounter(prev => prev + 1); 
-  }, 10000); // Poll every 10 seconds
+    const fetchIssues = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:8000/api/admin_errors/",
+          {
+            headers: { "X-API-KEY": "supersecret" },
+          }
+        );
+        if (!response.ok) throw new Error("Failed to fetch issues");
+        const data = await response.json();
+        setIssues(data);
+      } catch (error) {
+        console.error("Error fetching issues:", error);
+      }
+    };
 
-  const fetchIssues = async () => {
+    fetchIssues(); // Initial fetch
+    return () => clearInterval(fetchInterval);
+  }, [refreshCounter]);
+
+  useEffect(() => {
+    async function fetchSessions() {
+      try {
+        const { admin_count, normal_count } = await getActiveSessions();
+        setAdminCount(admin_count);
+        setNormalCount(normal_count);
+      } catch (err) {
+        console.error("Failed to fetch active sessions:", err);
+      }
+    }
+
+    fetchSessions();
+
+    // Optional: poll every 30 seconds
+    const intervalId = setInterval(() => {
+      fetchSessions();
+    }, 30000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  //deleting records from the database
+  const handleResolveError = async (errorId: number) => {
     try {
-      const response = await fetch("http://localhost:8000/api/admin_errors/", {
-        headers: { "X-API-KEY": "supersecret" }
-      });
-      if (!response.ok) throw new Error('Failed to fetch issues');
-      const data = await response.json();
-      setIssues(data);
+      const response = await fetch(
+        `http://localhost:8000/api/admin_errors/${errorId}/`,
+        { method: "DELETE", headers: { "X-API-KEY": "supersecret" } }
+      );
+      if (!response.ok) throw new Error("Failed to delete error");
+      setIssues((prev) => prev.filter((error) => error.id !== errorId));
+      addAlert("success", "Error resolved successfully");
     } catch (error) {
-      console.error("Error fetching issues:", error);
+      console.error("Error deleting:", error);
+      addAlert("error", "Failed to resolve error");
     }
   };
-
-  fetchIssues(); // Initial fetch
-  return () => clearInterval(fetchInterval); 
-}, [refreshCounter]); 
-
-
-useEffect(() => {
-  async function fetchSessions() {
-    try {
-      const { admin_count, normal_count } = await getActiveSessions();
-      setAdminCount(admin_count);
-      setNormalCount(normal_count);
-    } catch (err) {
-      console.error("Failed to fetch active sessions:", err);
-    }
-  }
-
-  fetchSessions();
-
-  // Optional: poll every 30 seconds
-  const intervalId = setInterval(() => {
-    fetchSessions();
-  }, 30000);
-
-  return () => clearInterval(intervalId);
-}, []);
-
-//deleting records from the database
-const handleResolveError = async (errorId: number) => {
-  try {
-    const response = await fetch(
-      `http://localhost:8000/api/admin_errors/${errorId}/`, 
-      { method: 'DELETE', headers: { "X-API-KEY": "supersecret" } }
-    );
-    if (!response.ok) throw new Error('Failed to delete error');
-    setIssues(prev => prev.filter(error => error.id !== errorId));
-    addAlert("success", "Error resolved successfully");
-  } catch (error) {
-    console.error("Error deleting:", error);
-    addAlert("error", "Failed to resolve error");
-  }
-};
 
   // Handle file selection
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -130,7 +131,12 @@ const handleResolveError = async (errorId: number) => {
 
   // Validate and set the selected file
   const validateAndSetFile = (file: File) => {
-    if (file.type === "application/zip" || file.name.endsWith(".zip") || file.type === "application/csv" || file.name.endsWith(".csv")) {
+    if (
+      file.type === "application/zip" ||
+      file.name.endsWith(".zip") ||
+      file.type === "application/csv" ||
+      file.name.endsWith(".csv")
+    ) {
       setSelectedFile(file);
       addAlert("info", `Selected file: ${file.name}`);
     } else {
@@ -163,7 +169,7 @@ const handleResolveError = async (errorId: number) => {
         }
       );
 
-      console.log(response)
+      console.log(response);
 
       if (!response.ok) {
         throw new Error("Upload failed.");
@@ -197,74 +203,6 @@ const handleResolveError = async (errorId: number) => {
   // Remove an alert by id
   const removeAlert = (id: number) => {
     setAlerts((prevAlerts) => prevAlerts.filter((alert) => alert.id !== id));
-  };
-
-  const handleCoordinatesChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const value = event.target.value;
-    const coordinatesRegex = /^-?\d{1,3}\.\d+,\s*-?\d{1,3}\.\d+$/;
-    setCoordinates(value);
-    setShowAddressInput(coordinatesRegex.test(value));
-  };
-
-  const handleAddressChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setAddress(event.target.value);
-    setShowSubmitButton(event.target.value.length > 0);
-  };
-
-  const handleSubmit = () => {
-    setShowConfirmation(true);
-  };
-
-  const confirmSubmit = async () => {
-    setIsSubmitting(true);
-    try {
-      const lat = parseFloat(coordinates.split(",")[0].trim());
-      const lon = parseFloat(coordinates.split(",")[1].trim());
-
-      if (isNaN(lat) || isNaN(lon)) {
-        throw new Error(
-          "Invalid coordinate format. Ensure it is in 'lat, lon' format."
-        );
-      }
-
-      const response = await fetch(
-        "http://localhost:8000/api/override-location/",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-API-KEY": "supersecret",
-          },
-          body: JSON.stringify({
-            lat: lat,
-            lon: lon,
-            address: address.trim(),
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Server response error:", errorData);
-        throw new Error(errorData.message || "Failed to update location.");
-      }
-
-      alert(
-        `Coordinates: ${coordinates}\nAddress: ${address}\nSuccessfully Updated!`
-      );
-    } catch (error) {
-      console.error("Error updating location:", error);
-      alert("Failed to update location. Please try again.");
-    }
-
-    setIsSubmitting(false);
-    setCoordinates("");
-    setAddress("");
-    setShowAddressInput(false);
-    setShowSubmitButton(false);
-    setShowConfirmation(false);
   };
 
   return (
@@ -350,66 +288,71 @@ const handleResolveError = async (errorId: number) => {
         <div className="flex items-center mb-2">
           <h2 className="text-xl font-bold text-gray-700">Issues</h2>
         </div>
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr> {/*I will remove this after demo*/}
+        <table className="divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              {" "}
+              {/*I will remove this after demo*/}
               <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-32">
-                  Error ID
-                </th>
-                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-32">
-                  Error Code
-                </th>
-                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider min-w-[500px]">
-                  Description
-                </th>
-                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-48">
-                  Date Occurred
-                </th>
-                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-32">
-                  Actions
-                </th>
+                Error ID
+              </th>
+              <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-32">
+                Error Code
+              </th>
+              <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider min-w-[500px]">
+                Description
+              </th>
+              <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-48">
+                Date Occurred
+              </th>
+              <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-32">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {issues.map((error) => (
+              <tr key={error.id}>
+                <td className="px-8 py-4 whitespace-nowrap text-base font-mono text-red-600">
+                  {error.id}
+                </td>
+                {/*I will remove this after demo*/}
+                <td className="px-8 py-4 whitespace-nowrap text-base font-mono text-red-600">
+                  {error.error_code}
+                </td>
+                <td className="px-8 py-4 whitespace-normal text-base text-gray-900 max-w-2xl">
+                  {error.error_description}
+                </td>
+                <td className="px-8 py-4 whitespace-nowrap text-base text-gray-500">
+                  {new Date(error.created_at).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </td>
+                <td className="px-8 py-4 whitespace-nowrap">
+                  <button
+                    onClick={() => handleResolveError(error.id)}
+                    className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
+                    aria-label={`Mark error ${error.id} as resolved`}
+                  >
+                    <TrashIcon className="w-5 h-5" />
+                    <span>Resolve</span>
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {issues.map((error) => (
-                <tr key={error.id}>
-                  <td className="px-8 py-4 whitespace-nowrap text-base font-mono text-red-600">
-                    {error.id}
-                  </td>{/*I will remove this after demo*/}
-                  <td className="px-8 py-4 whitespace-nowrap text-base font-mono text-red-600">
-                    {error.error_code}
-                  </td>
-                  <td className="px-8 py-4 whitespace-normal text-base text-gray-900 max-w-2xl">
-                    {error.error_description}
-                  </td>
-                  <td className="px-8 py-4 whitespace-nowrap text-base text-gray-500">
-                    {new Date(error.created_at).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </td>
-                  <td className="px-8 py-4 whitespace-nowrap">
-                    <button 
-                      onClick={() => handleResolveError(error.id)}
-                      className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
-                      aria-label={`Mark error ${error.id} as resolved`}
-                    >
-                      <TrashIcon className="w-5 h-5" />
-                      <span>Resolve</span>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+            ))}
+          </tbody>
+        </table>
       </section>
 
-
       {/* Dropdown Menu (above file upload) */}
-      <section className="w-full pt-6" aria-label="Geographical Selection Dropdown">
+      <section
+        className="w-full pt-6"
+        aria-label="Geographical Selection Dropdown"
+      >
         <label
           className="block text-gray-700 font-medium mb-2"
           htmlFor="select-option"
@@ -430,7 +373,9 @@ const handleResolveError = async (errorId: number) => {
           <option value="rnsa">Registered Nurse Shortage Area</option>
           <option value="mssa">Medical Service Study Area</option>
           <option value="pcsa">Primary Care Shortage Area</option>
-          <option value="hpsa">Health Professional Shortage Area (.csv only)</option>
+          <option value="hpsa">
+            Health Professional Shortage Area (.csv only)
+          </option>
         </select>
         <p className="text-sm text-gray-500 mt-2">
           You have selected:{" "}
