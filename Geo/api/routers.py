@@ -31,6 +31,9 @@ from typing import List, Optional
 import openpyxl
 from django.db import transaction
 from .models import OverrideLocation
+from django.contrib.sessions.models import Session
+from django.utils import timezone
+from django.contrib.auth import get_user_model
 
 
 
@@ -575,6 +578,31 @@ def delete_override(request, override_id: int):
         except Exception as e:
             print(f"Error found but not logged into the database! {e}")
         return {"success": False, "message": f"Failed to delete: {str(e)}"}
+    
+
+User = get_user_model()
+
+@router.get("/active-admin-sessions")
+def active_admin_sessions(request):
+    """
+    Returns how many unexpired sessions belong to staff or superuser users.
+    """
+    # Filter sessions that haven't expired
+    sessions = Session.objects.filter(expire_date__gte=timezone.now())
+
+    admin_count = 0
+    for session in sessions:
+        data = session.get_decoded()
+        user_id = data.get('_auth_user_id')
+        if user_id is not None:
+            try:
+                user = User.objects.get(pk=user_id)
+                if user.is_staff or user.is_superuser:
+                    admin_count += 1
+            except User.DoesNotExist:
+                pass
+
+    return {"active_admin_count": admin_count} 
 
 '''
 Endpoint deals with errors viewable by admins.

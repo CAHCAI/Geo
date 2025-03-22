@@ -1,5 +1,6 @@
 import { TrashIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import { getActiveAdminSessions } from "@/lib/utils"; 
 
 interface Alert {
   id: number;
@@ -19,6 +20,8 @@ const AdminDashboard: React.FC = () => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedOption, setSelectedOption] = useState<string>("senate");
+  const [activeAdminCount, setActiveAdminCount] = useState<number | null>(null);
+
 
 interface AdminError {
   id: number
@@ -51,6 +54,26 @@ useEffect(() => {
   fetchIssues(); // Initial fetch
   return () => clearInterval(fetchInterval); 
 }, [refreshCounter]); 
+
+
+  // fetchActiveAdmins calls our utility function from utils.ts
+  const fetchActiveAdmins = async () => {
+    try {
+      const count = await getActiveAdminSessions();
+      setActiveAdminCount(count);
+    } catch (err) {
+      console.error("Failed to fetch active admin sessions:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchActiveAdmins();
+
+    // Optional: poll every 30 seconds for near real-time updates
+    const interval = setInterval(fetchActiveAdmins, 30_000);
+
+    return () => clearInterval(interval);
+  }, []);
 
 //deleting records from the database
 const handleResolveError = async (errorId: number) => {
@@ -287,12 +310,28 @@ const handleResolveError = async (errorId: number) => {
         )}
       </section>
 
+      {/* Active Admin Sessions */}
+      <section className="bg-white  rounded-lg shadow p-6 mb-6 mx-auto">
+        <div className="flex items-center mb-2">
+          <h2 className="text-xl font-bold text-gray-700">
+            Active Admin Sessions
+          </h2>
+        </div>
+        
+        <p className="text-3xl font-extrabold text-blue-600">
+          {activeAdminCount !== null ? activeAdminCount : "Loading..."}
+        </p>
+        <p className="text-sm text-gray-500 mt-2">
+          Currently logged-in admin users
+        </p>
+      </section>
+
       {/* Statistics Section */}
       <section
         className="grid grid-cols-1 md:grid-cols-3 gap-6"
         aria-label="Statistics"
       >
-        <div className="bg-gray-50 rounded-lg shadow-lg mx-auto px-4 max-w-screen-xl">
+        <div className="bg-gray-50 rounded-lg shadow-lg mx-auto px-4 max-w-screen-xl mb-6">
           <h3 className="text-lg font-medium text-gray-700">Issues</h3>
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -349,8 +388,9 @@ const handleResolveError = async (errorId: number) => {
               ))}
             </tbody>
           </table>
-    </div>
-</section>
+        </div>
+      </section>
+
 
       {/* Dropdown Menu (above file upload) */}
       <section className="w-full pt-6" aria-label="Geographical Selection Dropdown">
