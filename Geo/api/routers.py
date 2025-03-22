@@ -582,27 +582,35 @@ def delete_override(request, override_id: int):
 
 User = get_user_model()
 
-@router.get("/active-admin-sessions")
-def active_admin_sessions(request):
+@router.get("/active-sessions")
+def active_sessions(request):
     """
-    Returns how many unexpired sessions belong to staff or superuser users.
+    Returns how many unexpired sessions belong to:
+      - Admin users (staff or superuser)
+      - Normal (non-admin) users
     """
-    # Filter sessions that haven't expired
     sessions = Session.objects.filter(expire_date__gte=timezone.now())
 
     admin_count = 0
+    normal_count = 0
+
     for session in sessions:
         data = session.get_decoded()
-        user_id = data.get('_auth_user_id')
+        user_id = data.get("_auth_user_id")
         if user_id is not None:
             try:
                 user = User.objects.get(pk=user_id)
                 if user.is_staff or user.is_superuser:
                     admin_count += 1
+                else:
+                    normal_count += 1
             except User.DoesNotExist:
                 pass
 
-    return {"active_admin_count": admin_count} 
+    return {
+        "admin_count": admin_count,
+        "normal_count": normal_count,
+    }
 
 '''
 Endpoint deals with errors viewable by admins.

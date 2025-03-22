@@ -1,6 +1,6 @@
 import { TrashIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { getActiveAdminSessions } from "@/lib/utils"; 
+import { getActiveSessions, ActiveSessionsResponse  } from "@/lib/utils"; 
 
 interface Alert {
   id: number;
@@ -20,7 +20,8 @@ const AdminDashboard: React.FC = () => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedOption, setSelectedOption] = useState<string>("senate");
-  const [activeAdminCount, setActiveAdminCount] = useState<number | null>(null);
+  const [adminCount, setAdminCount] = useState<number | null>(null);
+  const [normalCount, setNormalCount] = useState<number | null>(null);
 
 
 interface AdminError {
@@ -56,24 +57,26 @@ useEffect(() => {
 }, [refreshCounter]); 
 
 
-  // fetchActiveAdmins calls our utility function from utils.ts
-  const fetchActiveAdmins = async () => {
+useEffect(() => {
+  async function fetchSessions() {
     try {
-      const count = await getActiveAdminSessions();
-      setActiveAdminCount(count);
+      const { admin_count, normal_count } = await getActiveSessions();
+      setAdminCount(admin_count);
+      setNormalCount(normal_count);
     } catch (err) {
-      console.error("Failed to fetch active admin sessions:", err);
+      console.error("Failed to fetch active sessions:", err);
     }
-  };
+  }
 
-  useEffect(() => {
-    fetchActiveAdmins();
+  fetchSessions();
 
-    // Optional: poll every 30 seconds for near real-time updates
-    const interval = setInterval(fetchActiveAdmins, 30_000);
+  // Optional: poll every 30 seconds
+  const intervalId = setInterval(() => {
+    fetchSessions();
+  }, 30000);
 
-    return () => clearInterval(interval);
-  }, []);
+  return () => clearInterval(intervalId);
+}, []);
 
 //deleting records from the database
 const handleResolveError = async (errorId: number) => {
@@ -310,29 +313,43 @@ const handleResolveError = async (errorId: number) => {
         )}
       </section>
 
-      {/* Active Admin Sessions */}
-      <section className="bg-white  rounded-lg shadow p-6 mb-6 mx-auto">
-        <div className="flex items-center mb-2">
-          <h2 className="text-xl font-bold text-gray-700">
+      {/* Active Admin Sessions Card */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        {/* Admin Sessions Card */}
+        <div className="bg-gray-50  rounded-lg shadow-lg p-6">
+          <h2 className="text-lg font-bold text-gray-700 mb-1">
             Active Admin Sessions
           </h2>
+          <p className="text-3xl font-semibold text-blue-600">
+            {adminCount !== null ? adminCount : "Loading..."}
+          </p>
+          <p className="text-sm text-gray-500 mt-2">
+            Currently logged-in admin users
+          </p>
         </div>
-        
-        <p className="text-3xl font-extrabold text-blue-600">
-          {activeAdminCount !== null ? activeAdminCount : "Loading..."}
-        </p>
-        <p className="text-sm text-gray-500 mt-2">
-          Currently logged-in admin users
-        </p>
-      </section>
+
+        {/* Normal User Sessions Card */}
+        <div className="bg-gray-50 rounded-lg shadow-lg p-6">
+          <h2 className="text-lg font-bold text-gray-700 mb-1">
+            Active Normal Users
+          </h2>
+          <p className="text-3xl font-semibold text-green-600">
+            {normalCount !== null ? normalCount : "Loading..."}
+          </p>
+          <p className="text-sm text-gray-500 mt-2">
+            Non-admin authenticated sessions
+          </p>
+        </div>
+      </div>
 
       {/* Statistics Section */}
       <section
-        className="grid grid-cols-1 md:grid-cols-3 gap-6"
+        className="bg-gray-50 rounded-lg shadow-lg p-6 mb-6"
         aria-label="Statistics"
       >
-        <div className="bg-gray-50 rounded-lg shadow-lg mx-auto px-4 max-w-screen-xl mb-6">
-          <h3 className="text-lg font-medium text-gray-700">Issues</h3>
+        <div className="flex items-center mb-2">
+          <h2 className="text-xl font-bold text-gray-700">Issues</h2>
+        </div>
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr> {/*I will remove this after demo*/}
@@ -388,7 +405,6 @@ const handleResolveError = async (errorId: number) => {
               ))}
             </tbody>
           </table>
-        </div>
       </section>
 
 

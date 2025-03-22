@@ -102,9 +102,12 @@ export async function deleteOverride(
 }
 
 //Fetch the number of active admin sessions from the backend.
-export async function getActiveAdminSessions(): Promise<number> {
-  const response = await axiosInstance.get<{ active_admin_count: number }>(
-    "/active-admin-sessions"
-  );
-  return response.data.active_admin_count;
+export interface ActiveSessionsResponse {
+  admin_count: number;
+  normal_count: number;
+}
+
+export async function getActiveSessions(): Promise<ActiveSessionsResponse> {
+  const response = await axiosInstance.get<ActiveSessionsResponse>("/active-sessions");
+  return response.data;
 }

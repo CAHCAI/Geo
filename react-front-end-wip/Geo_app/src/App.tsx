@@ -130,10 +130,11 @@ const App: React.FC = () => {
 
               {loggedIn && (
                 <button
-                  className={cn(
-                    "hover:bg-black whitespace-nowrap text-white px-2 sm:px-4 py-3  text-sm sm:text-base",
-                    activePage === "admin-dashboard" && "bg-black"
-                  )}
+                className={cn(
+                  "relative hover:bg-black whitespace-nowrap text-white px-2 sm:px-4 py-3 text-sm sm:text-base",
+                  activePage === "admin-dashboard" &&
+                    "after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-0 after:h-0 after:border-l-8 after:border-r-8 after:border-b-8 after:border-t-gray-100 after:border-l-transparent after:border-r-transparent"
+                )}
                   onClick={() => setActivePage("admin-dashboard")}
                 >
                   Admin Dashboard
@@ -141,10 +142,11 @@ const App: React.FC = () => {
               )}
               {loggedIn && (
                 <button
-                  className={cn(
-                    "hover:bg-black whitespace-nowrap text-white px-2 sm:px-4 py-3  text-sm sm:text-base",
-                    activePage === "cord-override" && "bg-black"
-                  )}
+                className={cn(
+                  "relative hover:bg-black whitespace-nowrap text-white px-2 sm:px-4 py-3 text-sm sm:text-base",
+                  activePage === "cord-override" &&
+                    "after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-0 after:h-0 after:border-l-8 after:border-r-8 after:border-b-8 after:border-t-gray-100 after:border-l-transparent after:border-r-transparent"
+                )}
                   onClick={() => setActivePage("cord-override")}
                 >
                   Cordinate Override
