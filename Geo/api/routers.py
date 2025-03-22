@@ -94,6 +94,8 @@ def upload_shapefile(request, file: UploadedFile = File(...), file_type: str = F
     if (file_type == "hpsa"):
         handle_csv_upload(file)
         print("handled csv upload")
+        # if upload is successful, flush the cache 
+        cache.flushdb()
         return JsonResponse({"success" : True, "message" : "HPSA data uploaded"}, status=200)
     elif (file_type != "hpsa" and file.name.lower().endswith(".csv")):
         try:

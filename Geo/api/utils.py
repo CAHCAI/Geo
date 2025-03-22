@@ -10,6 +10,7 @@ from django.contrib.gis.geos import MultiPolygon, Polygon
 from django.db import connection
 from django.db import transaction
 import tempfile
+from Geo.cache import cache
 
 import csv
 
@@ -309,6 +310,8 @@ def generic_shapefile_uploader(layer: DataSource, model, create_instance_func, l
         return
     
     print(f"Successfully inserted {len(temp_records)} records into {label}.")
+    # flush cache after successful shapefile upload
+    cache.flushdb()
     
     
 def upload_senate_shapefile(layer: DataSource) -> None:

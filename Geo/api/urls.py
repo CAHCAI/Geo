@@ -19,6 +19,4 @@ urlpatterns = [
     path("logout/", admin_logout, name="admin_logout"),  # Logout API
     path("protected-view/", protected_view, name="protected_view"),
     path("message/", message_view, name="message"),  # Ensure this is defined
-
-    
 ]
