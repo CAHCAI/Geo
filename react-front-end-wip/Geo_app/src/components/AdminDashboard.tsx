@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import { TrashIcon } from "lucide-react";
+import React, { useEffect, useState } from "react";
 
 interface Alert {
   id: number;
@@ -18,6 +19,54 @@ const AdminDashboard: React.FC = () => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedOption, setSelectedOption] = useState<string>("senate");
+
+interface AdminError {
+  id: number
+  error_code: number;
+  error_description: string;
+  created_at: string;
+}
+
+const [issues, setIssues] = useState<AdminError[]>([]);
+const [refreshCounter, setRefreshCounter] = useState(0);
+
+useEffect(() => {
+  const fetchInterval = setInterval(() => {
+    setRefreshCounter(prev => prev + 1); 
+  }, 10000); // Poll every 10 seconds
+
+  const fetchIssues = async () => {
+    try {
+      const response = await fetch("http://localhost:8000/api/admin_errors/", {
+        headers: { "X-API-KEY": "supersecret" }
+      });
+      if (!response.ok) throw new Error('Failed to fetch issues');
+      const data = await response.json();
+      setIssues(data);
+    } catch (error) {
+      console.error("Error fetching issues:", error);
+    }
+  };
+
+  fetchIssues(); // Initial fetch
+  return () => clearInterval(fetchInterval); 
+}, [refreshCounter]); 
+
+//deleting records from the database
+const handleResolveError = async (errorId: number) => {
+  try {
+    const response = await fetch(
+      `http://localhost:8000/api/admin_errors/${errorId}/`, 
+      { method: 'DELETE', headers: { "X-API-KEY": "supersecret" } }
+    );
+    if (!response.ok) throw new Error('Failed to delete error');
+    setIssues(prev => prev.filter(error => error.id !== errorId));
+    addAlert("success", "Error resolved successfully");
+  } catch (error) {
+    console.error("Error deleting:", error);
+    addAlert("error", "Failed to resolve error");
+  }
+};
 
   // Handle file selection
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -243,30 +292,68 @@ const AdminDashboard: React.FC = () => {
         className="grid grid-cols-1 md:grid-cols-3 gap-6"
         aria-label="Statistics"
       >
-        <div className="bg-gray-50 rounded-lg shadow-lg p-6">
-          <h3 className="text-lg font-medium text-gray-700">
-            Total Users On The Site
-          </h3>
-          <p className="text-5xl font-bold text-blue-500 mt-4">50</p>
-        </div>
-        <div className="bg-gray-50 rounded-lg shadow-lg p-6">
-          <h3 className="text-lg font-medium text-gray-700">Active Sessions</h3>
-          <p className="text-5xl font-bold text-green-500 mt-4">10</p>
-        </div>
-        <div className="bg-gray-50 rounded-lg shadow-lg p-6">
-          <h3 className="text-lg font-medium text-gray-700">
-            Address Update Request
-          </h3>
-          <p className="text-5xl font-bold text-yellow-500 mt-4">3</p>
-        </div>
-        <div className="bg-gray-50 rounded-lg shadow-lg p-6">
+        <div className="bg-gray-50 rounded-lg shadow-lg mx-auto px-4 max-w-screen-xl">
           <h3 className="text-lg font-medium text-gray-700">Issues</h3>
-          <p className="text-5xl font-bold text-red-500 mt-4">None</p>
-        </div>
-      </section>
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr> {/*I will remove this after demo*/}
+              <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-32">
+                  Error ID
+                </th>
+                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-32">
+                  Error Code
+                </th>
+                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider min-w-[500px]">
+                  Description
+                </th>
+                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-48">
+                  Date Occurred
+                </th>
+                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-32">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {issues.map((error) => (
+                <tr key={error.id}>
+                  <td className="px-8 py-4 whitespace-nowrap text-base font-mono text-red-600">
+                    {error.id}
+                  </td>{/*I will remove this after demo*/}
+                  <td className="px-8 py-4 whitespace-nowrap text-base font-mono text-red-600">
+                    {error.error_code}
+                  </td>
+                  <td className="px-8 py-4 whitespace-normal text-base text-gray-900 max-w-2xl">
+                    {error.error_description}
+                  </td>
+                  <td className="px-8 py-4 whitespace-nowrap text-base text-gray-500">
+                    {new Date(error.created_at).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </td>
+                  <td className="px-8 py-4 whitespace-nowrap">
+                    <button 
+                      onClick={() => handleResolveError(error.id)}
+                      className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
+                      aria-label={`Mark error ${error.id} as resolved`}
+                    >
+                      <TrashIcon className="w-5 h-5" />
+                      <span>Resolve</span>
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+    </div>
+</section>
 
       {/* Dropdown Menu (above file upload) */}
-      <section className="w-full" aria-label="Geographical Selection Dropdown">
+      <section className="w-full pt-6" aria-label="Geographical Selection Dropdown">
         <label
           className="block text-gray-700 font-medium mb-2"
           htmlFor="select-option"

@@ -1,3 +1,4 @@
+import datetime
 import os
 from shutil import rmtree
 import subprocess
@@ -12,6 +13,8 @@ from django.contrib.gis.db.models.functions import Distance
 from ninja import Router, File, Schema, Form
 from ninja.files import UploadedFile
 from tempfile import TemporaryDirectory
+from datetime import datetime 
+from pydantic import Field  
 # utility functions
 from .utils import (extract_zip, find_shapefile, get_shapefile_metadata, 
 identify_shapefile_type, upload_assembly_shapefile, upload_congressional_shapefile,
@@ -21,7 +24,7 @@ upload_hsa_shapefile, upload_rnsa_shapefile, upload_mssa_shapefile, upload_pcsa_
 from django.shortcuts import get_object_or_404
 from django.db import connection
 from django.contrib.gis.db.models.functions import AsGeoJSON
-from .models import AssemblyDistrict, SenateDistrict, CongressionalDistrict, HealthServiceArea, MedicalServiceStudyArea,RegisteredNurseShortageArea, LAServicePlanningArea, PrimaryCareShortageArea
+from .models import AssemblyDistrict, SenateDistrict, AdminErrors, CongressionalDistrict, HealthServiceArea, MedicalServiceStudyArea,RegisteredNurseShortageArea, LAServicePlanningArea, PrimaryCareShortageArea
 import json
 from Geo.cache import cache, TTL
 from typing import List, Optional
@@ -60,6 +63,11 @@ def test_cache(request):
             cache.set("my_key", 1)
             return JsonResponse({"success": True, "message": "test api, successful. Will use cache next time."})
     except Exception as e:
+        try:
+            AdminErrors.objects.create(error_code=131, error_description=f"Redis failed: {str(e)}")
+            print("Error successfully logged in the database")
+        except Exception as e:
+            print(f"rror found but not logged into the database! {e}")
         return JsonResponse({"success": False, "message": f"Redis failed: {str(e)}"})
 
 @router.post("/upload-shapefile/")
@@ -73,6 +81,11 @@ def upload_shapefile(request, file: UploadedFile = File(...), file_type: str = F
     # lowercase the file type
     file_type = file_type.lower()
     if file_type not in valid_types:
+        try:
+            AdminErrors.objects.create(error_code=503, error_description="Invalid file type specifier")
+            print("Error successfully logged in the database")
+        except Exception as e:
+            print(f"Error found but not logged into the database! {e}")
         return JsonResponse({"success" : False, "message" : "Invalid file type specifier"})
     print("validated file")
     if (file_type == "hpsa"):
@@ -80,6 +93,11 @@ def upload_shapefile(request, file: UploadedFile = File(...), file_type: str = F
         print("handled csv upload")
         return JsonResponse({"success" : True, "message" : "HPSA data uploaded"}, status=200)
     elif (file_type != "hpsa" and file.name.lower().endswith(".csv")):
+        try:
+            AdminErrors.objects.create(error_code=500, error_description="CSV must be uploaded under Health Provider Shortage Areas (HPSA)")
+            print("Error successfully logged in the database")
+        except Exception as e:
+            print(f"Error found but not logged into the database! {e}")
         return JsonResponse({"success" : False, "message" : "CSV must be uploaded under Health Provider Shortage Areas (HPSA)"}, status=500)
     
     
@@ -92,6 +110,11 @@ def upload_shapefile(request, file: UploadedFile = File(...), file_type: str = F
 
         # Check if a shapefile is found
         if not shapefile_path:
+            try:
+                AdminErrors.objects.create(error_code=501, error_description="No shapefile found in the .zip archive.")
+                print("Error successfully logged in the database")
+            except Exception as e:
+                print(f"Error found but not logged into the database! {e}")
             return {"error": "No shapefile found in the .zip archive."}
 
         # Get metadata from the shapefile
@@ -104,6 +127,11 @@ def upload_shapefile(request, file: UploadedFile = File(...), file_type: str = F
         
         if file_type != validated_file_type:
             print(f"mismatched filetype | valid: {validated_file_type}, given: {file_type}")
+            try:
+                AdminErrors.objects.create(error_code=400, error_description="Invalid selected shapefile type.")
+                print("Error successfully logged in the database")
+            except Exception as e:
+                print(f"Error creating error log in table: {e}")
             return JsonResponse({"success": False, "error": "Invalid selected shapefile type."}, status=400)
 
         # Process the shapefile based on its type
@@ -125,13 +153,28 @@ def upload_shapefile(request, file: UploadedFile = File(...), file_type: str = F
             elif file_type == "pcsa":
                 upload_pcsa_shapefile(layer)
             else:
+                try:
+                    AdminErrors.objects.create(error_code=400, error_description="Unknown shapefile type")
+                    print("Error successfully logged in the database")
+                except Exception as e:
+                    print(f"Error creating log in the database: {e}")
                 return JsonResponse({"success": False, "error": "Unknown shapefile type", "status":400}, status=400)
         except Exception as e:
             print(f"Error uploading shapefile of type {file_type}: {e}")
+            try:
+                AdminErrors.objects.create(error_code=400, error_description=f"Shapefile of type '{file_type}' failed: {e}")
+                print("Error successfully logged in the database")
+            except Exception as e:
+                print(f"Error creating log in the database: {e}")
             return JsonResponse({"success" : False, "message": f"Shapefile of type '{file_type}' failed: {e}"}, status=400)
         # return on success
         return JsonResponse({"success" : True, "message": f"Shapefile of type '{file_type}' uploaded and processed successfully."})
     except Exception as e:
+        try:
+            AdminErrors.objects.create(error_code=400, error_description=f"Error response {e}")
+            print("Error successfully logged in the database")
+        except Exception as e:
+            print(f"Error creating log in the database: {e}")
         return JsonResponse({"success": False, "error": f"Error response {e}"}, status=400)
     finally:
         # Cleanup the temporary directory
@@ -323,6 +366,11 @@ def coordinate_search(request, lat: float, lng: float):
             cache_value["used_cache"] = True
             return JsonResponse(cache_value, safe=False) 
     except Exception as e:
+        try:
+            AdminErrors.objects.create(error_code=130, error_description=f"Error: {e}")
+            print("Error successfully logged in the database")
+        except Exception as e:
+            print(f"Error found but not logged into the database! {e}")
         return JsonResponse({"success": False, "message": f"Error: {e}"}, safe=False)
         
     
@@ -356,6 +404,11 @@ def coordinate_search(request, lat: float, lng: float):
         try:
             cache.set(cache_key, json.dumps(cache_value), ex=TTL)  #Stores in cache
         except Exception as e:
+            try:
+                AdminErrors.objects.create(error_code=130, error_description=f"Cache error: {e}")
+                print("Error successfully logged in the database")
+            except Exception as e:
+                print(f"Error found but not logged into the database! {e}")
             return JsonResponse({"success": False, "message": f"Cache error: {e}"}, safe=False)
 
     return JsonResponse(cache_value, safe=False) 
@@ -416,6 +469,11 @@ def upload_overrides_xlsx(request, file: UploadedFile = File(...)):
 
         if not new_overrides:
             print("No valid rows found in XLSX.")
+            try:
+                AdminErrors.objects.create(error_code=110, error_description="No valid rows found in XLSX")
+                print("Error successfully logged in the database")
+            except Exception as e:
+                print(f"Error found but not logged into the database! {e}")
             return {"success": False, "message": "No valid rows found in XLSX"}
 
         with transaction.atomic():
@@ -515,8 +573,33 @@ def delete_override(request, override_id: int):
         return {"success": True, "message": msg}
     except Exception as e:
         print(f"Error deleting override {override_id}: {e}")
+        try:
+            AdminErrors.objects.create(error_code=111, error_description=f"Failed to delete: {str(e)}")
+            print("Error successfully logged in the database")
+        except Exception as e:
+            print(f"Error found but not logged into the database! {e}")
         return {"success": False, "message": f"Failed to delete: {str(e)}"}
-    
+
+'''
+Endpoint deals with errors viewable by admins.
+''' 
+class AdminErrorSchema(Schema):
+    id: int
+    error_code: int
+    error_description: str
+    created_at: datetime = Field(..., format="iso8601")  
+
+@router.get("/admin_errors/", response=List[AdminErrorSchema])
+def admin_errors(request):
+    return AdminErrors.objects.all().order_by('-created_at')
+
+@router.delete("/admin_errors/{id}/")
+def delete_admin_error(request, id: int):
+    error = get_object_or_404(AdminErrors, id=id)
+    error.delete()
+    return {"success": True, "message": f"Error {id} deleted"}
+
+
 def to_hsa_dict(obj):
     if not obj:
         return {"N/A"}
@@ -558,3 +641,4 @@ def to_pcsa_dict(obj):
         "pcsa": obj.pcsa,
         #add more object if needed
     }
+
