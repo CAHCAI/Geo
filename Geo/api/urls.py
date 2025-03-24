@@ -10,7 +10,6 @@ from django.http import JsonResponse
 api = NinjaAPI(auth=APIKeyAuth())
 api.add_router("/", router)
 
-<<<<<<< Updated upstream
 # Properly include API URLs
 urlpatterns = [
     path("", api.urls),  #  This registers all API routes
@@ -19,7 +18,7 @@ urlpatterns = [
     path("protected-view/", protected_view, name="protected_view"),
     path("message/", message_view, name="message"),  # Ensure this is defined
 ]
-=======
+
 #def hello_world(request):
     #return JsonResponse({"message": "Hello from Django!"})
 
@@ -34,4 +33,3 @@ urlpatterns = [
    # path("hello/", hello_world, name="hello_world"),
     path("", api.urls),  # Catch-all NinjaAPI routes at the end
 ]
->>>>>>> Stashed changes

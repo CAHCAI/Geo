@@ -403,7 +403,7 @@ def coordinate_search(request, lat: float, lng: float):
         return JsonResponse(cache_value, safe=False)
 
     except Exception as e:
-<<<<<<< Updated upstream
+        
         try:
             AdminErrors.objects.create(error_code=130, error_description=f"Error: {e}")
             print("Error successfully logged in the database")
@@ -411,7 +411,7 @@ def coordinate_search(request, lat: float, lng: float):
             print(f"Error found but not logged into the database! {e}")
         return JsonResponse({"success": False, "message": f"Error: {e}"}, safe=False)
         
-    
+'''
     point = Point(lng, lat, srid=4326)
 
     senate_matches = SenateDistrict.objects.filter(geom__contains=point)
@@ -445,13 +445,11 @@ def coordinate_search(request, lat: float, lng: float):
                 print(f"Error found but not logged into the database! {e}")
             return JsonResponse({"success": False, "message": f"Cache error: {e}"}, safe=False)
 
-    return JsonResponse(cache_value, safe=False) 
-=======
-        print(f"❌ Coordinate Search Error: {e}")
-        return JsonResponse({"success": False, "error": str(e)}, status=500)
->>>>>>> Stashed changes
+ #   return JsonResponse(cache_value, safe=False) 
+ #     print(f" Coordinate Search Error: {e}")
+#        return JsonResponse({"success": False, "error": str(e)}, status=500)
 
-
+'''
 # Define a schema for expected data
 class OverrideLocationSchema(Schema):
     lat: float
@@ -713,12 +711,9 @@ def to_pcsa_dict(obj):
         #add more object if needed
     }
 
-<<<<<<< Updated upstream
-=======
-api = Router()
+#api = Router()
 
 #@api.post("/generate-api-key", tags=["Admin"])
 #def generate_api_key(request):
    # raw_key = APIKey.generate()  # This returns the unhashed key once
  #   return {"api_key": raw_key}
->>>>>>> Stashed changes

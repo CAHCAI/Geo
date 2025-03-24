@@ -314,7 +314,6 @@ class OverrideLocation(models.Model):
     def __str__(self):
         return self.address
     
-<<<<<<< Updated upstream
 class AdminErrors(models.Model):
     id = models.AutoField(primary_key=True)
     error_code = models.IntegerField()
@@ -323,5 +322,3 @@ class AdminErrors(models.Model):
     
     def __str__(self):
         return self.error_description
-=======
->>>>>>> Stashed changes

@@ -208,8 +208,6 @@ const AdminDashboard: React.FC = () => {
     setAlerts((prevAlerts) => prevAlerts.filter((alert) => alert.id !== id));
   };
 
-<<<<<<< Updated upstream
-=======
   const handleCoordinatesChange = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -278,7 +276,6 @@ const AdminDashboard: React.FC = () => {
     setShowConfirmation(false);
   };
 
->>>>>>> Stashed changes
   return (
     // Wrap in a <main> with an aria-label to identify this primary region
     <main

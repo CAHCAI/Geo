@@ -101,7 +101,6 @@ export async function deleteOverride(
   return response.data;
 }
 
-<<<<<<< Updated upstream
 //Fetch the number of active admin sessions from the backend.
 export interface ActiveSessionsResponse {
   admin_count: number;
@@ -112,7 +111,6 @@ export async function getActiveSessions(): Promise<ActiveSessionsResponse> {
   const response = await axiosInstance.get<ActiveSessionsResponse>("/active-sessions");
   return response.data;
 }
-=======
 export const getApiKey = async (): Promise<void> => {
   try {
       const response = await fetch("/api/generate-api-key/", {
@@ -156,4 +154,3 @@ export const validateKey = async (): Promise<void> => {
       console.error("Error validating API key:", error);
   }
 };
->>>>>>> Stashed changes
