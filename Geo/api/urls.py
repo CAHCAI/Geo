@@ -10,15 +10,6 @@ from django.http import JsonResponse
 api = NinjaAPI(auth=APIKeyAuth())
 api.add_router("/", router)
 
-# Properly include API URLs
-urlpatterns = [
-    path("", api.urls),  #  This registers all API routes
-    path("login/", admin_login, name="admin_login"),  # Login API
-    path("logout/", admin_logout, name="admin_logout"),  # Logout API
-    path("protected-view/", protected_view, name="protected_view"),
-    path("message/", message_view, name="message"),  # Ensure this is defined
-]
-
 #def hello_world(request):
     #return JsonResponse({"message": "Hello from Django!"})
 
