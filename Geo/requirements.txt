@@ -21,3 +21,4 @@ gdal==3.4.1
 djangorestframework
 psycopg2
 openpyxl
+python-dotenv

@@ -1,6 +1,15 @@
 from django.db import models
-from django.contrib.gis.db import models
+from django.contrib.auth.models import User
+from django.utils import timezone
 import uuid
+import secrets
+from datetime import timedelta, datetime, timezone
+from django.contrib.gis.db import models 
+from django.contrib.auth.hashers import make_password
+from datetime import timedelta, datetime
+
+
+
 # Create your models here.
 
 """
@@ -255,10 +264,42 @@ class HPSA_PrimaryCareShortageArea(HealthProfessionalShortageArea):
 def generate_api_key():
     return str(uuid.uuid4()).replace('-', '')  # Generates a unique API key
 
+
+# APIKey model
 class APIKey(models.Model):
-    key = models.CharField(max_length=64, unique=True, default=generate_api_key)  # Use function, not lambda
-    ip_address = models.GenericIPAddressField()  # Required field
+    key = models.CharField(max_length=64, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(null=True, blank=True)  # Ensure this exists
+    usage_count = models.IntegerField(default=0)
+    revoked = models.BooleanField(default=False)
+
+    def is_valid(self):
+        """ Check if the API key is valid (not expired or revoked) """
+        if self.revoked:
+            return False
+        if self.expires_at and self.expires_at < timezone.now():
+            return False
+        return True
+
+    def increment_usage(self, limit=100):
+        """ Increment the usage count and revoke if it exceeds limit """
+        self.usage_count += 1
+        if self.usage_count >= limit:
+            self.revoke()
+        self.save()
+
+    def revoke(self):
+        """ Revoke the API key """
+        self.revoked = True
+        self.save()
+
+    @classmethod
+    def generate(cls, expires_in_days=30):
+        """ Generate a new API key with expiration """
+        return cls.objects.create(
+            key=secrets.token_hex(32),
+            expires_at=timezone.make_aware(datetime.now() + timedelta(days=expires_in_days))  # Timezone-aware
+        )
 
     def __str__(self):
         return f"{self.key} ({self.ip_address})"
@@ -273,6 +314,7 @@ class OverrideLocation(models.Model):
     def __str__(self):
         return self.address
     
+<<<<<<< Updated upstream
 class AdminErrors(models.Model):
     id = models.AutoField(primary_key=True)
     error_code = models.IntegerField()
@@ -281,3 +323,5 @@ class AdminErrors(models.Model):
     
     def __str__(self):
         return self.error_description
+=======
+>>>>>>> Stashed changes

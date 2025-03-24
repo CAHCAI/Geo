@@ -1,6 +1,7 @@
 import datetime
 import os
 from shutil import rmtree
+from .auth import APIKeyAuth, api_key_required
 import subprocess
 import uuid
 import zipfile
@@ -36,13 +37,15 @@ from django.utils import timezone
 from django.contrib.auth import get_user_model
 
 
-
 # Directory to temporarily store uploaded shapefiles
 UPLOAD_DIR = os.path.join(settings.MEDIA_ROOT, "shapefiles")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # Create a router instance
 router = Router()
+
+#router = Router(auth=APIKeyAuth())
+
 
 
 @router.get("/test")
@@ -357,20 +360,50 @@ def all_districts_data(request):
     })
 
 @router.get("/search")
+@api_key_required
 def coordinate_search(request, lat: float, lng: float):
     """
     Search the district tables for polygons containing (lat, lng).
     """
-    
     cache_key = f"{lat}_{lng}"
-    
+
     try:
+        print(f"Coordinate Search Called - lat: {lat}, lng: {lng}")
         cache_value = cache.get(cache_key)
-        if cache_value:    
+        if cache_value:
             cache_value = json.loads(cache_value)
             cache_value["used_cache"] = True
-            return JsonResponse(cache_value, safe=False) 
+            return JsonResponse(cache_value, safe=False)
+
+        point = Point(lng, lat, srid=4326)
+
+        senate_matches = SenateDistrict.objects.filter(geom__contains=point)
+        assembly_matches = AssemblyDistrict.objects.filter(geom__contains=point)
+        congressional_matches = CongressionalDistrict.objects.filter(geom__contains=point)
+        healthservicearea_matches = HealthServiceArea.objects.filter(geom__contains=point)
+        laserviceplanningarea_matches = LAServicePlanningArea.objects.filter(geom__contains=point)
+        registerednurseshortagearea_matches = RegisteredNurseShortageArea.objects.filter(geom__contains=point)
+        medicalservicestudyarea_matches = MedicalServiceStudyArea.objects.filter(geom__contains=point)
+        primarycareshortagearea_matches = PrimaryCareShortageArea.objects.filter(geom__contains=point)
+
+        cache_value = {
+            "senate": [to_dict(d) for d in senate_matches],
+            "assembly": [to_dict(d) for d in assembly_matches],
+            "congressional": [to_dict(d) for d in congressional_matches],
+            "healthservicearea": [to_hsa_dict(d) for d in healthservicearea_matches],
+            "LaServicePlanning": [to_laspa_dict(d) for d in laserviceplanningarea_matches],
+            "RegisteredNurseShortageArea": [to_rnsa_dict(d) for d in registerednurseshortagearea_matches],
+            "MedicalServiceStudyArea": [to_mssa_dict(d) for d in medicalservicestudyarea_matches],
+            "PrimaryCareShortageArea": [to_pcsa_dict(d) for d in primarycareshortagearea_matches],
+        }
+
+        if any(cache_value.values()):
+            cache.set(cache_key, json.dumps(cache_value), ex=TTL)
+
+        return JsonResponse(cache_value, safe=False)
+
     except Exception as e:
+<<<<<<< Updated upstream
         try:
             AdminErrors.objects.create(error_code=130, error_description=f"Error: {e}")
             print("Error successfully logged in the database")
@@ -413,6 +446,10 @@ def coordinate_search(request, lat: float, lng: float):
             return JsonResponse({"success": False, "message": f"Cache error: {e}"}, safe=False)
 
     return JsonResponse(cache_value, safe=False) 
+=======
+        print(f"❌ Coordinate Search Error: {e}")
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
+>>>>>>> Stashed changes
 
 
 # Define a schema for expected data
@@ -676,3 +713,12 @@ def to_pcsa_dict(obj):
         #add more object if needed
     }
 
+<<<<<<< Updated upstream
+=======
+api = Router()
+
+#@api.post("/generate-api-key", tags=["Admin"])
+#def generate_api_key(request):
+   # raw_key = APIKey.generate()  # This returns the unhashed key once
+ #   return {"api_key": raw_key}
+>>>>>>> Stashed changes

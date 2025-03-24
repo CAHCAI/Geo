@@ -2,6 +2,9 @@ import { TrashIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { getActiveSessions, ActiveSessionsResponse } from "@/lib/utils";
 
+
+const fixedApiKey = import.meta.env.VITE_API_KEY;
+
 interface Alert {
   id: number;
   type: "error" | "success" | "info";
@@ -164,7 +167,7 @@ const AdminDashboard: React.FC = () => {
           method: "POST",
           body: formData,
           headers: {
-            "X-API-KEY": "supersecret",
+            "X-API-KEY": fixedApiKey,
           },
         }
       );
@@ -205,6 +208,77 @@ const AdminDashboard: React.FC = () => {
     setAlerts((prevAlerts) => prevAlerts.filter((alert) => alert.id !== id));
   };
 
+<<<<<<< Updated upstream
+=======
+  const handleCoordinatesChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = event.target.value;
+    const coordinatesRegex = /^-?\d{1,3}\.\d+,\s*-?\d{1,3}\.\d+$/;
+    setCoordinates(value);
+    setShowAddressInput(coordinatesRegex.test(value));
+  };
+
+  const handleAddressChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setAddress(event.target.value);
+    setShowSubmitButton(event.target.value.length > 0);
+  };
+
+  const handleSubmit = () => {
+    setShowConfirmation(true);
+  };
+
+  const confirmSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      const lat = parseFloat(coordinates.split(",")[0].trim());
+      const lon = parseFloat(coordinates.split(",")[1].trim());
+
+      if (isNaN(lat) || isNaN(lon)) {
+        throw new Error(
+          "Invalid coordinate format. Ensure it is in 'lat, lon' format."
+        );
+      }
+
+      const response = await fetch(
+        "http://localhost:8000/api/override-location/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-API-KEY": fixedApiKey,
+          },
+          body: JSON.stringify({
+            lat: lat,
+            lon: lon,
+            address: address.trim(),
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Server response error:", errorData);
+        throw new Error(errorData.message || "Failed to update location.");
+      }
+
+      alert(
+        `Coordinates: ${coordinates}\nAddress: ${address}\nSuccessfully Updated!`
+      );
+    } catch (error) {
+      console.error("Error updating location:", error);
+      alert("Failed to update location. Please try again.");
+    }
+
+    setIsSubmitting(false);
+    setCoordinates("");
+    setAddress("");
+    setShowAddressInput(false);
+    setShowSubmitButton(false);
+    setShowConfirmation(false);
+  };
+
+>>>>>>> Stashed changes
   return (
     // Wrap in a <main> with an aria-label to identify this primary region
     <main
@@ -456,3 +530,4 @@ export default AdminDashboard;
     setShowConfirmation(false);
   };
  */
+

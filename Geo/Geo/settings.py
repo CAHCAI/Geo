@@ -161,9 +161,12 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 # Media files (for file uploads)
 MEDIA_URL = '/media/'
@@ -176,7 +179,21 @@ MEDIA_ROOT = BASE_DIR / 'media'
 SECRET_KEY = 'django-insecure-*9k$2z9$opo%jne$wlvju)l%*8!p#*rg=jmjzy)oqe+xnfy48-'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'DEBUG',
+    },
+}
 
 ALLOWED_HOSTS = [
     "localhost",
@@ -245,6 +262,9 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'Geo.wsgi.application'
+
+#security
+FIXED_API_KEY = os.getenv("VITE_API_KEY", "supersecret")
 
 
 # Database

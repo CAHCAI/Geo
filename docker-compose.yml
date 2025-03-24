@@ -55,6 +55,7 @@ services:
       - POSTGRES_USER=geo_user
       - POSTGRES_PASSWORD=geo_password
       - POSTGRES_HOST=db
+      - VITE_API_KEY=supersecret
     networks:
       - app_network
     depends_on:

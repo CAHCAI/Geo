@@ -2,13 +2,20 @@ from django.shortcuts import render
 from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+from django.utils.timezone import now
+from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import check_password
 import json
+import secrets
 from django.contrib.gis.geos import Point
+from datetime import timedelta, datetime
+from django.utils import timezone
 from .models import AssemblyDistrict, SenateDistrict, CongressionalDistrict, HealthServiceArea, APIKey
 from .auth import api_key_required
 import openpyxl
 from rest_framework import viewsets, status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 
 # Create your views here.
@@ -40,7 +47,6 @@ def admin_logout(request):
     return JsonResponse({"message": "Logged out successfully"}, status=200)
 
 
-
 @csrf_exempt
 @api_key_required
 def protected_view(request):
@@ -54,3 +60,71 @@ def create_api_key(request):
 def message_view(request):
     return JsonResponse({"message": "Hello from Django API!"})
 
+
+@api_view(["POST"])
+def generate_api_key(request):
+    # Generate a secure random key
+    raw_key = secrets.token_hex(32)
+    
+    # Log the raw key to confirm it's generated correctly
+    print(f"Generated raw key: {raw_key}")
+    
+    # Hash the key before saving to DB
+    hashed_key = make_password(raw_key)
+    
+    # Set expiration time to 30 days from now (timezone-aware)
+    expiration_time = timezone.make_aware(datetime.now() + timedelta(days=30))
+    
+    # Save the hashed key
+    api_key = APIKey.objects.create(key=hashed_key, expires_at=expiration_time)
+    
+    return Response({
+        "api_key": raw_key,  # Show raw key only once
+        "expires_at": expiration_time.strftime('%Y-%m-%d %I:%M %p')  # Format the expiration time
+    })
+
+
+
+@api_view(["POST"])
+def validate_api_key(request):
+    key = request.data.get("api_key")  # Get the raw API key from the request
+
+    if not key:
+        return Response({"error": "API key is required"}, status=400)
+
+    # Iterate over all non-revoked API keys and check if any match the provided key.
+    valid_key = None
+    for k in APIKey.objects.filter(revoked=False):
+        if check_password(key, k.key):
+            valid_key = k
+            break
+
+    if not valid_key:
+        return Response({"error": "Invalid API key"}, status=403)
+
+    # Check if the API key has expired
+    if valid_key.expires_at and valid_key.expires_at < timezone.now():
+        return Response({"error": "API key has expired"}, status=403)
+
+    # Increment usage count if needed
+    valid_key.increment_usage()
+    return Response({"message": "API key valid", "usage_count": valid_key.usage_count})
+
+
+
+@api_view(["POST"])
+def revoke_api_key(request):
+    key = request.data.get("api_key")
+    
+    # Iterate over all non-revoked API keys and find a match
+    valid_key = None
+    for k in APIKey.objects.filter(revoked=False):
+        if check_password(key, k.key):
+            valid_key = k
+            break
+
+    if not valid_key:
+        return Response({"error": "API key not found or invalid"}, status=404)
+
+    valid_key.revoke()
+    return Response({"message": "API key revoked"})

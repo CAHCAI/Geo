@@ -101,6 +101,7 @@ export async function deleteOverride(
   return response.data;
 }
 
+<<<<<<< Updated upstream
 //Fetch the number of active admin sessions from the backend.
 export interface ActiveSessionsResponse {
   admin_count: number;
@@ -111,3 +112,48 @@ export async function getActiveSessions(): Promise<ActiveSessionsResponse> {
   const response = await axiosInstance.get<ActiveSessionsResponse>("/active-sessions");
   return response.data;
 }
+=======
+export const getApiKey = async (): Promise<void> => {
+  try {
+      const response = await fetch("/api/generate-api-key/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) {
+          throw new Error("Failed to generate API key");
+      }
+
+      const data = await response.json();
+      localStorage.setItem("api_key", data.api_key);
+  } catch (error) {
+      console.error("Error generating API key:", error);
+  }
+};
+
+export const validateKey = async (): Promise<void> => {
+  try {
+      const apiKey = localStorage.getItem("api_key");
+
+      if (!apiKey) {
+          console.error("No API key found in local storage");
+          return;
+      }
+
+      const response = await fetch("/api/validate-api-key/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ api_key: apiKey }),
+      });
+
+      if (!response.ok) {
+          throw new Error("API key validation failed");
+      }
+
+      const data = await response.json();
+      console.log(data.message);
+  } catch (error) {
+      console.error("Error validating API key:", error);
+  }
+};
+>>>>>>> Stashed changes

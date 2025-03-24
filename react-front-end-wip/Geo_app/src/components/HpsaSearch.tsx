@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import Table from "@/components/ui/table";
@@ -52,6 +51,8 @@ export const InputWithButton: React.FC<{
   </div>
 );
 
+const fixedApiKey = import.meta.env.VITE_API_KEY;
+
 // Helper function to transpose data
 const transposeData = (data: any[], columns: any[]) => {
   return columns.map((column) => ({
@@ -98,7 +99,7 @@ const HpsaSearchPage: React.FC = () => {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          "X-API-KEY": "supersecret",
+          "X-API-KEY": fixedApiKey,
         },
       });
 
@@ -496,3 +497,4 @@ const HpsaSearchPage: React.FC = () => {
 };
 
 export default HpsaSearchPage;
+
