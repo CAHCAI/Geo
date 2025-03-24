@@ -391,10 +391,11 @@ def coordinate_search(request, lat: float, lng: float):
             "assembly": [to_dict(d) for d in assembly_matches],
             "congressional": [to_dict(d) for d in congressional_matches],
             "healthservicearea": [to_hsa_dict(d) for d in healthservicearea_matches],
-            "LaServicePlanning": [to_laspa_dict(d) for d in laserviceplanningarea_matches],
+            "LaServicePlanning": [to_laspa_dict(d) for d in laserviceplanningarea_matches],  
             "RegisteredNurseShortageArea": [to_rnsa_dict(d) for d in registerednurseshortagearea_matches],
             "MedicalServiceStudyArea": [to_mssa_dict(d) for d in medicalservicestudyarea_matches],
-            "PrimaryCareShortageArea": [to_pcsa_dict(d) for d in primarycareshortagearea_matches],
+            "PrimaryCareShortageArea": [to_pcsa_dict(d) for d in primarycareshortagearea_matches], 
+
         }
 
         if any(cache_value.values()):
@@ -671,10 +672,11 @@ def delete_admin_error(request, id: int):
 
 def to_hsa_dict(obj):
     if not obj:
-        return {"N/A"}
+        return {}
 
     return {
         "hsa_name": obj.hsa_name,
+        "hsa_number": obj.hsa_number,
     }
 
 def to_laspa_dict(obj):
@@ -700,6 +702,10 @@ def to_mssa_dict(obj):
 
     return {
         "mssaid": obj.mssaid,
+        "definition": obj.definition,
+        "county": obj.county_nm,
+        "censustract": obj.tractce,
+        "censuskey": obj.geoid,
     }
 
 def to_pcsa_dict(obj):
@@ -708,8 +714,10 @@ def to_pcsa_dict(obj):
 
     return {
         "pcsa": obj.pcsa,
+        "scoretota": obj.score_tota,
         #add more object if needed
     }
+
 
 #api = Router()
 

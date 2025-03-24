@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import Table from "@/components/ui/table";
@@ -13,9 +14,26 @@ interface Alert {
 interface RegisteredNurseShortageAreaItem {
   rnsa: string;
   Effective: string;
-  hsa_name: string;
   spa_name: string;
 }
+
+interface MedicalServiceStudyAreaItem {
+  mssaid: string;
+  definition: string;
+  county: string;
+  censustract: string;
+  censuskey: string;
+}
+interface PrimaryCareShortageAreaItem {
+  pcsa: string;
+  scoretota: string;
+}
+
+interface HealthServiceAreaItem {
+  hsa_name: string;
+  hsa_number: string;
+}
+
 
 
 export const InputWithButton: React.FC<{
@@ -50,6 +68,7 @@ export const InputWithButton: React.FC<{
     </Button>
   </div>
 );
+
 
 const fixedApiKey = import.meta.env.VITE_API_KEY;
 
@@ -148,17 +167,33 @@ const HpsaSearchPage: React.FC = () => {
   };
 
   // Column definitions
-  const baseTableColumns = [
-    { Header: "MSSA ID", accessor: "ID" },
-    { Header: "MSSA Definition", accessor: "Definition" },
-    { Header: "Census Tract", accessor: "Tract" },
-    { Header: "Census Key", accessor: "Key" },
-    { Header: "County", accessor: "County" },
-    { Header: "MUA", accessor: "MUA" },
-    { Header: "MUP", accessor: "MUP" },
-    { Header: "PCSA", accessor: "PCSA" },
-    { Header: "RNSA", accessor: "RNSA" },
-  ];
+  const baseTableColumns = searchResults?.MedicalServiceStudyArea?.length
+  ? searchResults.MedicalServiceStudyArea.map((item: MedicalServiceStudyAreaItem) => ({
+      ID: item.mssaid,
+      Definition: item.definition,
+      Tract: item.censustract,
+      Key: item.censuskey,
+      County: item.county,
+      MUA: "No", // or fetch from data if needed
+      MUP: "No",
+      PCSA: searchResults?.PrimaryCareShortageArea?.length
+        ? searchResults.PrimaryCareShortageArea.map((pcsaItem: PrimaryCareShortageAreaItem) => `${pcsaItem.pcsa} (${pcsaItem.scoretota})`).join(", ")
+        : "N/A",
+      RNSA: searchResults?.RegisteredNurseShortageArea?.length
+        ? searchResults.RegisteredNurseShortageArea.map((rnsaItem: RegisteredNurseShortageAreaItem) => `${rnsaItem.rnsa} (${rnsaItem.Effective})`).join(", ")
+        : "N/A"
+    }))
+  : [{
+      ID: "N/A",
+      Definition: "N/A",
+      Tract: "N/A",
+      Key: "N/A",
+      County: "N/A",
+      MUA: "N/A",
+      MUP: "N/A",
+      PCSA: "N/A",
+      RNSA: "N/A"
+    }];
 
   const primaryCareColumns = [
     { Header: "HPSA Primary Care", accessor: "PrimaryCare" },
@@ -196,14 +231,38 @@ const HpsaSearchPage: React.FC = () => {
   // Table data
   const baseTableData = [
     {
-      ID: "139a",
-      Definition: "Urban",
-      Tract: "70.11",
-      Key: "06067007011",
-      County: "Sacramento",
+      ID: searchResults?.MedicalServiceStudyArea?.length
+      ? searchResults.MedicalServiceStudyArea.map(
+          (item: MedicalServiceStudyAreaItem) => `${item.mssaid}`)
+      : "N/A",
+      Definition: searchResults?.MedicalServiceStudyArea?.length
+      ? searchResults.MedicalServiceStudyArea.map(
+          (item: MedicalServiceStudyAreaItem) => `${item.definition}`
+        )
+      : "N/A",
+      Tract: searchResults?.MedicalServiceStudyArea?.length
+      ? searchResults.MedicalServiceStudyArea.map(
+          (item: MedicalServiceStudyAreaItem) => `${item.censustract}`
+        )
+      : "N/A",
+      Key: searchResults?.MedicalServiceStudyArea?.length
+      ? searchResults.MedicalServiceStudyArea.map(
+          (item: MedicalServiceStudyAreaItem) => `${item.censuskey}`
+        )
+      : "N/A",
+      County: searchResults?.MedicalServiceStudyArea?.length
+      ? searchResults.MedicalServiceStudyArea.map(
+          (item: MedicalServiceStudyAreaItem) => `${item.county}`
+        )
+      : "N/A",
       MUA: "No",
       MUP: "No",
-      PCSA: "Yes (7)",
+      PCSA: searchResults?.PrimaryCareShortageArea?.length
+      ? searchResults.PrimaryCareShortageArea.map(
+          (item: PrimaryCareShortageAreaItem) => `${item.pcsa} (${item.scoretota})`
+        )
+      : "N/A",    
+    
       RNSA: searchResults?.RegisteredNurseShortageArea?.length
       ? searchResults.RegisteredNurseShortageArea.map((item : RegisteredNurseShortageAreaItem) => 
           `${item.rnsa} (${item.Effective})`
@@ -226,8 +285,23 @@ const HpsaSearchPage: React.FC = () => {
   ];
 
   const dentalHealthCareData = [{ DentalHealth: "Designated: No" }];
-  const healthServiceAreaData = [{ HealthServiceArea: "Golden Empire (2)" }];
-  const laServicePlanningAreaData = [{ LAServiceArea: "N/A" }];
+  const healthServiceAreaData = searchResults?.healthservicearea?.length
+  ? searchResults.healthservicearea.map(
+      (item: HealthServiceAreaItem) => ({
+        HealthServiceArea: `${item.hsa_name} (${item.hsa_number})`,
+      })
+    )
+  : [{ HealthServiceArea: "N/A" }];
+  const laServicePlanningAreaData = searchResults?.LaServicePlanning?.length
+  ? searchResults.LaServicePlanning.map((item: { spa_name: string }) => ({
+      // The property name MUST match the table column accessor "spa_name"
+      spa_name: item.spa_name,
+    }))
+  : [
+      {
+        spa_name: "N/A",
+      },
+    ];
   const assemblyDistrictData = [
     { AssemblyDistrict: "Name: 6th Assembly District" },
     { AssemblyDistrict: "Party" },
@@ -260,23 +334,112 @@ const HpsaSearchPage: React.FC = () => {
   );
 
   const transposedHealthServiceAreaData = transposeData(
-    searchResults?.healthservicearea?.length
-      ? searchResults.healthservicearea
-      : [{ hsa_name: "N/A" }],
+    healthServiceAreaData,
     healthServiceAreaColumns
   );
 
   const transposedLAServicePlanningData = transposeData(
-    searchResults?.laplanning || [],
+    laServicePlanningAreaData,
     laServicePlanningAreaColumns
   );
- 
-  const transposedRNSAData = transposeData(
-    searchResults?.RegisteredNurseShortageArea?.length
-      ? searchResults.RegisteredNurseShortageArea.map((item : RegisteredNurseShortageAreaItem) => ({ rnsa: item.rnsa }))
-      : [{ rnsa: "N/A" }],
-    [{ Header: "RNSA", accessor: "rnsa" }]
+  const transposedBaseTableData = transposeData(baseTableData, [
+    { Header: "MSSA ID", accessor: "ID" },
+    { Header: "MSSA Definition", accessor: "Definition" },
+    { Header: "Census Tract", accessor: "Tract" },
+    { Header: "Census Key", accessor: "Key" },
+    { Header: "County", accessor: "County" },
+    { Header: "MUA", accessor: "MUA" },
+    { Header: "MUP", accessor: "MUP" },
+    { Header: "PCSA", accessor: "PCSA" },
+    { Header: "RNSA", accessor: "RNSA" },
+  ]);
+
+  const transposedPrimaryCareData = transposeData(
+    [{ PrimaryCare: "Designated: No" }],
+    [{ Header: "HPSA Primary Care", accessor: "PrimaryCare" }]
   );
+  
+  const transposedMentalHealthData = transposeData(
+    [
+      { MentalHealth: "SOURCE ID: 7061261199" },
+      { MentalHealth: "Designated: Yes" },
+      { MentalHealth: "Designated on: 3/25/2021" },
+      { MentalHealth: "Formal ratio" },
+      { MentalHealth: "Population below poverty (%): 13.3" },
+      { MentalHealth: "Designation population: 63651.0" },
+      { MentalHealth: "Estimated underserved population: 63651" },
+      { MentalHealth: "Estimated served population: 0" },
+      { MentalHealth: "Priority score: 18" },
+    ],
+    [{ Header: "HPSA Mental Health", accessor: "MentalHealth" }]
+  );
+  
+  const transposedDentalHealthData = transposeData(
+    [{ DentalHealth: "Designated: No" }],
+    [{ Header: "HPSA Dental Health", accessor: "DentalHealth" }]
+  );
+  
+  
+
+  
+ 
+  const transposedHSAData = transposeData(
+    searchResults?.healthservicearea?.length
+      ? searchResults.healthservicearea.map(
+          (item: HealthServiceAreaItem) => ({
+            hsa_name: item.hsa_name,
+            hsa_number: item.hsa_number,
+          })
+        )
+      : [{
+          hsa_name: "N/A",
+          hsa_number: "N/A",
+        }],
+    healthServiceAreaColumns
+  );
+  
+
+  const transposedMSSAData = transposeData(
+    searchResults?.MedicalServiceStudyArea?.length
+      ? searchResults.MedicalServiceStudyArea.map(
+          (item: MedicalServiceStudyAreaItem) => ({
+            mssaid: item.mssaid,
+            definition: item.definition,
+            county: item.county,
+            censustract: item.censustract,
+            censuskey: item.censuskey,
+          })
+        )
+      : [{
+          mssaid: "N/A",
+          definition: "N/A",
+          county: "N/A",
+          censustract: "N/A",
+          censuskey: "N/A",
+        }],
+    [
+      { Header: "MSSA ID", accessor: "mssaid" },
+      { Header: "Definition", accessor: "definition" },
+      { Header: "County", accessor: "county" },
+      { Header: "Census Tract", accessor: "censustract" },
+      { Header: "Census Key", accessor: "censuskey" },
+    ]
+  );  
+
+  const transposedPCSAData = transposeData(
+    searchResults?.PrimaryCareShortageArea?.length
+      ? searchResults.PrimaryCareShortageArea.map(
+          (item: PrimaryCareShortageAreaItem) => ({
+            pcsa: item.pcsa, scoretota:item.scoretota
+          })
+        )
+      : [{ pcsa: "N/A", 
+        scoretota:"N/A"}],
+    [{ Header: "PCSA", accessor: "pcsa" },
+      {Header: "Scoretota", accessor: "scoretota"}
+    ]
+  );
+  
   
   return (
     <>
@@ -286,13 +449,11 @@ const HpsaSearchPage: React.FC = () => {
       >
         Skip to main content
       </a>
-
       <header className="container mx-auto pt-5 px-4">
         <h1 className="text-3xl font-bold text-gray-900">
           Health Professional Shortage Areas (HPSA) Search
         </h1>
       </header>
-
       <div className="container mx-auto pt-5 px-4 space-y-4">
         {/* Alerts Section */}
         <section
@@ -300,8 +461,6 @@ const HpsaSearchPage: React.FC = () => {
           role="region"
           aria-labelledby="alerts-heading"
         >
-         
-      
             <div className="space-y-2">
               {alerts.map((alert) => (
                 <div
@@ -331,66 +490,171 @@ const HpsaSearchPage: React.FC = () => {
         {searchResults?.senate?.length > 0 && (
           <>
             {/* Base Table */}
-            <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white max-h-[350px] sm:max-h-[400px] overflow-auto">
-              <h3 className="text-lg font-bold text-gray-900 mb-3">
-                Base Table
-              </h3>
-              <div className="overflow-x-auto">
-                <Table columns={baseTableColumns} data={baseTableData} />
+            <div className="relative">
+              <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white max-h-[250px] sm:max-h-[300px] overflow-auto">
+                <div className="space-y-2">
+                    {transposedBaseTableData.map((row, index) => (
+                      <div
+                        key={index}
+                        className={`py-2 ${
+                          index !== transposedBaseTableData.length - 1
+                            ? "border-b border-gray-300"
+                            : ""
+                        }`}
+                      >
+                        <div className="font-semibold text-gray-800">
+                          {row.Header}:
+                        </div>
+                        {row.rows.map((cell, idx) => (
+                          <div key={idx} className="text-gray-700">
+                            {cell}
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
               </div>
-            </div>
+              </div>
 
             {/* Row 1 */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white max-h-[250px] sm:max-h-[300px] overflow-auto">
-                <h3 className="text-lg font-bold text-gray-900 mb-3">
-                  Primary Care
-                </h3>
-                <Table columns={primaryCareColumns} data={primaryCareData} />
+              <div className="relative">
+                <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white max-h-[400px] sm:max-h-[500px] overflow-auto resize-x min-w-[300px] w-fit max-w-[800px]">
+                  <h3 className="text-lg font-bold text-gray-900 mb-3 sticky top-0 bg-white">
+                    Primary Health Care
+                  </h3>
+                  <div className="space-y-2">
+                    {transposedPrimaryCareData.map((row, index) => (
+                      <div
+                        key={index}
+                        className={`py-2 ${
+                          index !== transposedPrimaryCareData.length - 1
+                            ? "border-b border-gray-300"
+                            : ""
+                        }`}
+                      >
+                        <div className="font-semibold text-gray-800">
+                          {row.Header}:
+                        </div>
+                        {row.rows.map((cell, idx) => (
+                          <div key={idx} className="text-gray-700">
+                            {cell}
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white max-h-[250px] sm:max-h-[300px] overflow-auto">
-                <h3 className="text-lg font-bold text-gray-900 mb-3">
-                  Mental Health Care
-                </h3>
-                <Table
-                  columns={mentalHealthCareColumns}
-                  data={mentalHealthCareData}
-                />
+              <div className="relative">
+                <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white max-h-[400px] sm:max-h-[500px] overflow-auto resize-x min-w-[300px] w-fit max-w-[800px] overflow-auto">
+                  <h3 className="text-lg font-bold text-gray-900 mb-3 sticky top-0 bg-white">
+                    Mental Health Care
+                  </h3>
+                  <div className="space-y-2">
+                    {transposedMentalHealthData.map((row, index) => (
+                      <div
+                        key={index}
+                        className={`py-2 ${
+                          index !== transposedMentalHealthData.length - 1
+                            ? "border-b border-gray-300"
+                            : ""
+                        }`}
+                      >
+                        <div className="font-semibold text-gray-800">
+                          {row.Header}:
+                        </div>
+                        {row.rows.map((cell, idx) => (
+                          <div key={idx} className="text-gray-700">
+                            {cell}
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white max-h-[250px] sm:max-h-[300px] overflow-auto">
-                <h3 className="text-lg font-bold text-gray-900 mb-3">
-                  Dental Health Care
-                </h3>
-                <Table
-                  columns={dentalHealthCareColumns}
-                  data={dentalHealthCareData}
-                />
+              <div className="relative">
+                <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white max-h-[250px] sm:max-h-[300px] overflow-auto">
+                  <h3 className="text-lg font-bold text-gray-900 mb-3 sticky top-0 bg-white">
+                    Dental Health Care
+                  </h3>
+                  <div className="space-y-2">
+                    {transposedDentalHealthData.map((row, index) => (
+                      <div
+                        key={index}
+                        className={`py-2 ${
+                          index !== transposedDentalHealthData.length - 1
+                            ? "border-b border-gray-300"
+                            : ""
+                        }`}
+                      >
+                        <div className="font-semibold text-gray-800">
+                          {row.Header}:
+                        </div>
+                        {row.rows.map((cell, idx) => (
+                          <div key={idx} className="text-gray-700">
+                            {cell}
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* Row 2 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="relative">
               <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white max-h-[250px] sm:max-h-[300px] overflow-auto">
-                <h3 className="text-lg font-bold text-gray-900 mb-3">
-                  Health Service Area
-                </h3>
-                <Table
-                  columns={[{ Header: "Health Service Area", accessor: "hsa_name" }]}
-                  data={searchResults?.healthservicearea?.length? searchResults.healthservicearea.map((item : RegisteredNurseShortageAreaItem) => ({hsa_name: item.hsa_name,}))
-                  : [{ hsa_name: "N/A" }]
-                  }
-                />
+                <div className="space-y-2">
+                    {transposedHealthServiceAreaData.map((row, index) => (
+                      <div
+                        key={index}
+                        className={`py-2 ${
+                          index !== transposedHealthServiceAreaData.length - 1
+                            ? "border-b border-gray-300"
+                            : ""
+                        }`}
+                      >
+                        <div className="font-semibold text-gray-800">
+                          {row.Header}:
+                        </div>
+                        {row.rows.map((cell, idx) => (
+                          <div key={idx} className="text-gray-700">
+                            {cell}
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
               </div>
+              </div>
+              <div className="relative">
               <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white max-h-[250px] sm:max-h-[300px] overflow-auto">
-                <h3 className="text-lg font-bold text-gray-900 mb-3">
-                  LA Service Planning Area
-                </h3>
-                <Table
-                  columns={[{ Header: "LA Service Planning Area", accessor: "spa_name" }]}
-                  data={searchResults?.LaServicePlanning?.length? searchResults.LaServicePlanning.map((item : RegisteredNurseShortageAreaItem) => ({ spa_name: item.spa_name }))
-                  : [{ spa_name: "N/A" }]
-                  }
-                />
+                <div className="space-y-2">
+                    {transposedLAServicePlanningData.map((row, index) => (
+                      <div
+                        key={index}
+                        className={`py-2 ${
+                          index !== transposedLAServicePlanningData.length - 1
+                            ? "border-b border-gray-300"
+                            : ""
+                        }`}
+                      >
+                        <div className="font-semibold text-gray-800">
+                          {row.Header}:
+                        </div>
+                        {row.rows.map((cell, idx) => (
+                          <div key={idx} className="text-gray-700">
+                            {cell}
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+              </div>
               </div>
             </div>
           </>
@@ -497,4 +761,3 @@ const HpsaSearchPage: React.FC = () => {
 };
 
 export default HpsaSearchPage;
-
