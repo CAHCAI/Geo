@@ -64,6 +64,12 @@ def parse_date(date_str):
             pass
     return None
 
+def parse_float(value: str) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return 0.0
+
 
 def handle_csv_upload(uploaded_file):
     """
@@ -79,6 +85,49 @@ def handle_csv_upload(uploaded_file):
         return handle_csv(tmp_path)
     except Exception as e:
         print(e)
+        
+def parse_shared_hpsa_fields(row):
+    return {
+        "hpsa_name": row.get("HPSA Name", ""),
+        "hpsa_id": row.get("HPSA ID", ""),
+        "designation_type": row.get("Designation Type", ""),
+        "hpsa_discipline_class": row.get("HPSA Discipline Class", ""),
+        "hpsa_score": int(row.get("HPSA Score", "0") or 0),
+        "primary_state_abbreviation": row.get("Primary State Abbreviation", ""),
+        "hpsa_status": row.get("HPSA Status", ""),
+        "hpsa_designation_date": parse_date(row.get("HPSA Designation Date", "")),
+        "hpsa_designation_last_update_date": parse_date(row.get("HPSA Designation Last Update Date", "")),
+        "metropolitan_indicator": row.get("Metropolitan Indicator", ""),
+        "hpsa_geography_id": row.get("HPSA Geography Identification Number", ""),
+        "hpsa_degree_of_shortage": row.get("HPSA Degree of Shortage", ""),
+        "withdrawn_date": parse_date(row.get("Withdrawn Date", "")),
+        "hpsa_fte": parse_float(row.get("HPSA FTE", "0")),
+        "hpsa_designation_population": int(float(row.get("HPSA Designation Population", "0") or 0)),
+        "percent_population_below_poverty": parse_float(row.get("% of Population Below 100% Poverty", "0")),
+        "hpsa_formal_ratio": row.get("HPSA Formal Ratio", ""),
+        "hpsa_population_type": row.get("HPSA Population Type", ""),
+        "rural_status": row.get("Rural Status", ""),
+        "longitude": parse_float(row.get("Longitude", "0")),
+        "latitude": parse_float(row.get("Latitude", "0")),
+        "common_county_name": row.get("Common County Name", ""),
+        "common_postal_code": row.get("Common Postal Code", ""),
+        "common_state_name": row.get("Common State Name", ""),
+        "county_equivalent_name": row.get("County Equivalent Name", ""),
+        "provider_type": row.get("Provider Type", ""),
+        "hpsa_provider_ratio_goal": row.get("HPSA Provider Ratio Goal", ""),
+        "hpsa_resident_civilian_population": int(float(row.get("HPSA Resident Civilian Population", "0") or 0)),
+        "hpsa_shortage": row.get("HPSA Shortage", ""),
+        "hpsa_status_code": row.get("HPSA Status Code", ""),
+        "hpsa_type_code": row.get("HPSA Type Code", ""),
+        "hpsa_withdrawn_date_string": row.get("HPSA Withdrawn Date String", ""),
+        "primary_state_fips_code": row.get("Primary State FIPS Code", ""),
+        "state_fips_code": row.get("State FIPS Code", ""),
+        "state_name": row.get("State Name", ""),
+        "us_mexico_border_100km_indicator": row.get("U.S. - Mexico Border 100 Kilometer Indicator", ""),
+        "us_mexico_border_county_indicator": row.get("U.S. - Mexico Border County Indicator", ""),
+        "data_warehouse_record_create_date": parse_date(row.get("Data Warehouse Record Create Date", ""))
+    }
+
 
 
 def handle_csv(file_path):
@@ -103,49 +152,17 @@ def handle_csv(file_path):
             reader = csv.DictReader(f)
             for row in reader:
                 discipline_class = row.get("HPSA Discipline Class", "").lower()
+                shared_fields = parse_shared_hpsa_fields(row)
 
                 if "dental" in discipline_class:
-                    instance = HPSA_DentalHealthShortageArea(
-                        hpsa_name=row.get("HPSA Name", ""),
-                        hpsa_id=row.get("HPSA ID", ""),
-                        designation_type=row.get("Designation Type", ""),
-                        hpsa_discipline_class=row.get("HPSA Discipline Class", ""),
-                        hpsa_score=row.get("HPSA Score", "0") or 0,
-                        primary_state_abbreviation=row.get("Primary State Abbreviation", ""),
-                        hpsa_status=row.get("HPSA Status", ""),
-                        hpsa_designation_date=parse_date(row.get("HPSA Designation Date", "")),
-                        hpsa_designation_last_update_date=parse_date(row.get("HPSA Designation Last Update Date", "")),
-                        withdrawn_date=parse_date(row.get("Withdrawn Date", "")),
-                        hpsa_fte=float(row.get("HPSA FTE", "0") or 0),
-                        hpsa_designation_population=float(row.get("HPSA Designation Population", "0") or 0),
-                        percent_population_below_poverty=float(row.get("% of Population Below 100% Poverty", "0") or 0),
-                        longitude=float(row.get("Longitude", "0") or 0),
-                        latitude=float(row.get("Latitude", "0") or 0),
-                        hpsa_shortage=row.get("HPSA Shortage", ""),
-                        data_warehouse_record_create_date=parse_date(row.get("Data Warehouse Record Create Date", "")),
-                        # Add more fields as needed
-                    )
+                    instance = HPSA_DentalHealthShortageArea(**shared_fields)
                     dental_rows.append(instance)
-
                 elif "mental" in discipline_class:
-                    instance = HPSA_MentalHealthShortageArea(
-                        # same approach as above
-                        hpsa_name=row.get("HPSA Name", ""),
-                        # ...
-                        data_warehouse_record_create_date=parse_date(row.get("Data Warehouse Record Create Date", "")),
-                    )
+                    instance = HPSA_MentalHealthShortageArea(**shared_fields)
                     mental_rows.append(instance)
-
                 elif "primary" in discipline_class:
-                    instance = HPSA_PrimaryCareShortageArea(
-                        # same approach as above
-                        hpsa_name=row.get("HPSA Name", ""),
-                        # ...
-                        data_warehouse_record_create_date=parse_date(row.get("Data Warehouse Record Create Date", "")),
-                    )
+                    instance = HPSA_PrimaryCareShortageArea(**shared_fields)
                     primary_rows.append(instance)
-
-                # else skip unknown discipline_class
 
         # Now bulk-insert for each discipline that actually has data.
         # We also TRUNCATE each table only once per discipline.
