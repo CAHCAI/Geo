@@ -111,6 +111,7 @@ export async function getActiveSessions(): Promise<ActiveSessionsResponse> {
   const response = await axiosInstance.get<ActiveSessionsResponse>("/active-sessions");
   return response.data;
 }
+
 export const getApiKey = async (): Promise<void> => {
   try {
       const response = await fetch("/api/generate-api-key/", {

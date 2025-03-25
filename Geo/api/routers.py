@@ -14,7 +14,7 @@ from django.contrib.gis.db.models.functions import Distance
 from ninja import Router, File, Schema, Form
 from ninja.files import UploadedFile
 from tempfile import TemporaryDirectory
-from datetime import datetime 
+from datetime import datetime, timedelta 
 from pydantic import Field  
 # utility functions
 from .utils import (extract_zip, find_shapefile, get_shapefile_metadata, 
@@ -35,7 +35,7 @@ from .models import OverrideLocation
 from django.contrib.sessions.models import Session
 from django.utils import timezone
 from django.contrib.auth import get_user_model
-
+from .models import VisitorTracking
 
 # Directory to temporarily store uploaded shapefiles
 UPLOAD_DIR = os.path.join(settings.MEDIA_ROOT, "shapefiles")
@@ -623,27 +623,17 @@ User = get_user_model()
 @router.get("/active-sessions")
 def active_sessions(request):
     """
-    Returns how many unexpired sessions belong to:
-      - Admin users (staff or superuser)
-      - Normal (non-admin) users
+    Returns how many visitors (cookie-based) have last_seen in last 15 minutes:
+      admin_count (staff/superusers)
+      normal_count (everyone else)
     """
-    sessions = Session.objects.filter(expire_date__gte=timezone.now())
+    cutoff = timezone.now() - timedelta(minutes=15)
 
-    admin_count = 0
-    normal_count = 0
+    # All visitors seen in the last 15 minutes
+    visitors = VisitorTracking.objects.filter(last_seen__gte=cutoff)
 
-    for session in sessions:
-        data = session.get_decoded()
-        user_id = data.get("_auth_user_id")
-        if user_id is not None:
-            try:
-                user = User.objects.get(pk=user_id)
-                if user.is_staff or user.is_superuser:
-                    admin_count += 1
-                else:
-                    normal_count += 1
-            except User.DoesNotExist:
-                pass
+    admin_count = visitors.filter(is_staff=True).count()
+    normal_count = visitors.filter(is_staff=False).count()
 
     return {
         "admin_count": admin_count,

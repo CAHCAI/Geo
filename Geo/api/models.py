@@ -7,6 +7,8 @@ from datetime import timedelta, datetime, timezone
 from django.contrib.gis.db import models 
 from django.contrib.auth.hashers import make_password
 from datetime import timedelta, datetime
+from django.conf import settings
+
 
 
 
@@ -322,3 +324,16 @@ class AdminErrors(models.Model):
     
     def __str__(self):
         return self.error_description
+
+class VisitorTracking(models.Model):
+    """
+    Tracks each unique visitor (cookie-based).
+    If the visitor is authenticated as staff/superuser, we mark `is_staff=True`.
+    Otherwise, they are normal.
+    """
+    visitor_id = models.CharField(max_length=255, unique=True)
+    last_seen = models.DateTimeField(auto_now=True)
+    is_staff = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.visitor_id} last seen at {self.last_seen}, staff={self.is_staff}"

@@ -66,19 +66,18 @@ const AdminDashboard: React.FC = () => {
       try {
         const { admin_count, normal_count } = await getActiveSessions();
         setAdminCount(admin_count);
-        setNormalCount(normal_count);
+        if (normal_count !== null) {
+          setNormalCount(Math.round(normal_count/10));
+        } else {
+          setNormalCount(null);
+        }
       } catch (err) {
         console.error("Failed to fetch active sessions:", err);
       }
     }
-
+  
     fetchSessions();
-
-    // Optional: poll every 30 seconds
-    const intervalId = setInterval(() => {
-      fetchSessions();
-    }, 30000);
-
+    const intervalId = setInterval(fetchSessions, 30000);
     return () => clearInterval(intervalId);
   }, []);
 
