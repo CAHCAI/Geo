@@ -267,7 +267,7 @@ def generate_api_key():
 
 # APIKey model
 class APIKey(models.Model):
-    key = models.CharField(max_length=64, unique=True)
+    key = models.CharField(max_length=255, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField(null=True, blank=True)  # Ensure this exists
     usage_count = models.IntegerField(default=0)
