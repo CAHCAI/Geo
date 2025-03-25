@@ -49,27 +49,11 @@ from .models import (
     HPSA_PrimaryCareShortageArea
 )
 
-
-def parse_date(date_str):
-    """
-    Given a string like '10/20/2005' or '2005-10-20',
-    return a Python date object (or None if invalid/empty).
-    """
-    if not date_str:
-        return None
-    for fmt in ("%Y-%m-%d", "%m/%d/%Y", "%m/%d/%y"):
-        try:
-            return datetime.strptime(date_str, fmt).date()
-        except ValueError:
-            pass
-    return None
-
 def parse_float(value: str) -> float:
     try:
         return float(value)
     except (TypeError, ValueError):
         return 0.0
-
 
 def handle_csv_upload(uploaded_file):
     """
