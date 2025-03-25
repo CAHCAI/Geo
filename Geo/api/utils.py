@@ -11,7 +11,6 @@ from django.db import connection
 from django.db import transaction
 import tempfile
 from Geo.cache import cache
-
 import csv
 
 from datetime import datetime
@@ -32,14 +31,6 @@ def parse_date(date_str):
     
     return None
 
-
-from .models import (
-    HPSA_DentalHealthShortageArea,
-    HPSA_MentalHealthShortageArea,
-    HPSA_PrimaryCareShortageArea
-)
-
-import csv
 import tempfile
 from datetime import datetime
 from django.db import connection, transaction
