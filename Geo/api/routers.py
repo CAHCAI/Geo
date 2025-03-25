@@ -360,7 +360,6 @@ def all_districts_data(request):
     })
 
 @router.get("/search")
-@api_key_required
 def coordinate_search(request, lat: float, lng: float):
     """
     Search the district tables for polygons containing (lat, lng).

@@ -264,8 +264,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'Geo.wsgi.application'
 
-#security
-FIXED_API_KEY = os.getenv("VITE_API_KEY", "supersecret")
 
 
 # Database

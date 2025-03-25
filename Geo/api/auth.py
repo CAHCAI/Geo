@@ -1,5 +1,4 @@
 # auth documentation: https://django-ninja.dev/guides/authentication/
-import os
 from ninja.security import APIKeyHeader
 from .models import APIKey
 from django.http import JsonResponse
@@ -9,28 +8,20 @@ from django.conf import settings
 from functools import wraps 
 
 
-# Read the fixed API key from the .env 
-FIXED_API_KEY = os.getenv("VITE_API_KEY", "")
-
 # Class-based API Key Authentication
 class APIKeyAuth(APIKeyHeader):
     param_name = "X-API-Key"
 
     def authenticate(self, request, key):
         # If the key equals the fixed API key, allow it.
-        if key == FIXED_API_KEY:
-            return key
         try:
             # Otherwise, look for a dynamic key (if any)
-            for key_obj in APIKey.objects.filter(revoked=False):
-                if check_password(key, key_obj.key):
-                    if key_obj.expires_at and key_obj.expires_at < timezone.now():
-                        return None
-                    key_obj.increment_usage()
-                    return key
+            if key in APIKey.objects.filter(revoked=False).values_list("key", flat=True):
+                return key
             return None
         except APIKey.DoesNotExist:
             return None
+
 
 # Decorator for API key validation
 def api_key_required(view_func):

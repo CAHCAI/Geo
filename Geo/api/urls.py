@@ -5,8 +5,6 @@ from .routers import router
 from .auth import APIKeyAuth
 from django.http import JsonResponse
 
-# Create the NinjaAPI instance with APIKeyAuth
-
 
 # Ninja API setup with auth
 api = NinjaAPI(auth=APIKeyAuth())

@@ -64,7 +64,7 @@ def message_view(request):
 @api_view(["POST"])
 def generate_api_key(request):
     # Generate a secure random key
-    raw_key = secrets.token_hex(32)
+    raw_key = secrets.token_hex(34)
     
     # Log the raw key to confirm it's generated correctly
     print(f"Generated raw key: {raw_key}")
