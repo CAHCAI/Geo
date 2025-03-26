@@ -14,7 +14,7 @@ from django.contrib.gis.db.models.functions import Distance
 from ninja import Router, File, Schema, Form
 from ninja.files import UploadedFile
 from tempfile import TemporaryDirectory
-from datetime import datetime, timedelta 
+from datetime import datetime 
 from pydantic import Field  
 # utility functions
 from .utils import (extract_zip, find_shapefile, get_shapefile_metadata, 
@@ -25,7 +25,7 @@ upload_hsa_shapefile, upload_rnsa_shapefile, upload_mssa_shapefile, upload_pcsa_
 from django.shortcuts import get_object_or_404
 from django.db import connection
 from django.contrib.gis.db.models.functions import AsGeoJSON
-from .models import AssemblyDistrict, SenateDistrict, AdminErrors, CongressionalDistrict, HealthServiceArea, MedicalServiceStudyArea,RegisteredNurseShortageArea, LAServicePlanningArea, PrimaryCareShortageArea
+from .models import AssemblyDistrict, SenateDistrict, AdminErrors, CongressionalDistrict, HealthServiceArea, MedicalServiceStudyArea,RegisteredNurseShortageArea, LAServicePlanningArea, PrimaryCareShortageArea, HealthProfessionalShortageArea, HPSA_PrimaryCareShortageArea,HPSA_MentalHealthShortageArea,HPSA_DentalHealthShortageArea
 import json
 from Geo.cache import cache, TTL
 from typing import List, Optional
@@ -35,7 +35,7 @@ from .models import OverrideLocation
 from django.contrib.sessions.models import Session
 from django.utils import timezone
 from django.contrib.auth import get_user_model
-from .models import VisitorTracking
+
 
 # Directory to temporarily store uploaded shapefiles
 UPLOAD_DIR = os.path.join(settings.MEDIA_ROOT, "shapefiles")
@@ -385,6 +385,15 @@ def coordinate_search(request, lat: float, lng: float):
         medicalservicestudyarea_matches = MedicalServiceStudyArea.objects.filter(geom__contains=point)
         primarycareshortagearea_matches = PrimaryCareShortageArea.objects.filter(geom__contains=point)
 
+       
+        RANGE=0.1
+        primary_matches = HPSA_PrimaryCareShortageArea.objects.filter(latitude__range=(lat - RANGE, lat + RANGE),longitude__range=(lng - RANGE, lng + RANGE))
+
+        mental_matches = HPSA_MentalHealthShortageArea.objects.filter(latitude__range=(lat - RANGE, lat + RANGE),longitude__range=(lng - RANGE, lng + RANGE))
+
+        dental_matches = HPSA_DentalHealthShortageArea.objects.filter(latitude__range=(lat - RANGE, lat + RANGE),longitude__range=(lng - RANGE, lng + RANGE))
+      
+        
         cache_value = {
             "senate": [to_dict(d) for d in senate_matches],
             "assembly": [to_dict(d) for d in assembly_matches],
@@ -393,7 +402,10 @@ def coordinate_search(request, lat: float, lng: float):
             "LaServicePlanning": [to_laspa_dict(d) for d in laserviceplanningarea_matches],  
             "RegisteredNurseShortageArea": [to_rnsa_dict(d) for d in registerednurseshortagearea_matches],
             "MedicalServiceStudyArea": [to_mssa_dict(d) for d in medicalservicestudyarea_matches],
-            "PrimaryCareShortageArea": [to_pcsa_dict(d) for d in primarycareshortagearea_matches], 
+            "PrimaryCareShortageArea": [to_pcsa_dict(d) for d in primarycareshortagearea_matches],
+            "PrimaryCareHPSA": [to_primary_hpsa_dict(d) for d in primary_matches],
+            "MentalHealthHPSA": [to_mental_hpsa_dict(d) for d in mental_matches],
+            "DentalHealthHPSA": [to_dental_hpsa_dict(d) for d in dental_matches],
 
         }
 
@@ -411,45 +423,7 @@ def coordinate_search(request, lat: float, lng: float):
             print(f"Error found but not logged into the database! {e}")
         return JsonResponse({"success": False, "message": f"Error: {e}"}, safe=False)
         
-'''
-    point = Point(lng, lat, srid=4326)
 
-    senate_matches = SenateDistrict.objects.filter(geom__contains=point)
-    assembly_matches = AssemblyDistrict.objects.filter(geom__contains=point)
-    congressional_matches = CongressionalDistrict.objects.filter(geom__contains=point)
-    healthservicearea_matches = HealthServiceArea.objects.filter(geom__contains=point)
-    laserviceplanningarea_matches = LAServicePlanningArea.objects.filter(geom__contains=point)
-    registerednurseshortagearea_matches = RegisteredNurseShortageArea.objects.filter(geom__contains=point)
-    medicalservicestudyarea_matches = MedicalServiceStudyArea.objects.filter(geom__contains=point)
-    primarycareshortagearea_matches = PrimaryCareShortageArea.objects.filter(geom__contains=point)
-
-    cache_value = {
-        "senate": [to_dict(d) for d in senate_matches],
-        "assembly": [to_dict(d) for d in assembly_matches],
-        "congressional": [to_dict(d) for d in congressional_matches],
-        "healthservicearea": [to_hsa_dict(d) for d in healthservicearea_matches],
-        "LaServicePlanning": [to_laspa_dict(d) for d in laserviceplanningarea_matches],  
-        "RegisteredNurseShortageArea": [to_rnsa_dict(d) for d in registerednurseshortagearea_matches],
-        "MedicalServiceStudyArea": [to_mssa_dict(d) for d in medicalservicestudyarea_matches],
-        "PrimaryCareShortageArea": [to_pcsa_dict(d) for d in primarycareshortagearea_matches], 
-    }
-
-    if any(cache_value.values()):  # Check if any list has data
-        try:
-            cache.set(cache_key, json.dumps(cache_value), ex=TTL)  #Stores in cache
-        except Exception as e:
-            try:
-                AdminErrors.objects.create(error_code=130, error_description=f"Cache error: {e}")
-                print("Error successfully logged in the database")
-            except Exception as e:
-                print(f"Error found but not logged into the database! {e}")
-            return JsonResponse({"success": False, "message": f"Cache error: {e}"}, safe=False)
-
- #   return JsonResponse(cache_value, safe=False) 
- #     print(f" Coordinate Search Error: {e}")
-#        return JsonResponse({"success": False, "error": str(e)}, status=500)
-
-'''
 # Define a schema for expected data
 class OverrideLocationSchema(Schema):
     lat: float
@@ -622,17 +596,27 @@ User = get_user_model()
 @router.get("/active-sessions")
 def active_sessions(request):
     """
-    Returns how many visitors (cookie-based) have last_seen in last 15 minutes:
-      admin_count (staff/superusers)
-      normal_count (everyone else)
+    Returns how many unexpired sessions belong to:
+      - Admin users (staff or superuser)
+      - Normal (non-admin) users
     """
-    cutoff = timezone.now() - timedelta(minutes=15)
+    sessions = Session.objects.filter(expire_date__gte=timezone.now())
 
-    # All visitors seen in the last 15 minutes
-    visitors = VisitorTracking.objects.filter(last_seen__gte=cutoff)
+    admin_count = 0
+    normal_count = 0
 
-    admin_count = visitors.filter(is_staff=True).count()
-    normal_count = visitors.filter(is_staff=False).count()
+    for session in sessions:
+        data = session.get_decoded()
+        user_id = data.get("_auth_user_id")
+        if user_id is not None:
+            try:
+                user = User.objects.get(pk=user_id)
+                if user.is_staff or user.is_superuser:
+                    admin_count += 1
+                else:
+                    normal_count += 1
+            except User.DoesNotExist:
+                pass
 
     return {
         "admin_count": admin_count,
@@ -704,9 +688,33 @@ def to_pcsa_dict(obj):
     return {
         "pcsa": obj.pcsa,
         "scoretota": obj.score_tota,
+        "mssa_e": obj.cnty_fips
         #add more object if needed
     }
 
+def to_dental_hpsa_dict(obj):
+    return {
+        "Designated": obj.hpsa_name,
+      
+    }
+
+def to_mental_hpsa_dict(obj):
+    return {
+        "hpsa_id": obj.hpsa_id,
+        "Designated": obj.hpsa_status,
+        "Designated On": obj.hpsa_designation_last_update_date,
+        "formal ratio": obj.hpsa_formal_ratio,
+        "Population Below Poverty": obj.percent_population_below_poverty,
+        "Designation Population": obj.hpsa_designation_population,
+        "Estimated underserved population": obj.hpsa_designation_population,
+        "Estimated Served Population": obj.hpsa_name,
+        "Priority score": obj.hpsa_score
+    }
+
+def to_primary_hpsa_dict(obj):
+    return {
+        "Designated": obj.designation_type,
+    }
 
 #api = Router()
 

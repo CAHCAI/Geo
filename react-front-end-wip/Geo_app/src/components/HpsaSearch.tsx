@@ -166,41 +166,21 @@ const HpsaSearchPage: React.FC = () => {
     setAlerts((prevAlerts) => prevAlerts.filter((alert) => alert.id !== id));
   };
 
-  // Column definitions
-  const baseTableColumns = searchResults?.MedicalServiceStudyArea?.length
-  ? searchResults.MedicalServiceStudyArea.map((item: MedicalServiceStudyAreaItem) => ({
-      ID: item.mssaid,
-      Definition: item.definition,
-      Tract: item.censustract,
-      Key: item.censuskey,
-      County: item.county,
-      MUA: "No", // or fetch from data if needed
-      MUP: "No",
-      PCSA: searchResults?.PrimaryCareShortageArea?.length
-        ? searchResults.PrimaryCareShortageArea.map((pcsaItem: PrimaryCareShortageAreaItem) => `${pcsaItem.pcsa} (${pcsaItem.scoretota})`).join(", ")
-        : "N/A",
-      RNSA: searchResults?.RegisteredNurseShortageArea?.length
-        ? searchResults.RegisteredNurseShortageArea.map((rnsaItem: RegisteredNurseShortageAreaItem) => `${rnsaItem.rnsa} (${rnsaItem.Effective})`).join(", ")
-        : "N/A"
-    }))
-  : [{
-      ID: "N/A",
-      Definition: "N/A",
-      Tract: "N/A",
-      Key: "N/A",
-      County: "N/A",
-      MUA: "N/A",
-      MUP: "N/A",
-      PCSA: "N/A",
-      RNSA: "N/A"
-    }];
-
+  
   const primaryCareColumns = [
     { Header: "HPSA Primary Care", accessor: "PrimaryCare" },
   ];
   const mentalHealthCareColumns = [
-    { Header: "HPSA Mental Health", accessor: "MentalHealth" },
+    { Header: "Designated", accessor: "Designated" },
+    { Header: "Designated On", accessor: "DesignatedOn" },
+    { Header: "Formal Ratio", accessor: "Ratio" },
+    { Header: "Population Below Poverty", accessor: "Poverty" },
+    { Header: "Designation Population", accessor: "Population" },
+    { Header: "Estimated Underserved", accessor: "Underserved" },
+    { Header: "Estimated Served", accessor: "Served" },
+    { Header: "Priority Score", accessor: "Score" },
   ];
+  
   const dentalHealthCareColumns = [
     { Header: "HPSA Dental Health", accessor: "DentalHealth" },
   ];
@@ -271,20 +251,35 @@ const HpsaSearchPage: React.FC = () => {
     },
   ];
 
-  const primaryCareData = [{ PrimaryCare: "Designated: No" }];
-  const mentalHealthCareData = [
-    { MentalHealth: "Source Id: 7061261199" },
-    { MentalHealth: "Designated: Yes" },
-    { MentalHealth: "Designated on: 3/25/2021" },
-    { MentalHealth: "Formal ratio" },
-    { MentalHealth: "Population below poverty (%): 13.3" },
-    { MentalHealth: "Designation population: 63651.0" },
-    { MentalHealth: "Estimated underserved population: 63651" },
-    { MentalHealth: "Estimated served population: 0" },
-    { MentalHealth: "Priority score: 18" },
-  ];
+  const primaryCareData = searchResults?.PrimaryCareHPSA?.length
+  ? Object.entries(searchResults.PrimaryCareHPSA[0]).map(([key, value]) => ({
+      PrimaryCare: `${key}: ${value}`,
+    }))
+  : [{ PrimaryCare: "No Primary Care HPSA data available" }];
 
-  const dentalHealthCareData = [{ DentalHealth: "Designated: No" }];
+  const mentalHealthCareData = searchResults?.MentalHealthHPSA?.length
+  ? searchResults.MentalHealthHPSA.map((item: any) => ({
+      Designated: item.Designated,
+      DesignatedOn: item["Designated On"],
+      Ratio: item["Formal Ratio"],
+      Poverty: item["Population Below Poverty"],
+      Population: item["Designation Population"],
+      Underserved: item["Estimated Underserved"],
+      Served: item["Estimated Served"],
+      Score: item["Priority Score"],
+    }))
+  : [{ Designated: "No Mental Health HPSA data available" }];
+
+
+  const dentalHealthCareData = searchResults?.DentalHealthHPSA?.length
+  ? searchResults.DentalHealthHPSA.map((item: { Designated: string }) => ({
+      Designated: item.Designated,
+    }))
+  : [{ Designated: "No Dental Health HPSA data available" }];
+
+
+
+
   const healthServiceAreaData = searchResults?.healthservicearea?.length
   ? searchResults.healthservicearea.map(
       (item: HealthServiceAreaItem) => ({
@@ -292,6 +287,7 @@ const HpsaSearchPage: React.FC = () => {
       })
     )
   : [{ HealthServiceArea: "N/A" }];
+
   const laServicePlanningAreaData = searchResults?.LaServicePlanning?.length
   ? searchResults.LaServicePlanning.map((item: { spa_name: string }) => ({
       // The property name MUST match the table column accessor "spa_name"
@@ -302,6 +298,7 @@ const HpsaSearchPage: React.FC = () => {
         spa_name: "N/A",
       },
     ];
+
   const assemblyDistrictData = [
     { AssemblyDistrict: "Name: 6th Assembly District" },
     { AssemblyDistrict: "Party" },
@@ -342,6 +339,9 @@ const HpsaSearchPage: React.FC = () => {
     laServicePlanningAreaData,
     laServicePlanningAreaColumns
   );
+
+  
+  
   const transposedBaseTableData = transposeData(baseTableData, [
     { Header: "MSSA ID", accessor: "ID" },
     { Header: "MSSA Definition", accessor: "Definition" },
@@ -355,34 +355,21 @@ const HpsaSearchPage: React.FC = () => {
   ]);
 
   const transposedPrimaryCareData = transposeData(
-    [{ PrimaryCare: "Designated: No" }],
+    primaryCareData,
     [{ Header: "HPSA Primary Care", accessor: "PrimaryCare" }]
   );
   
   const transposedMentalHealthData = transposeData(
-    [
-      { MentalHealth: "SOURCE ID: 7061261199" },
-      { MentalHealth: "Designated: Yes" },
-      { MentalHealth: "Designated on: 3/25/2021" },
-      { MentalHealth: "Formal ratio" },
-      { MentalHealth: "Population below poverty (%): 13.3" },
-      { MentalHealth: "Designation population: 63651.0" },
-      { MentalHealth: "Estimated underserved population: 63651" },
-      { MentalHealth: "Estimated served population: 0" },
-      { MentalHealth: "Priority score: 18" },
-    ],
-    [{ Header: "HPSA Mental Health", accessor: "MentalHealth" }]
+    mentalHealthCareData,
+    mentalHealthCareColumns
   );
+  
   
   const transposedDentalHealthData = transposeData(
-    [{ DentalHealth: "Designated: No" }],
-    [{ Header: "HPSA Dental Health", accessor: "DentalHealth" }]
+    dentalHealthCareData,
+    [{ Header: "HPSA Dental Health", accessor: "Designated" }]
   );
   
-  
-
-  
- 
   const transposedHSAData = transposeData(
     searchResults?.healthservicearea?.length
       ? searchResults.healthservicearea.map(
