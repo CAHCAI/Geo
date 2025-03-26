@@ -64,13 +64,13 @@ def message_view(request):
 @api_view(["POST"])
 def generate_api_key(request):
     # Generate a secure random key
-    raw_key = secrets.token_hex(34)
+    raw_key = secrets.token_hex(64)
     
     # Log the raw key to confirm it's generated correctly
     print(f"Generated raw key: {raw_key}")
     
     # Hash the key before saving to DB
-    hashed_key = make_password(raw_key)
+    hashed_key = raw_key
     
     # Set expiration time to 30 days from now (timezone-aware)
     expiration_time = timezone.make_aware(datetime.now() + timedelta(days=30))

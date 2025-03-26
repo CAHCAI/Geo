@@ -14,6 +14,9 @@ class APIKeyAuth(APIKeyHeader):
 
     def authenticate(self, request, key):
         # If the key equals the fixed API key, allow it.
+        print(key)
+        print(APIKey.objects.filter(revoked=False).values_list("key", flat=True))
+
         try:
             # Otherwise, look for a dynamic key (if any)
             if key in APIKey.objects.filter(revoked=False).values_list("key", flat=True):
@@ -31,7 +34,7 @@ def api_key_required(view_func):
         if not provided_key:
             return JsonResponse({"error": "API key missing"}, status=401)
 
-        if provided_key == settings.FIXED_API_KEY:
+        if provided_key in APIKey.objects.filter(revoked=False).values_list("key", flat=True):
             return view_func(request, *args, **kwargs)
 
         valid_key = None
