@@ -10,6 +10,7 @@ import MainNav from "./components/headers/MainNav";
 import MobileNav from "./components/headers/MobileNav";
 import SearchBar from "./components/headers/SearchBar";
 import TopNavBar from "./components/headers/TopNavBar";
+import CordOverride from "./components/CordOverride";
 import Home from "./components/Home";
 import LicensedHealthcareFacilities from "./components/LicensedHealthcareFacilities";
 import Login from "./components/Login";
@@ -79,6 +80,8 @@ const App: React.FC = () => {
         return <LicensedHealthcareFacilities />;
       case "api-reference":
         return <APIReference />;
+      case "cord-override":
+        return <CordOverride />;
       default:
         return <Home />;
     }
@@ -117,7 +120,7 @@ const App: React.FC = () => {
                   className={cn(
                     "relative hover:bg-black whitespace-nowrap text-white px-2 sm:px-4 py-3 text-sm sm:text-base",
                     activePage === page &&
-                      "bg-black after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-0 after:h-0 after:border-l-8 after:border-r-8 after:border-b-8 after:border-t-gray-100 after:border-l-transparent after:border-r-transparent"
+                      "after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-0 after:h-0 after:border-l-8 after:border-r-8 after:border-b-8 after:border-t-gray-100 after:border-l-transparent after:border-r-transparent"
                   )}
                   onClick={() => setActivePage(page)}
                 >
@@ -127,13 +130,26 @@ const App: React.FC = () => {
 
               {loggedIn && (
                 <button
-                  className={cn(
-                    "hover:bg-black whitespace-nowrap text-white px-2 sm:px-4 py-3  text-sm sm:text-base",
-                    activePage === "admin-dashboard" && "bg-black"
-                  )}
+                className={cn(
+                  "relative hover:bg-black whitespace-nowrap text-white px-2 sm:px-4 py-3 text-sm sm:text-base",
+                  activePage === "admin-dashboard" &&
+                    "after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-0 after:h-0 after:border-l-8 after:border-r-8 after:border-b-8 after:border-t-gray-100 after:border-l-transparent after:border-r-transparent"
+                )}
                   onClick={() => setActivePage("admin-dashboard")}
                 >
                   Admin Dashboard
+                </button>
+              )}
+              {loggedIn && (
+                <button
+                className={cn(
+                  "relative hover:bg-black whitespace-nowrap text-white px-2 sm:px-4 py-3 text-sm sm:text-base",
+                  activePage === "cord-override" &&
+                    "after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-0 after:h-0 after:border-l-8 after:border-r-8 after:border-b-8 after:border-t-gray-100 after:border-l-transparent after:border-r-transparent"
+                )}
+                  onClick={() => setActivePage("cord-override")}
+                >
+                  Cordinate Override
                 </button>
               )}
               <Sheet>

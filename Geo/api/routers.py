@@ -1,5 +1,7 @@
+import datetime
 import os
 from shutil import rmtree
+from .auth import APIKeyAuth, api_key_required
 import subprocess
 import uuid
 import zipfile
@@ -9,16 +11,31 @@ from django.conf import settings
 from django.http import JsonResponse
 from django.contrib.gis.geos import Point
 from django.contrib.gis.db.models.functions import Distance
-from ninja import Router, File, Schema
+from ninja import Router, File, Schema, Form
 from ninja.files import UploadedFile
 from tempfile import TemporaryDirectory
+from datetime import datetime 
+from pydantic import Field  
+# utility functions
 from .utils import (extract_zip, find_shapefile, get_shapefile_metadata, 
-identify_shapefile_type, upload_assembly_shapefile, upload_congressional_shapefile, upload_senate_shapefile, get_shapefile_layer, to_dict)
+identify_shapefile_type, upload_assembly_shapefile, upload_congressional_shapefile,
+upload_laspa_shapefile, upload_senate_shapefile, get_shapefile_layer, to_dict, 
+upload_hsa_shapefile, upload_rnsa_shapefile, upload_mssa_shapefile, upload_pcsa_shapefile, handle_csv_upload)
+# end utility functions
+from django.shortcuts import get_object_or_404
 from django.db import connection
 from django.contrib.gis.db.models.functions import AsGeoJSON
-from .models import AssemblyDistrict, SenateDistrict, CongressionalDistrict
+from .models import AssemblyDistrict, SenateDistrict, AdminErrors, CongressionalDistrict, HealthServiceArea, MedicalServiceStudyArea,RegisteredNurseShortageArea, LAServicePlanningArea, PrimaryCareShortageArea, HealthProfessionalShortageArea, HPSA_PrimaryCareShortageArea,HPSA_MentalHealthShortageArea,HPSA_DentalHealthShortageArea
 import json
 from Geo.cache import cache, TTL
+from typing import List, Optional
+import openpyxl
+from django.db import transaction
+from .models import OverrideLocation
+from django.contrib.sessions.models import Session
+from django.utils import timezone
+from django.contrib.auth import get_user_model
+
 
 # Directory to temporarily store uploaded shapefiles
 UPLOAD_DIR = os.path.join(settings.MEDIA_ROOT, "shapefiles")
@@ -26,6 +43,10 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # Create a router instance
 router = Router()
+
+#router = Router(auth=APIKeyAuth())
+
+
 
 @router.get("/test")
 def test(request):
@@ -48,163 +69,125 @@ def test_cache(request):
             cache.set("my_key", 1)
             return JsonResponse({"success": True, "message": "test api, successful. Will use cache next time."})
     except Exception as e:
+        try:
+            AdminErrors.objects.create(error_code=131, error_description=f"Redis failed: {str(e)}")
+            print("Error successfully logged in the database")
+        except Exception as e:
+            print(f"rror found but not logged into the database! {e}")
         return JsonResponse({"success": False, "message": f"Redis failed: {str(e)}"})
 
-# Field mapping: map model field names to shapefile field names.
-assembly_shp_mapping = {
-    'district_number': 'DISTRICT',     # shapefile field "DISTRICT" → model field "district_number"
-    'area': 'AREA',                    # shapefile field "AREA" → model field "area"
-    'members': 'MEMBERS',              # shapefile field "MEMBERS" → model field "members"
-    'population': 'POPULATION',        # shapefile field "POPULATION" → model field "population"
-    'cvap_19': 'CVAP_19',              # shapefile field "CVAP_19" → model field "cvap_19"
-    'hsp_cvap_1': 'HSP_CVAP_1',        # shapefile field "HSP_CVAP_1" → model field "hsp_cvap_1"
-    'doj_nh_blk': 'DOJ_NH_BLK',        # shapefile field "DOJ_NH_BLK" → model field "doj_nh_blk"
-    'doj_nh_asn': 'DOJ_NH_ASN',        # shapefile field "DOJ_NH_ASN" → model field "doj_nh_asn"
-    'nh_wht_cva': 'NH_WHT_CVA',        # shapefile field "NH_WHT_CVA" → model field "nh_wht_cva"
-    'ideal_value': 'IDEAL_VALU',       # shapefile field "IDEAL_VALU" → model field "ideal_value"
-    'deviation': 'DEVIATION',          # shapefile field "DEVIATION" → model field "deviation"
-    'f_deviatio': 'F_DEVIATIO',        # shapefile field "F_DEVIATIO" → model field "f_deviatio"
-    'f_cvap_19': 'F_CVAP_19',          # shapefile field "F_CVAP_19" → model field "f_cvap_19"
-    'f_hsp_cvap': 'F_HSP_CVAP',        # shapefile field "F_HSP_CVAP" → model field "f_hsp_cvap"
-    'f_doj_nh_b': 'F_DOJ_NH_B',        # shapefile field "F_DOJ_NH_B" → model field "f_doj_nh_b"
-    'f_doj_nh_a': 'F_DOJ_NH_A',        # shapefile field "F_DOJ_NH_A" → model field "f_doj_nh_a"
-    'f_nh_wht_c': 'F_NH_WHT_C',        # shapefile field "F_NH_WHT_C" → model field "f_nh_wht_c"
-    'district_n': 'DISTRICT_N',        # shapefile field "DISTRICT_N" → model field "district_n"
-    'district_label': 'DISTRICT_L',    # shapefile field "DISTRICT_L" → model field "district_label"
-    'geom': 'MULTIPOLYGON',            # For geometry
-}
-
-# Mapping dictionary for the SenateDistrict model
-senate_shp_mapping = {
-    'district_number': 'DISTRICT',       # Shapefile field "DISTRICT" → model field "district_number"
-    'area': 'AREA',                      # Shapefile field "AREA" → model field "area"
-    'members': 'MEMBERS',                # Shapefile field "MEMBERS" → model field "members"
-    'name': 'NAME',
-    'population': 'POPULATION',          # Shapefile field "POPULATION" → model field "population"
-    'cvap_19': 'CVAP_19',                # Shapefile field "CVAP_19" → model field "cvap_19"
-    'hsp_cvap_1': 'HSP_CVAP_1',          # Shapefile field "HSP_CVAP_1" → model field "hsp_cvap_1"
-    'doj_nh_ind': 'DOJ_NH_IND',          # Shapefile field "DOJ_NH_IND" → model field "doj_nh_ind"
-    'doj_nh_blk': 'DOJ_NH_BLK',          # Shapefile field "DOJ_NH_BLK" → model field "doj_nh_blk"
-    'doj_nh_asn': 'DOJ_NH_ASN',          # Shapefile field "DOJ_NH_ASN" → model field "doj_nh_asn"
-    'nh_wht_cva': 'NH_WHT_CVA',              # Shapefile field "NH_WHT_C" → model field "nh_wht_c"
-    'ideal_valu': 'IDEAL_VALU',         # Shapefile field "IDEAL_VALU" → model field "ideal_value"
-    'deviation': 'DEVIATION',            # Shapefile field "DEVIATION" → model field "deviation"
-    'f_deviatio': 'F_DEVIATIO',        # Shapefile field "F_DEVIATION" → model field "f_deviation"
-    'f_cvap_19': 'F_CVAP_19',            # Shapefile field "F_CVAP_19" → model field "f_cvap_19"
-    'f_hsp_cvap': 'F_HSP_CVAP',      # Shapefile field "F_HSP_CVAP_1" → model field "f_hsp_cvap_1"
-    'f_doj_nh_i': 'F_DOJ_NH_I',
-    'f_doj_nh_b': 'F_DOJ_NH_B',          # Shapefile field "F_DOJ_NH_B" → model field "f_doj_nh_b"
-    'f_doj_nh_a': 'F_DOJ_NH_A',          # Shapefile field "F_DOJ_NH_A" → model field "f_doj_nh_a"
-    'f_nh_wht_c': 'F_NH_WHT_C',          # Shapefile field "F_NH_WHT_C" → model field "f_nh_wht_c"
-    'district_label': 'DISTRICT_L',      # Shapefile field "DISTRICT_L" → model field "district_label"
-    'multiple_f': 'MULTIPLE_F',          # Shapefile field "MULTIPLE_F" → model field "multiple_f"
-    'geom': 'MULTIPOLYGON',              # Geometry field: typically the shapefile contains a "MULTIPOLYGON" geometry
-}
-
-# Mapping dictionary for the CongressionalDistrict model
-congressional_shp_mapping = {
-    'district_number': 'DISTRICT',      # shapefile field "DISTRICT" → model field "district_number"
-    'area': 'AREA',                     # shapefile field "AREA" → model field "area"
-    'members': 'MEMBERS',               # shapefile field "MEMBERS" → model field "members"
-    'population': 'POPULATION',         # shapefile field "POPULATION" → model field "population"
-    'cvap_19': 'CVAP_19',               # shapefile field "CVAP_19" → model field "cvap_19"
-    'hsp_cvap_1': 'HSP_CVAP_1',         # shapefile field "HSP_CVAP_1" → model field "hsp_cvap_1"
-    'doj_nh_blk': 'DOJ_NH_BLK',         # shapefile field "DOJ_NH_BLK" → model field "doj_nh_blk"
-    'doj_nh_asn': 'DOJ_NH_ASN',         # shapefile field "DOJ_NH_ASN" → model field "doj_nh_asn"
-    'nh_wht_cva': 'NH_WHT_CVA',         # shapefile field "NH_WHT_CVA" → model field "nh_wht_cva"
-    'ideal_value': 'IDEAL_VALU',        # shapefile field "IDEAL_VALU" → model field "ideal_value"
-    'deviation': 'DEVIATION',           # shapefile field "DEVIATION" → model field "deviation"
-    'f_deviatio': 'F_DEVIATIO',         # shapefile field "F_DEVIATIO" → model field "f_deviatio"
-    'multiple_f': 'MULTIPLE_F',         # shapefile field "MULTIPLE_F" → model field "multiple_f"
-    'f_cvap_19': 'F_CVAP_19',           # shapefile field "F_CVAP_19" → model field "f_cvap_19"
-    'f_hsp_cvap': 'F_HSP_CVAP',         # shapefile field "F_HSP_CVAP" → model field "f_hsp_cvap"
-    'f_doj_nh_b': 'F_DOJ_NH_B',         # shapefile field "F_DOJ_NH_B" → model field "f_doj_nh_b"
-    'f_doj_nh_a': 'F_DOJ_NH_A',         # shapefile field "F_DOJ_NH_A" → model field "f_doj_nh_a"
-    'f_nh_wht_c': 'F_NH_WHT_C',         # shapefile field "F_NH_WHT_C" → model field "f_nh_wht_c"
-    'district_label': 'DISTRICT_L',     # shapefile field "DISTRICT_L" → model field "district_label"
-    'district_n': 'DISTRICT_N',         # shapefile field "DISTRICT_N" → model field "district_n"
-    'geom': 'MULTIPOLYGON',             # Geometry field; this tells LayerMapping which field contains the multipolygon geometries
-}
-
-def import_congressional_shapefile(shp_path):
-    """
-    Imports the congressional shapefile into the CongressionalDistrict model using LayerMapping.
-    
-    Parameters:
-        shp_path (str): Full path to the .shp file.
-                        (Ensure that the accompanying .dbf, .shx, and .prj files are in the same folder.)
-    """
-    lm = LayerMapping(CongressionalDistrict, shp_path, congressional_shp_mapping, transform=True, encoding='utf-8')
-    lm.save(strict=True, verbose=True)
-
-
-def import_assembly_shapefile(shp_path):
-    """
-    Imports a shapefile into the AssemblyDistrict model using LayerMapping.
-    
-    Parameters:
-        shp_path (str): Full path to the .shp file. The accompanying .dbf, .shx, and .prj files
-                        must be in the same directory.
-    """
-    # Create a LayerMapping instance.
-    # Set transform=True if the shapefile's spatial reference differs from your database (commonly EPSG:4326).
-    lm = LayerMapping(AssemblyDistrict, shp_path, assembly_shp_mapping, transform=True, encoding='utf-8')
-    lm.save(strict=True, verbose=True)
-
-
-def import_senate_shapefile(shp_path):
-    """
-    Imports the shapefile data into the SenateDistrict model.
-    
-    Parameters:
-        shp_path (str): Full path to the .shp file (with .dbf, .shx, and .prj files in the same directory).
-    """
-    lm = LayerMapping(SenateDistrict, shp_path, senate_shp_mapping, transform=True, encoding='utf-8')
-    lm.save(strict=False, verbose=True)
-
-
 @router.post("/upload-shapefile/")
-def upload_shapefile(request, file: UploadedFile = File(...)):
+def upload_shapefile(request, file: UploadedFile = File(...), file_type: str = Form(...)):
     """
     Upload a shapefile (as .zip) and populate the respective model.
     """
-    # Extract the zip file
-    tmp_dir = extract_zip(file)
-
-    try:
+    print("handling upload")
+    # valid shapefile types for upload, any other files will get invalid filetype
+    valid_types = {"assembly", "congressional", "senate", "laspa", "hsa", "rnsa", "mssa", "pcsa", "hpsa"}
+    # lowercase the file type
+    file_type = file_type.lower()
+    if file_type not in valid_types:
+        try:
+            AdminErrors.objects.create(error_code=503, error_description="Invalid file type specifier")
+            print("Error successfully logged in the database")
+        except Exception as e:
+            print(f"Error found but not logged into the database! {e}")
+        return JsonResponse({"success" : False, "message" : "Invalid file type specifier"})
+    print("validated file")
+    if (file_type == "hpsa"):
+        handle_csv_upload(file)
+        print("handled csv upload")
+        # if upload is successful, flush the cache 
+        cache.flushdb()
+        return JsonResponse({"success" : True, "message" : "HPSA data uploaded"}, status=200)
+    elif (file_type != "hpsa" and file.name.lower().endswith(".csv")):
+        try:
+            AdminErrors.objects.create(error_code=500, error_description="CSV must be uploaded under Health Provider Shortage Areas (HPSA)")
+            print("Error successfully logged in the database")
+        except Exception as e:
+            print(f"Error found but not logged into the database! {e}")
+        return JsonResponse({"success" : False, "message" : "CSV must be uploaded under Health Provider Shortage Areas (HPSA)"}, status=500)
+    
+    
+    try:   
+        # Extract the zip file
+        tmp_dir = extract_zip(file)
+    
         # Get the path to the shapefile (.shp)
         shapefile_path = find_shapefile(tmp_dir.name)
 
         # Check if a shapefile is found
         if not shapefile_path:
+            try:
+                AdminErrors.objects.create(error_code=501, error_description="No shapefile found in the .zip archive.")
+                print("Error successfully logged in the database")
+            except Exception as e:
+                print(f"Error found but not logged into the database! {e}")
             return {"error": "No shapefile found in the .zip archive."}
 
         # Get metadata from the shapefile
         fields = get_shapefile_metadata(shapefile_path)
-
-        # Identify the type of shapefile
-        shapefile_type = identify_shapefile_type(fields)
-
+        
         layer = get_shapefile_layer(shapefile_path)
+        
+        # try to identify the shapefile type
+        validated_file_type = identify_shapefile_type(fields)
+        
+        if file_type != validated_file_type:
+            print(f"mismatched filetype | valid: {validated_file_type}, given: {file_type}")
+            try:
+                AdminErrors.objects.create(error_code=400, error_description="Invalid selected shapefile type.")
+                print("Error successfully logged in the database")
+            except Exception as e:
+                print(f"Error creating error log in table: {e}")
+            return JsonResponse({"success": False, "error": "Invalid selected shapefile type."}, status=400)
 
         # Process the shapefile based on its type
-        if shapefile_type == "assembly":
-            upload_assembly_shapefile(layer)
-        elif shapefile_type == "senate":
-            upload_senate_shapefile(layer)
-        elif shapefile_type == "congressional":
-            upload_congressional_shapefile(layer)
-        else:
-            return JsonResponse({"success": False, "error": "Unknown shapefile type"})
+        try:    
+            if file_type == "assembly":
+                upload_assembly_shapefile(layer)
+            elif file_type == "senate":
+                upload_senate_shapefile(layer)
+            elif file_type == "congressional":
+                upload_congressional_shapefile(layer)
+            elif file_type == "laspa":
+                upload_laspa_shapefile(layer)
+            elif file_type == "hsa":
+                upload_hsa_shapefile(layer)
+            elif file_type == "rnsa":
+                upload_rnsa_shapefile(layer)
+            elif file_type == "mssa":
+                upload_mssa_shapefile(layer)
+            elif file_type == "pcsa":
+                upload_pcsa_shapefile(layer)
+            else:
+                try:
+                    AdminErrors.objects.create(error_code=400, error_description="Unknown shapefile type")
+                    print("Error successfully logged in the database")
+                except Exception as e:
+                    print(f"Error creating log in the database: {e}")
+                return JsonResponse({"success": False, "error": "Unknown shapefile type", "status":400}, status=400)
+        except Exception as e:
+            print(f"Error uploading shapefile of type {file_type}: {e}")
+            try:
+                AdminErrors.objects.create(error_code=400, error_description=f"Shapefile of type '{file_type}' failed: {e}")
+                print("Error successfully logged in the database")
+            except Exception as e:
+                print(f"Error creating log in the database: {e}")
+            return JsonResponse({"success" : False, "message": f"Shapefile of type '{file_type}' failed: {e}"}, status=400)
         # return on success
-        return JsonResponse({"success" : True, "message": f"Shapefile of type '{shapefile_type}' uploaded and processed successfully."})
+        return JsonResponse({"success" : True, "message": f"Shapefile of type '{file_type}' uploaded and processed successfully."})
     except Exception as e:
-        return JsonResponse({"success": False, "error": f"Error response {e}"})
+        try:
+            AdminErrors.objects.create(error_code=400, error_description=f"Error response {e}")
+            print("Error successfully logged in the database")
+        except Exception as e:
+            print(f"Error creating log in the database: {e}")
+        return JsonResponse({"success": False, "error": f"Error response {e}"}, status=400)
     finally:
         # Cleanup the temporary directory
-        tmp_dir.cleanup()
-
-
+        if tmp_dir:
+            tmp_dir.cleanup()
 
 def process_uploaded_zip(file, expected_filename):
     """
@@ -250,68 +233,6 @@ def process_uploaded_zip(file, expected_filename):
         raise ValueError("No shapefile (.shp) found in the extracted archive.")
     return file_path, shp_path
 
-
-@router.post("/upload-assembly-shapefile/")
-def upload_assembly_shapefile_endpoint(request, file: UploadedFile = File(...)):
-    """
-    Expects a file named "ad.zip" containing an Assembly District shapefile.
-    Saves, extracts, searches for the .shp file, and imports the data into AssemblyDistrict.
-    """
-    try:
-        # For Assembly District, the uploaded file must be named "ad.zip"
-        file_path, shp_path = process_uploaded_zip(file, "ad.zip")
-        import_assembly_shapefile(shp_path)
-    except Exception as e:
-        return JsonResponse({"success": False, "error": str(e)})
-    
-    return JsonResponse({
-        "success": True,
-        "message": "Assembly district shapefile imported successfully.",
-        "uploaded_file_path": file_path,
-        "extracted_shapefile": shp_path,
-    })
-
-@router.post("/upload-senate-shapefile/")
-def upload_senate_shapefile_endpoint(request, file: UploadedFile = File(...)):
-    """
-    Expects a file named "sd.zip" containing a Senate District shapefile.
-    Saves, extracts, searches for the .shp file, and imports the data into SenateDistrict.
-    """
-    try:
-        # For Senate District, the uploaded file must be named "sd.zip"
-        file_path, shp_path = process_uploaded_zip(file, "sd.zip")
-        import_senate_shapefile(shp_path)
-    except Exception as e:
-        return JsonResponse({"success": False, "error": str(e)})
-    
-    return JsonResponse({
-        "success": True,
-        "message": "Senate district shapefile imported successfully.",
-        "uploaded_file_path": file_path,
-        "extracted_shapefile": shp_path,
-    })
-
-@router.post("/upload-congressional-shapefile/")
-def upload_congressional_shapefile_endpoint(request, file: UploadedFile = File(...)):
-    """
-    Expects a file named "cd.zip" containing a Congressional District shapefile.
-    Saves, extracts, searches for the .shp file, and imports the data into CongressionalDistrict.
-    """
-    try:
-        # For Congressional District, the uploaded file must be named "cd.zip"
-        file_path, shp_path = process_uploaded_zip(file, "cd.zip")
-        import_congressional_shapefile(shp_path)
-    except Exception as e:
-        return JsonResponse({"success": False, "error": str(e)})
-    
-    return JsonResponse({
-        "success": True,
-        "message": "Congressional district shapefile imported successfully.",
-        "uploaded_file_path": file_path,
-        "extracted_shapefile": shp_path,
-    })
-
-
 #Test 
 @router.get("/dev-credentials")
 def dev_credentials(request):
@@ -340,121 +261,6 @@ def list_tables(request):
     # Flatten list of tuples into a list of strings
     tables = [row[0] for row in table_rows]
     return JsonResponse({"tables": tables})
-
-
-@router.get("/nearest-location/")
-def nearest_location(request, longitude: float, latitude: float):
-    """
-    Accepts a longitude and latitude as query parameters, creates a Point,
-    and finds the nearest record in each of the AssemblyDistrict, SenateDistrict,
-    and CongressionalDistrict models. Returns a JSON response with the details.
-    """
-    # Create a geospatial point (assumes EPSG:4326 coordinate system)
-    test_point = Point(longitude, latitude, srid=4326)
-    
-    # Query each model and annotate with distance from the test point, ordering by distance.
-    assembly_qs = AssemblyDistrict.objects.annotate(distance=Distance("geom", test_point)).order_by("distance")
-    senate_qs = SenateDistrict.objects.annotate(distance=Distance("geom", test_point)).order_by("distance")
-    congressional_qs = CongressionalDistrict.objects.annotate(distance=Distance("geom", test_point)).order_by("distance")
-    
-    # Get the nearest record from each queryset if it exists
-    assembly_nearest = assembly_qs.first() if assembly_qs.exists() else None
-    senate_nearest = senate_qs.first() if senate_qs.exists() else None
-    congressional_nearest = congressional_qs.first() if congressional_qs.exists() else None
-
-    # Prepare the response data for AssemblyDistrict
-    assembly_data = None
-    if assembly_nearest:
-        assembly_data = {
-            "id": assembly_nearest.id,
-            "district_number": assembly_nearest.district_number,
-            "area": assembly_nearest.area,
-            "members": assembly_nearest.members,
-            "population": assembly_nearest.population,
-            "cvap_19": assembly_nearest.cvap_19,
-            "hsp_cvap_1": assembly_nearest.hsp_cvap_1,
-            "doj_nh_blk": getattr(assembly_nearest, "doj_nh_blk", None),
-            "doj_nh_asn": getattr(assembly_nearest, "doj_nh_asn", None),
-            "nh_wht_cva": getattr(assembly_nearest, "nh_wht_cva", None),
-            "ideal_value": assembly_nearest.ideal_value,
-            "deviation": assembly_nearest.deviation,
-            "f_deviatio": assembly_nearest.f_deviatio,
-            "f_cvap_19": assembly_nearest.f_cvap_19,
-            "f_hsp_cvap": getattr(assembly_nearest, "f_hsp_cvap", None),
-            "f_doj_nh_b": getattr(assembly_nearest, "f_doj_nh_b", None),
-            "f_doj_nh_a": getattr(assembly_nearest, "f_doj_nh_a", None),
-            "f_nh_wht_c": getattr(assembly_nearest, "f_nh_wht_c", None),
-            "district_label": assembly_nearest.district_label,
-            "distance_m": assembly_nearest.distance.m,
-            # "geom": assembly_nearest.geom.geojson,
-        }
-
-    # Prepare the response data for SenateDistrict
-    senate_data = None
-    if senate_nearest:
-        senate_data = {
-            "id": senate_nearest.id,
-            "district_number": senate_nearest.district_number,
-            "area": senate_nearest.area,
-            "members": senate_nearest.members,
-            "population": senate_nearest.population,
-            "cvap_19": senate_nearest.cvap_19,
-            "hsp_cvap_1": senate_nearest.hsp_cvap_1,
-            "doj_nh_blk": getattr(senate_nearest, "doj_nh_blk", None),
-            "doj_nh_asn": getattr(senate_nearest, "doj_nh_asn", None),
-            # For Senate, if "nh_wht_cva" is missing or named differently, adjust accordingly:
-            "nh_wht_cva": getattr(senate_nearest, "nh_wht_cva", None),
-            "ideal_value": senate_nearest.ideal_value,
-            "deviation": senate_nearest.deviation,
-            "f_deviation": senate_nearest.f_deviation,
-            "f_cvap_19": senate_nearest.f_cvap_19,
-            "f_hsp_cvap_1": getattr(senate_nearest, "f_hsp_cvap_1", None),
-            "f_doj_nh_b": getattr(senate_nearest, "f_doj_nh_b", None),
-            "f_doj_nh_a": getattr(senate_nearest, "f_doj_nh_a", None),
-            # If the field "f_nh_wht_c" is missing, use getattr to safely fetch it:
-            "f_nh_wht_c": getattr(senate_nearest, "f_nh_wht_c", None),
-            "district_label": senate_nearest.district_label,
-            "multiple_f": senate_nearest.multiple_f,
-            "distance_m": senate_nearest.distance.m,
-        }
-    
-    # Prepare the response data for CongressionalDistrict
-    congressional_data = None
-    if congressional_nearest:
-        congressional_data = {
-            "id": congressional_nearest.id,
-            "district_number": congressional_nearest.district_number,
-            "area": congressional_nearest.area,
-            "members": congressional_nearest.members,
-            "population": congressional_nearest.population,
-            "cvap_19": congressional_nearest.cvap_19,
-            "hsp_cvap_1": congressional_nearest.hsp_cvap_1,
-            "doj_nh_blk": getattr(congressional_nearest, "doj_nh_blk", None),
-            "doj_nh_asn": getattr(congressional_nearest, "doj_nh_asn", None),
-            "nh_wht_cva": getattr(congressional_nearest, "nh_wht_cva", None),
-            "ideal_value": congressional_nearest.ideal_value,
-            "deviation": congressional_nearest.deviation,
-            "f_deviatio": congressional_nearest.f_deviatio,
-            "multiple_f": congressional_nearest.multiple_f,
-            "f_cvap_19": congressional_nearest.f_cvap_19,
-            "f_hsp_cvap": congressional_nearest.f_hsp_cvap,
-            "f_doj_nh_b": congressional_nearest.f_doj_nh_b,
-            "f_doj_nh_a": congressional_nearest.f_doj_nh_a,
-            "f_nh_wht_c": congressional_nearest.f_nh_wht_c,
-            "district_label": congressional_nearest.district_label,
-            "district_n": congressional_nearest.district_n,
-            "distance_m": congressional_nearest.distance.m,
-        }
-    
-    # Create a combined result dictionary
-    result = {
-        "assembly": assembly_data,
-        "senate": senate_data,
-        "congressional": congressional_data,
-    }
-    
-    return JsonResponse({"success": True, "data": result})
-
 
 @router.get("/all-districts-data")
 def all_districts_data(request):
@@ -495,10 +301,62 @@ def all_districts_data(request):
     )
     congress_data = list(congress_qs)
 
+    # HSA with GeoJSON
+    hsa_qs = (
+        HealthServiceArea.objects
+        .annotate(geom_geojson=AsGeoJSON('geom'))
+        .values(
+            'hsa_name', 'geom_geojson'
+        )
+    )
+    hsa_data = list(hsa_qs)
+
+    laspa_qs = (
+        LAServicePlanningArea.objects
+        .annotate(geom_geojson=AsGeoJSON('geom'))
+        .values(
+            'spa_name', 'geom_geojson'
+        )
+    )
+    laspa_data = list(laspa_qs)
+
+    rnsa_qs = (
+        RegisteredNurseShortageArea.objects
+        .annotate(geom_geojson=AsGeoJSON('geom'))
+        .values(
+            'rnsa','severity', 'geom_geojson'
+        )
+    )
+    rnsa_data = list(rnsa_qs)
+
+    mssa_qs = (
+        MedicalServiceStudyArea.objects
+        .annotate(geom_geojson=AsGeoJSON('geom'))
+        .values(
+            'mssaid', 'geom_geojson'
+        )
+    )
+    mssa_data = list(mssa_qs)
+
+    pcsa_qs = (
+        PrimaryCareShortageArea.objects
+        .annotate(geom_geojson=AsGeoJSON('geom'))
+        .values(
+            'pcsa', 'geom_geojson'
+        )
+    )
+    pcsa_data = list(pcsa_qs)
+
+
     return JsonResponse({
         "assembly_districts": assembly_data,
         "senate_districts": senate_data,
         "congressional_districts": congress_data,
+        "health_service_data": hsa_data,
+        "la_service_planning": laspa_data,
+        "rnsa": rnsa_data,
+        "mssa": mssa_data,
+        "pcsa": pcsa_data,
     })
 
 @router.get("/search")
@@ -506,45 +364,65 @@ def coordinate_search(request, lat: float, lng: float):
     """
     Search the district tables for polygons containing (lat, lng).
     """
-    
     cache_key = f"{lat}_{lng}"
-    
-    # check if this point has been searched for recently in the cache
+
     try:
+        print(f"Coordinate Search Called - lat: {lat}, lng: {lng}")
         cache_value = cache.get(cache_key)
-        if cache_value:    
+        if cache_value:
             cache_value = json.loads(cache_value)
             cache_value["used_cache"] = True
-            return cache_value
-    except Exception as e:
-        return {"success": False, "message": f"Error: {e}"}
+            return JsonResponse(cache_value, safe=False)
+
+        point = Point(lng, lat, srid=4326)
+
+        senate_matches = SenateDistrict.objects.filter(geom__contains=point)
+        assembly_matches = AssemblyDistrict.objects.filter(geom__contains=point)
+        congressional_matches = CongressionalDistrict.objects.filter(geom__contains=point)
+        healthservicearea_matches = HealthServiceArea.objects.filter(geom__contains=point)
+        laserviceplanningarea_matches = LAServicePlanningArea.objects.filter(geom__contains=point)
+        registerednurseshortagearea_matches = RegisteredNurseShortageArea.objects.filter(geom__contains=point)
+        medicalservicestudyarea_matches = MedicalServiceStudyArea.objects.filter(geom__contains=point)
+        primarycareshortagearea_matches = PrimaryCareShortageArea.objects.filter(geom__contains=point)
+
+       
+        RANGE=0.1
+        primary_matches = HPSA_PrimaryCareShortageArea.objects.filter(latitude__range=(lat - RANGE, lat + RANGE),longitude__range=(lng - RANGE, lng + RANGE))
+
+        mental_matches = HPSA_MentalHealthShortageArea.objects.filter(latitude__range=(lat - RANGE, lat + RANGE),longitude__range=(lng - RANGE, lng + RANGE))
+
+        dental_matches = HPSA_DentalHealthShortageArea.objects.filter(latitude__range=(lat - RANGE, lat + RANGE),longitude__range=(lng - RANGE, lng + RANGE))
+      
         
-        
-        
-    # this runs if the lat long key was not found in the cache
-    point = Point(lng, lat, srid=4326)
-    
-    senate_matches = SenateDistrict.objects.filter(geom__contains=point).distinct("district_number")
-    assembly_matches = AssemblyDistrict.objects.filter(geom__contains=point).distinct("district_number")
-    congressional_matches = CongressionalDistrict.objects.filter(geom__contains=point).distinct("district_number")
-    
-    # Convert to lists of dictionaries before caching
-    cache_value = {
-        "senate": [to_dict(d) for d in senate_matches],
-        "assembly": [to_dict(d) for d in assembly_matches],
-        "congressional": [to_dict(d) for d in congressional_matches],
-    }
-    # Don't cache if all results are empty
-    if senate_matches.exists() or assembly_matches.exists() or congressional_matches.exists():
-        try:
-            # Create a cached value with a TTL
+        cache_value = {
+            "senate": [to_dict(d) for d in senate_matches],
+            "assembly": [to_dict(d) for d in assembly_matches],
+            "congressional": [to_dict(d) for d in congressional_matches],
+            "healthservicearea": [to_hsa_dict(d) for d in healthservicearea_matches],
+            "LaServicePlanning": [to_laspa_dict(d) for d in laserviceplanningarea_matches],  
+            "RegisteredNurseShortageArea": [to_rnsa_dict(d) for d in registerednurseshortagearea_matches],
+            "MedicalServiceStudyArea": [to_mssa_dict(d) for d in medicalservicestudyarea_matches],
+            "PrimaryCareShortageArea": [to_pcsa_dict(d) for d in primarycareshortagearea_matches],
+            "PrimaryCareHPSA": [to_primary_hpsa_dict(d) for d in primary_matches],
+            "MentalHealthHPSA": [to_mental_hpsa_dict(d) for d in mental_matches],
+            "DentalHealthHPSA": [to_dental_hpsa_dict(d) for d in dental_matches],
+
+        }
+
+        if any(cache_value.values()):
             cache.set(cache_key, json.dumps(cache_value), ex=TTL)
+
+        return JsonResponse(cache_value, safe=False)
+
+    except Exception as e:
+        
+        try:
+            AdminErrors.objects.create(error_code=130, error_description=f"Error: {e}")
+            print("Error successfully logged in the database")
         except Exception as e:
-            return {"success": False, "message": f"Error: {e}"}
-
-    return cache_value
-
-
+            print(f"Error found but not logged into the database! {e}")
+        return JsonResponse({"success": False, "message": f"Error: {e}"}, safe=False)
+        
 
 # Define a schema for expected data
 class OverrideLocationSchema(Schema):
@@ -560,3 +438,287 @@ def override_location(request, data: OverrideLocationSchema):
     print(f"Received Data - Coordinates: ({data.lat}, {data.lon}), Address: {data.address}")
 
     return JsonResponse({"success": True, "message": "Coordinates and address logged successfully."})
+
+class OverrideLocationIn(Schema):
+    address: str
+    latitude: float
+    longitude: float
+    
+class OverrideLocationOut(Schema):
+    id: int
+    address: str
+    latitude: float
+    longitude: float
+    
+    
+@router.post("/manual-overrides/upload-xlsx")
+def upload_overrides_xlsx(request, file: UploadedFile = File(...)):
+    """
+    Expects an XLSX with:
+    1) Address
+    2) Latitude
+    3) Longitude
+
+    Example row: "123 Example St" | 40.7128 | -74.0060
+    """
+    try:
+        wb = openpyxl.load_workbook(file.file)
+        sheet = wb.active  # or specify a sheet name
+
+        new_overrides = []
+        # If row 1 is a header, start from row=2
+        for row in sheet.iter_rows(min_row=2, values_only=True):
+            address, lat, lon = row[0], row[1], row[2]
+            #print(f"Row data: address={address}, lat={lat}, lon={lon}")
+            if address and lat is not None and lon is not None:
+                new_overrides.append(
+                    OverrideLocation(address=address, latitude=lat, longitude=lon)
+                )
+
+        print(f"Parsed {len(new_overrides)} new overrides.")
+
+        if not new_overrides:
+            print("No valid rows found in XLSX.")
+            try:
+                AdminErrors.objects.create(error_code=110, error_description="No valid rows found in XLSX")
+                print("Error successfully logged in the database")
+            except Exception as e:
+                print(f"Error found but not logged into the database! {e}")
+            return {"success": False, "message": "No valid rows found in XLSX"}
+
+        with transaction.atomic():
+            OverrideLocation.objects.bulk_create(new_overrides)
+
+        print(f"Inserted {len(new_overrides)} overrides into the database.")
+        return {
+            "success": True,
+            "message": f"Inserted {len(new_overrides)} overrides from XLSX."
+        }
+
+    except Exception as e:
+        print(f"Error during XLSX upload: {e}")
+        return {"success": False, "message": f"Error processing XLSX: {str(e)}"}
+
+@router.get("/manual-overrides", response=List[OverrideLocationOut])
+def list_overrides(request):
+    """
+    GET /manual-overrides
+    Returns all override entries.
+    """
+    try:
+        qs = OverrideLocation.objects.all()
+        count = qs.count()
+        print(f"Found {count} override(s) in the database.")
+        return qs
+    except Exception as e:
+        print(f"Error listing overrides: {e}")
+        return []  # or raise HttpError(400, f"Error: {e}")
+
+
+@router.post("/manual-overrides", response=OverrideLocationOut)
+def create_override(request, payload: OverrideLocationIn):
+    """
+    POST /manual-overrides
+    Creates a single override entry.
+    """
+    print(f"Creating new override with data: {payload.dict()}")
+    try:
+        obj = OverrideLocation.objects.create(**payload.dict())
+        print(f"Override created with ID={obj.id}")
+        return obj
+    except Exception as e:
+        print(f"Error creating override: {e}")
+        # Return a fallback or raise an exception
+        # but we must conform to response=OverrideLocationOut
+        # So let's do a minimal approach:
+        raise Exception(f"Failed to create override: {str(e)}")
+
+
+@router.get("/manual-overrides/{override_id}", response=OverrideLocationOut)
+def retrieve_override(request, override_id: int):
+    """
+    GET /manual-overrides/{override_id}
+    Retrieves a single override entry by its ID.
+    """
+    print(f"Retrieving override with ID={override_id}")
+    try:
+        obj = get_object_or_404(OverrideLocation, id=override_id)
+        print(f"Found override: {obj}")
+        return obj
+    except Exception as e:
+        print(f"Error retrieving override {override_id}: {e}")
+        raise Exception(f"Failed to retrieve override: {str(e)}")
+
+
+@router.put("/manual-overrides/{override_id}", response=OverrideLocationOut)
+def update_override(request, override_id: int, payload: OverrideLocationIn):
+    """
+    PUT /manual-overrides/{override_id}
+    Fully updates an override entry by its ID.
+    """
+    print(f"Updating override with ID={override_id} using data={payload.dict()}")
+    try:
+        obj = get_object_or_404(OverrideLocation, id=override_id)
+        for attr, value in payload.dict().items():
+            setattr(obj, attr, value)
+        obj.save()
+        print(f"Override with ID={override_id} updated successfully.")
+        return obj
+    except Exception as e:
+        print(f"Error updating override {override_id}: {e}")
+        raise Exception(f"Failed to update override: {str(e)}")
+
+@router.delete("/manual-overrides/{override_id}")
+def delete_override(request, override_id: int):
+    """
+    DELETE /manual-overrides/{override_id}
+    Deletes an override entry by its ID.
+    """
+    print(f"Deleting override with ID={override_id}")
+    try:
+        obj = get_object_or_404(OverrideLocation, id=override_id)
+        obj.delete()
+        msg = f"Override {override_id} deleted"
+        print(msg)
+        return {"success": True, "message": msg}
+    except Exception as e:
+        print(f"Error deleting override {override_id}: {e}")
+        try:
+            AdminErrors.objects.create(error_code=111, error_description=f"Failed to delete: {str(e)}")
+            print("Error successfully logged in the database")
+        except Exception as e:
+            print(f"Error found but not logged into the database! {e}")
+        return {"success": False, "message": f"Failed to delete: {str(e)}"}
+    
+
+User = get_user_model()
+
+@router.get("/active-sessions")
+def active_sessions(request):
+    """
+    Returns how many unexpired sessions belong to:
+      - Admin users (staff or superuser)
+      - Normal (non-admin) users
+    """
+    sessions = Session.objects.filter(expire_date__gte=timezone.now())
+
+    admin_count = 0
+    normal_count = 0
+
+    for session in sessions:
+        data = session.get_decoded()
+        user_id = data.get("_auth_user_id")
+        if user_id is not None:
+            try:
+                user = User.objects.get(pk=user_id)
+                if user.is_staff or user.is_superuser:
+                    admin_count += 1
+                else:
+                    normal_count += 1
+            except User.DoesNotExist:
+                pass
+
+    return {
+        "admin_count": admin_count,
+        "normal_count": normal_count,
+    }
+
+'''
+Endpoint deals with errors viewable by admins.
+''' 
+class AdminErrorSchema(Schema):
+    id: int
+    error_code: int
+    error_description: str
+    created_at: datetime = Field(..., format="iso8601")  
+
+@router.get("/admin_errors/", response=List[AdminErrorSchema])
+def admin_errors(request):
+    return AdminErrors.objects.all().order_by('-created_at')
+
+@router.delete("/admin_errors/{id}/")
+def delete_admin_error(request, id: int):
+    error = get_object_or_404(AdminErrors, id=id)
+    error.delete()
+    return {"success": True, "message": f"Error {id} deleted"}
+
+
+def to_hsa_dict(obj):
+    if not obj:
+        return {}
+
+    return {
+        "hsa_name": obj.hsa_name,
+        "hsa_number": obj.hsa_number,
+    }
+
+def to_laspa_dict(obj):
+    if not obj:
+        return {}
+
+    return {
+        "spa_name": obj.spa_name,
+    }
+
+def to_rnsa_dict(obj):
+    if not obj:
+        return {}
+
+    return {
+        "rnsa": obj.rnsa,
+        "Effective": obj.severity,
+    }
+
+def to_mssa_dict(obj):
+    if not obj:
+        return {}
+
+    return {
+        "mssaid": obj.mssaid,
+        "definition": obj.definition,
+        "county": obj.county_nm,
+        "censustract": obj.tractce,
+        "censuskey": obj.geoid,
+    }
+
+def to_pcsa_dict(obj):
+    if not obj:
+        return {}
+
+    return {
+        "pcsa": obj.pcsa,
+        "scoretota": obj.score_tota,
+        "mssa_e": obj.cnty_fips
+        #add more object if needed
+    }
+
+def to_dental_hpsa_dict(obj):
+    return {
+        "Designated": obj.hpsa_name,
+      
+    }
+
+def to_mental_hpsa_dict(obj):
+    return {
+        "hpsa_id": obj.hpsa_id,
+        "Designated": obj.hpsa_status,
+        "Designated On": obj.hpsa_designation_last_update_date,
+        "formal ratio": obj.hpsa_formal_ratio,
+        "Population Below Poverty": obj.percent_population_below_poverty,
+        "Designation Population": obj.hpsa_designation_population,
+        "Estimated underserved population": obj.hpsa_designation_population,
+        "Estimated Served Population": obj.hpsa_name,
+        "Priority score": obj.hpsa_score
+    }
+
+def to_primary_hpsa_dict(obj):
+    return {
+        "Designated": obj.designation_type,
+    }
+
+#api = Router()
+
+#@api.post("/generate-api-key", tags=["Admin"])
+#def generate_api_key(request):
+   # raw_key = APIKey.generate()  # This returns the unhashed key once
+ #   return {"api_key": raw_key}

@@ -1,4 +1,9 @@
-import React, { useState } from "react";
+import { TrashIcon } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { getActiveSessions, ActiveSessionsResponse } from "@/lib/utils";
+
+
+const fixedApiKey = import.meta.env.VITE_API_KEY;
 
 interface Alert {
   id: number;
@@ -18,6 +23,79 @@ const AdminDashboard: React.FC = () => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedOption, setSelectedOption] = useState<string>("senate");
+  const [adminCount, setAdminCount] = useState<number | null>(null);
+  const [normalCount, setNormalCount] = useState<number | null>(null);
+
+  interface AdminError {
+    id: number;
+    error_code: number;
+    error_description: string;
+    created_at: string;
+  }
+
+  const [issues, setIssues] = useState<AdminError[]>([]);
+  const [refreshCounter, setRefreshCounter] = useState(0);
+
+  useEffect(() => {
+    const fetchInterval = setInterval(() => {
+      setRefreshCounter((prev) => prev + 1);
+    }, 10000); // Poll every 10 seconds
+
+    const fetchIssues = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:8000/api/admin_errors/",
+          {
+            headers: { "X-API-KEY": "supersecret" },
+          }
+        );
+        if (!response.ok) throw new Error("Failed to fetch issues");
+        const data = await response.json();
+        setIssues(data);
+      } catch (error) {
+        console.error("Error fetching issues:", error);
+      }
+    };
+
+    fetchIssues(); // Initial fetch
+    return () => clearInterval(fetchInterval);
+  }, [refreshCounter]);
+
+  useEffect(() => {
+    async function fetchSessions() {
+      try {
+        const { admin_count, normal_count } = await getActiveSessions();
+        setAdminCount(admin_count);
+        if (normal_count !== null) {
+          setNormalCount(Math.round(normal_count/10));
+        } else {
+          setNormalCount(null);
+        }
+      } catch (err) {
+        console.error("Failed to fetch active sessions:", err);
+      }
+    }
+  
+    fetchSessions();
+    const intervalId = setInterval(fetchSessions, 30000);
+    return () => clearInterval(intervalId);
+  }, []);
+
+  //deleting records from the database
+  const handleResolveError = async (errorId: number) => {
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/admin_errors/${errorId}/`,
+        { method: "DELETE", headers: { "X-API-KEY": "supersecret" } }
+      );
+      if (!response.ok) throw new Error("Failed to delete error");
+      setIssues((prev) => prev.filter((error) => error.id !== errorId));
+      addAlert("success", "Error resolved successfully");
+    } catch (error) {
+      console.error("Error deleting:", error);
+      addAlert("error", "Failed to resolve error");
+    }
+  };
 
   // Handle file selection
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,7 +133,12 @@ const AdminDashboard: React.FC = () => {
 
   // Validate and set the selected file
   const validateAndSetFile = (file: File) => {
-    if (file.type === "application/zip" || file.name.endsWith(".zip")) {
+    if (
+      file.type === "application/zip" ||
+      file.name.endsWith(".zip") ||
+      file.type === "application/csv" ||
+      file.name.endsWith(".csv")
+    ) {
       setSelectedFile(file);
       addAlert("info", `Selected file: ${file.name}`);
     } else {
@@ -72,6 +155,7 @@ const AdminDashboard: React.FC = () => {
 
     const formData = new FormData();
     formData.append("file", selectedFile);
+    formData.append("file_type", selectedOption);
 
     setIsUploading(true);
 
@@ -82,10 +166,12 @@ const AdminDashboard: React.FC = () => {
           method: "POST",
           body: formData,
           headers: {
-            "X-API-KEY": "supersecret",
+            "X-API-KEY": fixedApiKey,
           },
         }
       );
+
+      console.log(response);
 
       if (!response.ok) {
         throw new Error("Upload failed.");
@@ -157,7 +243,7 @@ const AdminDashboard: React.FC = () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "X-API-KEY": "supersecret",
+            "X-API-KEY": fixedApiKey,
           },
           body: JSON.stringify({
             lat: lat,
@@ -235,121 +321,108 @@ const AdminDashboard: React.FC = () => {
         )}
       </section>
 
+      {/* Active Admin Sessions Card */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        {/* Admin Sessions Card */}
+        <div className="bg-gray-50  rounded-lg shadow-lg p-6">
+          <h2 className="text-lg font-bold text-gray-700 mb-1">
+            Active Admin Sessions
+          </h2>
+          <p className="text-3xl font-semibold text-blue-600">
+            {adminCount !== null ? adminCount : "Loading..."}
+          </p>
+          <p className="text-sm text-gray-500 mt-2">
+            Currently logged-in admin users
+          </p>
+        </div>
+
+        {/* Normal User Sessions Card */}
+        <div className="bg-gray-50 rounded-lg shadow-lg p-6">
+          <h2 className="text-lg font-bold text-gray-700 mb-1">
+            Active Normal Users
+          </h2>
+          <p className="text-3xl font-semibold text-green-600">
+            {normalCount !== null ? normalCount : "Loading..."}
+          </p>
+          <p className="text-sm text-gray-500 mt-2">
+            Non-admin authenticated sessions
+          </p>
+        </div>
+      </div>
+
       {/* Statistics Section */}
       <section
-        className="grid grid-cols-1 md:grid-cols-3 gap-6"
+        className="bg-gray-50 rounded-lg shadow-lg p-6 mb-6"
         aria-label="Statistics"
       >
-        <div className="bg-gray-50 rounded-lg shadow-lg p-6">
-          <h3 className="text-lg font-medium text-gray-700">
-            Total Users On The Site
-          </h3>
-          <p className="text-5xl font-bold text-blue-500 mt-4">50</p>
+        <div className="flex items-center mb-2">
+          <h2 className="text-xl font-bold text-gray-700">Issues</h2>
         </div>
-        <div className="bg-gray-50 rounded-lg shadow-lg p-6">
-          <h3 className="text-lg font-medium text-gray-700">Active Sessions</h3>
-          <p className="text-5xl font-bold text-green-500 mt-4">10</p>
-        </div>
-        <div className="bg-gray-50 rounded-lg shadow-lg p-6">
-          <h3 className="text-lg font-medium text-gray-700">
-            Address Update Request
-          </h3>
-          <p className="text-5xl font-bold text-yellow-500 mt-4">3</p>
-        </div>
-        <div className="bg-gray-50 rounded-lg shadow-lg p-6">
-          <h3 className="text-lg font-medium text-gray-700">Issues</h3>
-          <p className="text-5xl font-bold text-red-500 mt-4">None</p>
-        </div>
+        <table className="divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              {" "}
+              {/*I will remove this after demo*/}
+              <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-32">
+                Error ID
+              </th>
+              <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-32">
+                Error Code
+              </th>
+              <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider min-w-[500px]">
+                Description
+              </th>
+              <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-48">
+                Date Occurred
+              </th>
+              <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-32">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {issues.map((error) => (
+              <tr key={error.id}>
+                <td className="px-8 py-4 whitespace-nowrap text-base font-mono text-red-600">
+                  {error.id}
+                </td>
+                {/*I will remove this after demo*/}
+                <td className="px-8 py-4 whitespace-nowrap text-base font-mono text-red-600">
+                  {error.error_code}
+                </td>
+                <td className="px-8 py-4 whitespace-normal text-base text-gray-900 max-w-2xl">
+                  {error.error_description}
+                </td>
+                <td className="px-8 py-4 whitespace-nowrap text-base text-gray-500">
+                  {new Date(error.created_at).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </td>
+                <td className="px-8 py-4 whitespace-nowrap">
+                  <button
+                    onClick={() => handleResolveError(error.id)}
+                    className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
+                    aria-label={`Mark error ${error.id} as resolved`}
+                  >
+                    <TrashIcon className="w-5 h-5" />
+                    <span>Resolve</span>
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </section>
-
-      {/* Coordinate Override Section */}
-      <section
-        className="bg-gray-50 rounded-lg shadow-lg p-6 mb-6 mt-10"
-        aria-label="Coordinate Override"
-      >
-        <h2 className="text-xl font-semibold text-gray-700 mb-4">
-          Coordinate Override
-        </h2>
-        {/* Label for coordinates input (visually hidden) */}
-        <label htmlFor="coordinate-input" className="sr-only">
-          Enter coordinates (lat, lon)
-        </label>
-        <input
-          id="coordinate-input"
-          type="text"
-          placeholder="Enter coordinates (lat, lon)"
-          value={coordinates}
-          onChange={handleCoordinatesChange}
-          className="w-full p-3 border border-gray-300 rounded-lg mb-4"
-        />
-
-        {/* Label for address input (visually hidden) */}
-        {showAddressInput && (
-          <>
-            <label htmlFor="address-input" className="sr-only">
-              Enter new address
-            </label>
-            <input
-              id="address-input"
-              type="text"
-              placeholder="Enter new address"
-              value={address}
-              onChange={handleAddressChange}
-              className="w-full p-3 border border-gray-300 rounded-lg mb-4"
-            />
-          </>
-        )}
-        {showSubmitButton && (
-          <button
-            onClick={handleSubmit}
-            className={`px-6 py-3 bg-orange-500 text-white font-bold rounded-lg shadow-md transition ${
-              isSubmitting ? "" : "hover:bg-orange-600"
-            }`}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Submitting..." : "Submit"}
-          </button>
-        )}
-      </section>
-
-      {showConfirmation && (
-        // Modal confirmation dialog
-        <div
-          className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="confirmation-heading"
-        >
-          <div className="bg-white p-6 rounded-lg shadow-lg">
-            <h3 id="confirmation-heading" className="text-lg font-bold mb-4">
-              Are you sure?
-            </h3>
-            <p className="mb-2">Coordinates: {coordinates}</p>
-            <p className="mb-4">Address: {address}</p>
-            <button
-              onClick={confirmSubmit}
-              className="px-6 py-3 bg-green-500 text-white font-bold rounded-lg shadow-md hover:bg-green-600 transition mr-4"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <span className="animate-spin inline-block w-5 h-5 border-4 border-white border-t-transparent rounded-full"></span>
-              ) : (
-                "Confirm"
-              )}
-            </button>
-            <button
-              onClick={() => setShowConfirmation(false)}
-              className="px-6 py-3 bg-red-500 text-white font-bold rounded-lg shadow-md hover:bg-red-600 transition"
-              disabled={isSubmitting}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Dropdown Menu (above file upload) */}
-      <section className="w-full" aria-label="Geographical Selection Dropdown">
+      <section
+        className="w-full pt-6"
+        aria-label="Geographical Selection Dropdown"
+      >
         <label
           className="block text-gray-700 font-medium mb-2"
           htmlFor="select-option"
@@ -362,9 +435,17 @@ const AdminDashboard: React.FC = () => {
           onChange={(e) => setSelectedOption(e.target.value)}
           className="w-full p-3 border border-gray-300 rounded-lg"
         >
-          <option value="senate">Senate</option>
-          <option value="assembly">Assembly</option>
-          <option value="congressional">Congressional</option>
+          <option value="senate">Senate District</option>
+          <option value="assembly">Assembly District</option>
+          <option value="congressional">Congressional District</option>
+          <option value="laspa">LA Service Planning Area</option>
+          <option value="hsa">Health Service Area</option>
+          <option value="rnsa">Registered Nurse Shortage Area</option>
+          <option value="mssa">Medical Service Study Area</option>
+          <option value="pcsa">Primary Care Shortage Area</option>
+          <option value="hpsa">
+            Health Professional Shortage Area (.csv only)
+          </option>
         </select>
         <p className="text-sm text-gray-500 mt-2">
           You have selected:{" "}
@@ -398,7 +479,7 @@ const AdminDashboard: React.FC = () => {
               id="file-upload"
               className="hidden"
               onChange={handleFileChange}
-              accept=".zip"
+              accept=".zip,.csv"
             />
             <label
               htmlFor="file-upload"
@@ -426,7 +507,7 @@ const AdminDashboard: React.FC = () => {
           >
             {isUploading ? "Uploading..." : "Upload File"}
           </button>
-          <p className="text-sm text-gray-500">Shapefiles only.</p>
+          <p className="text-sm text-gray-500">Shapefiles & .csv only.</p>
         </div>
       </section>
     </main>
@@ -445,3 +526,4 @@ export default AdminDashboard;
     setShowConfirmation(false);
   };
  */
+

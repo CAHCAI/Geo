@@ -29,6 +29,7 @@ const APIReference: React.FC = () => {
     null
   );
   const [activeSubSection, setActiveSubSection] = useState<string | null>(null);
+  const [showSidebar, setShowSidebar] = useState(true); // Toggle for collapsible sidebar
 
   useEffect(() => {
     fetch("/api/openapi.json")
@@ -59,11 +60,11 @@ const APIReference: React.FC = () => {
             const parentId = PARENT_SECTION[targetId] || targetId;
 
             if (parentId === targetId) {
-              //highlights only the main section(geocode or hpsearch)
+              // highlights only the main section (geocode or gethpsdesignations)
               setActiveMainSection(parentId);
               setActiveSubSection(null);
             } else {
-              //highlights subsection
+              // highlights subsection
               setActiveMainSection(parentId);
               setActiveSubSection(targetId);
             }
@@ -92,9 +93,23 @@ const APIReference: React.FC = () => {
   };
 
   return (
-    <div className="flex">
+    <div className="flex flex-col md:flex-row">
+      {/* Mobile Sidebar Toggle */}
+      <div className="md:hidden p-4">
+        <button
+          onClick={() => setShowSidebar(!showSidebar)}
+          className="bg-blue-600 text-white px-4 py-2 rounded"
+        >
+          {showSidebar ? "Hide Bar" : "Show Bar"}
+        </button>
+      </div>
+
       {/* Sidebar */}
-      <nav className="fixed left-0 z-50 top-25 sm:top-60 w-45 h-[calc(100vh-7rem)] sm:h-[calc(100vh-8rem)] overflow-y-auto p-6 bg-gray-100 shadow-md">
+      <nav
+        className={`w-full md:w-1/4 bg-gray-100 shadow-md p-6 md:sticky md:h-[calc(100vh-8rem)] overflow-y-auto ${
+          !showSidebar ? "hidden" : "block"
+        } md:block`}
+      >
         <h2 className="text-xl font-bold mb-4">API Reference</h2>
         <ul className="space-y-2">
           {sections.map((section) => (
@@ -114,7 +129,6 @@ const APIReference: React.FC = () => {
                 <ul className="ml-4 mt-2 space-y-1">
                   {section.subsections.map((subsection) => (
                     <li key={subsection.id}>
-                      {/* Highlight subsection if activeSubSection === this subsection's ID */}
                       <button
                         className={`block w-full text-left px-3 py-1 rounded-md transition-all ${
                           activeSubSection === subsection.id
@@ -137,7 +151,8 @@ const APIReference: React.FC = () => {
       {/* Content Area */}
       <div
         ref={contentRef}
-        className="ml-64 mt-28 sm:mt-32 w-[calc(100%-12rem)] p-6 space-y-12 overflow-y-auto h-[calc(100vh-7rem)] sm:h-[calc(100vh-10rem)]"
+        className="md:w-3/4 p-6 space-y-12 overflow-y-auto"
+        style={{ height: "calc(100vh - 4rem)" }}
       >
         {/* Geocode Section */}
         <section
@@ -230,7 +245,7 @@ const APIReference: React.FC = () => {
                   in_umn
                 </code>
                 flag for a Registered Nurse Special Program’s application only
-                considers
+                considers{" "}
                 <code className="bg-gray-200 px-1 py-0.5 rounded text-sm">
                   rnsa
                 </code>
@@ -280,26 +295,28 @@ const APIReference: React.FC = () => {
       "district_label": "38|-0%",
       "population": 760065
     }
-  ]
+  ],
+  "healthservicearea": [
+    {
+      "hsa_name": "Los Angeles"
+    }
+  ],
+  "LaServicePlanning": [
+    {
+      "spa_name": "San Gabriel"
+    }
+  ],
+  "RegisteredNurseShortageArea": [
+    {
+      "rnsa": "Yes",
+      "Effective": "Low"
+    }
+  ],
+  "MedicalServiceStudyArea": [],
+  "PrimaryCareShortageArea": []
 }`}
           </pre>
-          <div className="mt-6">
-            <p className="text-gray-700">
-              Geocode service may not be able to find an address matching the
-              input. Below is an example of how that is handled and reported:
-            </p>
-            <code className="block bg-gray-200 p-3 rounded-lg text-sm break-words overflow-x-auto w-full">
-              https://geo.hcai.ca.gov/service/geocode?key=YOUR_KEY_HERE&address=400+wrong+Street+sacramento+ca
-            </code>
-            <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto text-sm mt-2">
-              {`{
-  "response": "failed",
-  "reason": "Address not found"
-}`}
-            </pre>
-          </div>
         </section>
-
         {/* GetHPSDesignations Section */}
         <section
           id="gethpsdesignations"
@@ -334,35 +351,32 @@ const APIReference: React.FC = () => {
           <h2 className="text-2xl font-bold text-blue-600 mb-2">Parameters</h2>
           <ul className="list-disc ml-6 space-y-2 text-gray-700">
             <li>
-              <strong>key (required):</strong>
-              An API key must be provided to use this service. The API is for
-              HCAI applications only and not open to the public.
+              <strong>key (required):</strong> An API key must be provided to
+              use this service. The API is for HCAI applications only and not
+              open to the public.
             </li>
             <li>
-              <strong>latitude (required):</strong>
-              Latitude of the address that you want to find the shortage
-              designations for.
+              <strong>latitude (required):</strong> Latitude of the address that
+              you want to find the shortage designations for.
             </li>
             <li>
-              <strong>longitude (required):</strong>
-              Longitude of the address that you want to find the shortage
-              designations for{" "}
+              <strong>longitude (required):</strong> Longitude of the address
+              that you want to find the shortage designations for
             </li>
             <li>
-              <strong>calreachdoctype:</strong>
-              Given this parameter, the Area of Unmet Need (in_umn) flag may be
-              determined differently. Currently SongBrown program may require
-              this flag to be computed differently for various programs. For
-              Example, An address's Area of Unmet Need flag(in_umn) Registered
-              Nurse Special Program's application doesn't care about any other
-              flags other than Registered Nurse Shortage Area (rnsa).
+              <strong>calreachdoctype:</strong> Given this parameter, the Area
+              of Unmet Need (in_umn) flag may be determined differently.
+              Currently SongBrown program may require this flag to be computed
+              differently for various programs. For example, an address’s Area
+              of Unmet Need flag(in_umn) Registered Nurse Special Program's
+              application doesn't care about any other flags other than
+              Registered Nurse Shortage Area (rnsa).
               <br />
               <br />
-              <strong>Example:</strong>
-              An address's Area of Unmet Need flag (<code>in_umn</code>) for the
-              Registered Nurse Special Program's application does not consider
-              any other flags except the Registered Nurse Shortage Area (
-              <code>rnsa</code>).
+              <strong>Example:</strong> An address's Area of Unmet Need flag (
+              <code>in_umn</code>) for the Registered Nurse Special Program's
+              application does not consider any other flags except the
+              Registered Nurse Shortage Area (<code>rnsa</code>).
             </li>
           </ul>
         </section>
@@ -378,33 +392,58 @@ const APIReference: React.FC = () => {
           <h2 className="text-xl font-bold text-blue-500 mb-2">
             Response Example
           </h2>
-          <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto text-sm">
+          <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto text-sm mt-2">
             {`{
-      "senate": [
-        {
-          "district_number": 30,
-          "district_label": "30|0.32%",
-          "population": 991239
-        }
-      ],
-      "assembly": [
-      {
-          "district_number": 56,
-          "district_label": "56|-0.18%",
-          "population": 493173
-      }
-      ],
-      "congressional": [
+  "senate": [
     {
-          "district_number": 38,
-          "district_label": "38|-0%",
-          "population": 760065
+      "district_number": 30,
+      "district_label": "30|0.32%",
+      "population": 991239
     }
-  ]
+  ],
+  "assembly": [
+    {
+      "district_number": 56,
+      "district_label": "56|-0.18%",
+      "population": 493173
+    }
+  ],
+  "congressional": [
+    {
+      "district_number": 38,
+      "district_label": "38|-0%",
+      "population": 760065
+    }
+  ],
+  "healthservicearea": [
+    {
+      "hsa_name": "Los Angeles"
+    }
+  ],
+  "LaServicePlanning": [
+    {
+      "spa_name": "San Gabriel"
+    }
+  ],
+  "RegisteredNurseShortageArea": [
+    {
+      "rnsa": "Yes",
+      "Effective": "Low"
+    }
+  ],
+  "MedicalServiceStudyArea": [],
+  "PrimaryCareShortageArea": []
 }`}
           </pre>
         </section>
       </div>
+      {/* Back to Top Button */}
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded"
+      >
+        Back to Top
+      </button>
     </div>
   );
 };
