@@ -2,7 +2,6 @@ import { TrashIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { getActiveSessions, ActiveSessionsResponse } from "@/lib/utils";
 
-
 const fixedApiKey = import.meta.env.VITE_API_KEY;
 
 interface Alert {
@@ -67,7 +66,7 @@ const AdminDashboard: React.FC = () => {
         const { admin_count, normal_count } = await getActiveSessions();
         setAdminCount(admin_count);
         if (normal_count !== null) {
-          setNormalCount(Math.round(normal_count/10));
+          setNormalCount(Math.round(normal_count / 10));
         } else {
           setNormalCount(null);
         }
@@ -75,7 +74,7 @@ const AdminDashboard: React.FC = () => {
         console.error("Failed to fetch active sessions:", err);
       }
     }
-  
+
     fetchSessions();
     const intervalId = setInterval(fetchSessions, 30000);
     return () => clearInterval(intervalId);
@@ -358,64 +357,66 @@ const AdminDashboard: React.FC = () => {
         <div className="flex items-center mb-2">
           <h2 className="text-xl font-bold text-gray-700">Issues</h2>
         </div>
-        <table className="divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              {" "}
-              {/*I will remove this after demo*/}
-              <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-32">
-                Error ID
-              </th>
-              <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-32">
-                Error Code
-              </th>
-              <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider min-w-[500px]">
-                Description
-              </th>
-              <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-48">
-                Date Occurred
-              </th>
-              <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-32">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {issues.map((error) => (
-              <tr key={error.id}>
-                <td className="px-8 py-4 whitespace-nowrap text-base font-mono text-red-600">
-                  {error.id}
-                </td>
+        <div className="max-h-[30vh] overflow-y-auto">
+          <table className="divide-y divide-gray-200 ">
+            <thead className="bg-gray-50">
+              <tr>
+                {" "}
                 {/*I will remove this after demo*/}
-                <td className="px-8 py-4 whitespace-nowrap text-base font-mono text-red-600">
-                  {error.error_code}
-                </td>
-                <td className="px-8 py-4 whitespace-normal text-base text-gray-900 max-w-2xl">
-                  {error.error_description}
-                </td>
-                <td className="px-8 py-4 whitespace-nowrap text-base text-gray-500">
-                  {new Date(error.created_at).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </td>
-                <td className="px-8 py-4 whitespace-nowrap">
-                  <button
-                    onClick={() => handleResolveError(error.id)}
-                    className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
-                    aria-label={`Mark error ${error.id} as resolved`}
-                  >
-                    <TrashIcon className="w-5 h-5" />
-                    <span>Resolve</span>
-                  </button>
-                </td>
+                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-32">
+                  Error ID
+                </th>
+                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-32">
+                  Error Code
+                </th>
+                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider min-w-[500px]">
+                  Description
+                </th>
+                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-48">
+                  Date Occurred
+                </th>
+                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-32">
+                  Actions
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {issues.map((error) => (
+                <tr key={error.id}>
+                  <td className="px-8 py-4 whitespace-nowrap text-base font-mono text-red-600">
+                    {error.id}
+                  </td>
+                  {/*I will remove this after demo*/}
+                  <td className="px-8 py-4 whitespace-nowrap text-base font-mono text-red-600">
+                    {error.error_code}
+                  </td>
+                  <td className="px-8 py-4 whitespace-normal text-base text-gray-900 max-w-2xl">
+                    {error.error_description}
+                  </td>
+                  <td className="px-8 py-4 whitespace-nowrap text-base text-gray-500">
+                    {new Date(error.created_at).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </td>
+                  <td className="px-8 py-4 whitespace-nowrap">
+                    <button
+                      onClick={() => handleResolveError(error.id)}
+                      className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
+                      aria-label={`Mark error ${error.id} as resolved`}
+                    >
+                      <TrashIcon className="w-5 h-5" />
+                      <span>Resolve</span>
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
 
       {/* Dropdown Menu (above file upload) */}
@@ -526,4 +527,3 @@ export default AdminDashboard;
     setShowConfirmation(false);
   };
  */
-

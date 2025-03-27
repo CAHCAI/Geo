@@ -40,13 +40,12 @@ export default function Login({ loggedIn, setLoggedIn }: LoginProps) {
       if (response.data.message === "Login successful") {
         setLoggedIn(true); // Update parent state
         setIsLoggedIn(true); // Local state update
-        alert("✅ Login successful!");
+        //alert("✅ Login successful!");
       } else {
         setError("Invalid username or password.");
       }
     } catch (err) {
       setError("Invalid credentials.");
-
     } finally {
       setLoading(false);
     }
