@@ -155,3 +155,45 @@ export const validateKey = async (): Promise<void> => {
       console.error("Error validating API key:", error);
   }
 };
+
+
+
+const AXIOS = axios.create({
+  baseURL: "http://localhost:8000/api",
+  // if you need to send cookies or an API key
+  //withCredentials: true,
+  headers: {
+    "X-API-KEY": API_KEY
+  }
+});
+
+// Check override location in Django
+export async function checkOverrideLocation(address: string) {
+  // e.g. GET /override-locations?address=...
+  const resp = await AXIOS.get<{
+    found: boolean;
+    latitude?: number;
+    longitude?: number;
+    error?: string;
+  }>("/override-locations", {
+    params: { address },
+  });
+  return resp.data;
+}
+
+// Call Azure geocoding if not found in override
+export async function getCoordinatesFromAzure(address: string) {
+  // Replace with Azure endpoint from MSA
+  const azureKey = "YOUR_AZURE_KEY";
+  const url = `https://atlas.microsoft.com/search/address/json?api-version=1.0&subscription-key=${azureKey}&query=${encodeURIComponent(address)}`;
+  
+  const resp = await fetch(url);
+  const data = await resp.json();
+  // parse lat/lon from data
+  if (data && data.results && data.results.length > 0) {
+    const lat = data.results[0].position.lat;
+    const lng = data.results[0].position.lon;
+    return { lat, lng };
+  }
+  return { lat: null, lng: null };
+}

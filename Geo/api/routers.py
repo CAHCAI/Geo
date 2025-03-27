@@ -590,6 +590,27 @@ def delete_override(request, override_id: int):
             print(f"Error found but not logged into the database! {e}")
         return {"success": False, "message": f"Failed to delete: {str(e)}"}
     
+    
+
+@router.get("/override-locations")
+def check_override_location(request, address: str):
+    """
+    Tries to find an OverrideLocation matching this address (case-insensitive).
+    If found, returns { found: true, latitude, longitude } 
+    else { found: false }
+    """
+    try:
+        ol = OverrideLocation.objects.filter(address__iexact=address).first()
+        if ol:
+            return {
+                "found": True,
+                "latitude": ol.latitude,
+                "longitude": ol.longitude
+            }
+        else:
+            return { "found": False }
+    except Exception as e:
+        return { "found": False, "error": str(e) }
 
 User = get_user_model()
 

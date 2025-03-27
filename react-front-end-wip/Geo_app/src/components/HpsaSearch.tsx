@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import Table from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { checkOverrideLocation, getCoordinatesFromAzure } from "@/lib/utils";
+import { Search } from "@/components/ui/Search";
 
 interface Alert {
   id: number;
@@ -33,7 +35,6 @@ interface HealthServiceAreaItem {
   hsa_name: string;
   hsa_number: string;
 }
-
 
 
 export const InputWithButton: React.FC<{
@@ -144,7 +145,102 @@ const HpsaSearchPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  }; 
+  
+  function isCoordinateFormat(input: string): boolean {
+    // e.g. "13, -22" or "13.123, -22.456"
+    // a quick example pattern:
+    const coordRegex = /^-?\d{1,3}(\.\d+)?,\s*-?\d{1,3}(\.\d+)?$/;
+    return coordRegex.test(input.trim());
+  }
+
+  const fetchResults2 = async () => {
+    console.log("fetchResults function triggered.");
+    setError(null);
+
+    if (!searchQuery.trim()) {
+      console.error("No search query provided.");
+      setError("Please enter valid coordinates or an address.");
+      addAlert("error", "Please enter valid coordinates or an address.");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+
+      // 1) Check if it's coordinate
+      if (isCoordinateFormat(searchQuery)) {
+        console.log("Input is recognized as coordinates:", searchQuery);
+        // Use existing coordinate logic
+        const [lat, lng] = searchQuery.split(",").map((coord) => parseFloat(coord.trim()));
+        if (isNaN(lat) || isNaN(lng)) {
+          setError("Invalid coordinate format. Use: lat, lng");
+          addAlert("error", "Invalid coordinate format. Use: lat, lng");
+          return;
+        }
+        await doSearchWithCoordinates(lat, lng);
+
+      } else {
+        console.log("Input is recognized as an address:", searchQuery);
+        // 2) It's an address -> check override
+        const overrideData = await checkOverrideLocation(searchQuery);
+        if (overrideData.found && overrideData.latitude !== undefined && overrideData.longitude !== undefined) {
+          // Found in override
+          console.log("Override found => lat, lng =", overrideData.latitude, overrideData.longitude);
+          await doSearchWithCoordinates(overrideData.latitude, overrideData.longitude);
+        } else {
+          // 3) Not found in override => call Azure geocoding
+          console.log("No override => calling Azure geocoding");
+          const geoRes = await getCoordinatesFromAzure(searchQuery);
+          if (geoRes.lat && geoRes.lng) {
+            await doSearchWithCoordinates(geoRes.lat, geoRes.lng);
+          } else {
+            setError("Failed to geocode address. Please try again.");
+            addAlert("error", "Failed to geocode address. Please try again.");
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching search results:", error);
+      setError("Failed to retrieve data.");
+      addAlert("error", "Failed to retrieve data.");
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  // Helper: call your existing search route
+  async function doSearchWithCoordinates(lat: number, lng: number) {
+    const apiUrl = `http://localhost:8000/api/search?lat=${lat}&lng=${lng}`;
+    console.log("Fetching from API:", apiUrl);
+
+    const response = await fetch(apiUrl, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "X-API-KEY": fixedApiKey,
+      },
+      credentials: "include", // if you need cookies
+    });
+
+    const data = await response.json();
+    console.log("Fetched data:", data);
+
+    if (
+      Object.keys(data).length === 0 ||
+      (!data.senate && !data.assembly && !data.congressional && !data.hsa)
+    ) {
+      console.warn("No results found.");
+      setError("No results found.");
+      addAlert("error", "No results found.");
+    } else {
+      setSearchResults(data);
+      console.table(data);
+      addAlert("success", "Search results retrieved successfully.");
+    }
+  }
+
+
 
   // Add a new alert
   const addAlert = (type: Alert["type"], message: string) => {
@@ -473,6 +569,14 @@ const HpsaSearchPage: React.FC = () => {
           fetchResults={fetchResults}
           isLoading={isLoading}
         />
+   
+        {/*  
+        <Search
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          fetchResults={fetchResults2}
+          isLoading={isLoading}
+        />*/} 
 
         {searchResults?.senate?.length > 0 && (
           <>
