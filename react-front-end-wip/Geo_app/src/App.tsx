@@ -11,6 +11,7 @@ import MobileNav from "./components/headers/MobileNav";
 import SearchBar from "./components/headers/SearchBar";
 import TopNavBar from "./components/headers/TopNavBar";
 import CordOverride from "./components/CordOverride";
+import MapViewer from "./components/MapViewer";
 import Home from "./components/Home";
 import LicensedHealthcareFacilities from "./components/LicensedHealthcareFacilities";
 import Login from "./components/Login";
@@ -78,6 +79,8 @@ const App: React.FC = () => {
         return <TestAdminCredentials />;
       case "licensed-healthcare":
         return <LicensedHealthcareFacilities />;
+      case "map-viewer":
+        return <MapViewer />
       case "api-reference":
         return <APIReference />;
       case "cord-override":
@@ -114,6 +117,7 @@ const App: React.FC = () => {
                   page: "licensed-healthcare",
                 },
                 { label: "API Reference", page: "api-reference" },
+                { label: "Map Viewer", page: "map-viewer"},
               ].map(({ label, page }) => (
                 <button
                   key={page}
