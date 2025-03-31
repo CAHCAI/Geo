@@ -46,8 +46,6 @@ router = Router()
 
 #router = Router(auth=APIKeyAuth())
 
-
-
 @router.get("/test")
 def test(request):
     """
@@ -267,7 +265,18 @@ def all_districts_data(request):
     """
     Fetches data for all districts, with geometry converted to GeoJSON strings.
     """
+    cache_key = "geoJson-all-data"
     # Assembly with GeoJSON
+    try:
+        cache_value = cache.get(cache_key)
+        if cache_value:
+            cache_value = json.loads(cache_value)
+            cache_value["used_cache"] = True
+            return JsonResponse(cache_value, safe=False)
+    except Exception as e:
+        print(f"Error fetching from cache {e}")
+    
+    
     assembly_qs = (
         AssemblyDistrict.objects
         .annotate(geom_geojson=AsGeoJSON('geom'))  # Convert geom to GeoJSON
@@ -306,7 +315,7 @@ def all_districts_data(request):
         HealthServiceArea.objects
         .annotate(geom_geojson=AsGeoJSON('geom'))
         .values(
-            'hsa_name', 'geom_geojson'
+            'hsa_number', 'hsa_name', 'area_sqmi', 'geom_geojson'
         )
     )
     hsa_data = list(hsa_qs)
@@ -315,7 +324,7 @@ def all_districts_data(request):
         LAServicePlanningArea.objects
         .annotate(geom_geojson=AsGeoJSON('geom'))
         .values(
-            'spa_name', 'geom_geojson'
+            'spa_num', 'spa_name', 'geom_geojson'
         )
     )
     laspa_data = list(laspa_qs)
@@ -324,7 +333,7 @@ def all_districts_data(request):
         RegisteredNurseShortageArea.objects
         .annotate(geom_geojson=AsGeoJSON('geom'))
         .values(
-            'rnsa','severity', 'geom_geojson'
+            'rnsa', 'rn_area_na', 'severity', 'geom_geojson'
         )
     )
     rnsa_data = list(rnsa_qs)
@@ -333,7 +342,7 @@ def all_districts_data(request):
         MedicalServiceStudyArea.objects
         .annotate(geom_geojson=AsGeoJSON('geom'))
         .values(
-            'mssaid', 'geom_geojson'
+            'mssaid', 'county_nm', 'geom_geojson'
         )
     )
     mssa_data = list(mssa_qs)
@@ -342,13 +351,12 @@ def all_districts_data(request):
         PrimaryCareShortageArea.objects
         .annotate(geom_geojson=AsGeoJSON('geom'))
         .values(
-            'pcsa', 'geom_geojson'
+            'pcsa', 'mssa_id', 'mssa_name', 'mssa_count', 'definition', 'geom_geojson'
         )
     )
     pcsa_data = list(pcsa_qs)
 
-
-    return JsonResponse({
+    cache_value = {
         "assembly_districts": assembly_data,
         "senate_districts": senate_data,
         "congressional_districts": congress_data,
@@ -357,7 +365,11 @@ def all_districts_data(request):
         "rnsa": rnsa_data,
         "mssa": mssa_data,
         "pcsa": pcsa_data,
-    })
+    }
+    
+    if any(cache_value.values()):
+        cache.set(cache_key, json.dumps(cache_value))
+    return JsonResponse(cache_value, safe=False)
 
 @router.get("/search")
 def coordinate_search(request, lat: float, lng: float):
