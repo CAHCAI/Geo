@@ -266,7 +266,8 @@ def all_districts_data(request):
     Fetches data for all districts, with geometry converted to GeoJSON strings.
     """
     cache_key = "geoJson-all-data"
-    # Assembly with GeoJSON
+
+    # Check if data is already cached
     try:
         cache_value = cache.get(cache_key)
         if cache_value:
@@ -274,88 +275,78 @@ def all_districts_data(request):
             cache_value["used_cache"] = True
             return JsonResponse(cache_value, safe=False)
     except Exception as e:
-        print(f"Error fetching from cache {e}")
-    
-    
+        print(f"Error fetching from cache: {e}")
+
+    # Helper function to clean data handling None values and geom fields
+    def clean_data(queryset):
+        return [
+            {key: value for key, value in item.items() if key != "geom"}  # Exclude 'geom'
+            for item in queryset
+        ]
+
     assembly_qs = (
         AssemblyDistrict.objects
         .annotate(geom_geojson=AsGeoJSON('geom'))  # Convert geom to GeoJSON
-        .values(
-            'id', 'district_number', 'area', 'population',
-            # list all the numeric fields you want,
-            'geom_geojson'  # The annotated GeoJSON field
-        )
+        .values()  
     )
-    assembly_data = list(assembly_qs)
+    assembly_data = clean_data(assembly_qs)
 
-    # Senate with GeoJSON
+
     senate_qs = (
         SenateDistrict.objects
         .annotate(geom_geojson=AsGeoJSON('geom'))
-        .values(
-            'id', 'district_number', 'area', 'population',
-            'geom_geojson'
-        )
+        .values()  
     )
-    senate_data = list(senate_qs)
+    senate_data = clean_data(senate_qs)
 
-    # Congressional with GeoJSON
     congress_qs = (
         CongressionalDistrict.objects
         .annotate(geom_geojson=AsGeoJSON('geom'))
-        .values(
-            'id', 'district_number', 'area', 'population',
-            'geom_geojson'
-        )
+        .values()  
     )
-    congress_data = list(congress_qs)
+    congress_data = clean_data(congress_qs)
 
-    # HSA with GeoJSON
+    # Health Service Area with GeoJSON
     hsa_qs = (
         HealthServiceArea.objects
         .annotate(geom_geojson=AsGeoJSON('geom'))
-        .values(
-            'hsa_number', 'hsa_name', 'area_sqmi', 'geom_geojson'
-        )
+        .values()  # Include all fields
     )
-    hsa_data = list(hsa_qs)
+    hsa_data = clean_data(hsa_qs)
 
+    # LA Service Planning Area with GeoJSON
     laspa_qs = (
         LAServicePlanningArea.objects
         .annotate(geom_geojson=AsGeoJSON('geom'))
-        .values(
-            'spa_num', 'spa_name', 'geom_geojson'
-        )
+        .values()  # Include all fields
     )
-    laspa_data = list(laspa_qs)
+    laspa_data = clean_data(laspa_qs)
 
+    # Registered Nurse Shortage Area with GeoJSON
     rnsa_qs = (
         RegisteredNurseShortageArea.objects
         .annotate(geom_geojson=AsGeoJSON('geom'))
-        .values(
-            'rnsa', 'rn_area_na', 'severity', 'geom_geojson'
-        )
+        .values()  # Include all fields
     )
-    rnsa_data = list(rnsa_qs)
+    rnsa_data = clean_data(rnsa_qs)
 
+    # Medical Service Study Area with GeoJSON
     mssa_qs = (
         MedicalServiceStudyArea.objects
         .annotate(geom_geojson=AsGeoJSON('geom'))
-        .values(
-            'mssaid', 'county_nm', 'geom_geojson'
-        )
+        .values()  # Include all fields
     )
-    mssa_data = list(mssa_qs)
+    mssa_data = clean_data(mssa_qs)
 
+    # Primary Care Shortage Area with GeoJSON
     pcsa_qs = (
         PrimaryCareShortageArea.objects
         .annotate(geom_geojson=AsGeoJSON('geom'))
-        .values(
-            'pcsa', 'mssa_id', 'mssa_name', 'mssa_count', 'definition', 'geom_geojson'
-        )
+        .values()  # Include all fields
     )
-    pcsa_data = list(pcsa_qs)
+    pcsa_data = clean_data(pcsa_qs)
 
+    # Combine all data into a single dictionary
     cache_value = {
         "assembly_districts": assembly_data,
         "senate_districts": senate_data,
@@ -366,9 +357,14 @@ def all_districts_data(request):
         "mssa": mssa_data,
         "pcsa": pcsa_data,
     }
-    
+
+    # Cache the result for future requests
     if any(cache_value.values()):
-        cache.set(cache_key, json.dumps(cache_value))
+        try:
+            cache.set(cache_key, json.dumps(cache_value))
+        except Exception as e:
+            print(f"Error caching data: {e}")
+
     return JsonResponse(cache_value, safe=False)
 
 @router.get("/search")
