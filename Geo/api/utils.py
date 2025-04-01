@@ -84,6 +84,8 @@ def parse_shared_hpsa_fields(row):
         "rural_status": row.get("Rural Status", ""),
         "longitude": parse_float(row.get("Longitude", "0")),
         "latitude": parse_float(row.get("Latitude", "0")),
+        "hpsa_estimated_served_population": int(row.get("HPSA Estimated Served Population", 0)) if row.get("HPSA Estimated Served Population") else None,
+        "hpsa_estimated_underserved_population": int(row.get("HPSA Estimated Underserved Population", 0)) if row.get("HPSA Estimated Underserved Population") else None,
         "common_county_name": row.get("Common County Name", ""),
         "common_postal_code": row.get("Common Postal Code", ""),
         "common_state_name": row.get("Common State Name", ""),

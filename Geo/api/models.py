@@ -229,6 +229,8 @@ class HealthProfessionalShortageArea(models.Model):
     rural_status = models.CharField(max_length=50, null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
     latitude = models.FloatField(null=True, blank=True)
+    hpsa_estimated_served_population = models.BigIntegerField(null=True)
+    hpsa_estimated_underserved_population = models.BigIntegerField(null=True)
     common_county_name = models.CharField(max_length=100, null=True, blank=True)
     common_postal_code = models.CharField(max_length=20, null=True, blank=True)
     common_state_name = models.CharField(max_length=100, null=True, blank=True)
