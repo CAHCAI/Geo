@@ -34,6 +34,9 @@ const AdminDashboard: React.FC = () => {
 
   const [issues, setIssues] = useState<AdminError[]>([]);
   const [refreshCounter, setRefreshCounter] = useState(0);
+  const [apiKeys, setApiKeys] = useState<any[]>([]);
+  const [newAppName, setNewAppName] = useState("");
+  
 
   useEffect(() => {
     const fetchInterval = setInterval(() => {
@@ -80,6 +83,75 @@ const AdminDashboard: React.FC = () => {
     return () => clearInterval(intervalId);
   }, []);
 
+  useEffect(() => {
+    const fetchApiKeys = async () => {
+      try {
+        const response = await fetch("http://localhost:8000/api/api-keys/");
+        const data = await response.json();
+        setApiKeys(data);
+      } catch (err) {
+        console.error("Failed to fetch API keys:", err);
+        addAlert("error", "Failed to load API keys.");
+      }
+    };
+  
+    fetchApiKeys();
+  }, []);
+  
+  const handleGenerateApiKey = async () => {
+    if (!newAppName.trim()) {
+      addAlert("error", "Please enter an app name.");
+      return;
+    }
+  
+    try {
+      const response = await fetch("http://localhost:8000/api/generate-api-key/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ app_name: newAppName }),
+      });
+  
+      if (!response.ok) throw new Error("Failed to generate API key");
+      const newKey = await response.json();
+      addAlert("success", `API key generated for ${newAppName}`);
+      setApiKeys((prev) => [
+        ...prev,
+        {
+          key: newKey.api_key,
+          app_name: newKey.app_name,
+          usage_count: newKey.usage_count || 0,
+        },
+      ]);      
+      setNewAppName("");
+    } catch (err) {
+      console.error("Generate failed:", err);
+      addAlert("error", "Failed to generate API key.");
+    }
+  };
+  
+  const handleRevokeApiKey = async (key: string) => {
+    try {
+      const response = await fetch("http://localhost:8000/api/revoke-api-key/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ api_key: key }),
+      });
+  
+      if (!response.ok) throw new Error("Failed to revoke API key");
+  
+      // Re-fetch API keys from the backend to ensure correct display
+      const refreshed = await fetch("http://localhost:8000/api/api-keys/");
+      const data = await refreshed.json();
+      setApiKeys(data);
+  
+      addAlert("success", "API key revoked.");
+    } catch (err) {
+      console.error("Revoke failed:", err);
+      addAlert("error", "Failed to revoke API key.");
+    }
+  };
+  
+  
   //deleting records from the database
   const handleResolveError = async (errorId: number) => {
     try {
@@ -511,6 +583,55 @@ const AdminDashboard: React.FC = () => {
           <p className="text-sm text-gray-500">Shapefiles & .csv only.</p>
         </div>
       </section>
+
+      {/* API Key Management Section */}
+      <section className="bg-gray-50 rounded-lg shadow-lg p-6 mb-6">
+        <h2 className="text-xl font-bold text-gray-700 mb-4">API Key Management</h2>
+
+        <div className="flex mb-4">
+          <input
+            type="text"
+            placeholder="Enter App Name"
+            className="p-2 border border-gray-300 rounded-l-md w-full"
+            value={newAppName}
+            onChange={(e) => setNewAppName(e.target.value)}
+          />
+          <button
+            className="bg-blue-500 text-white px-4 py-2 rounded-r-md hover:bg-blue-600"
+            onClick={handleGenerateApiKey}
+          >
+            Generate
+          </button>
+        </div>
+
+        <table className="w-full table-auto text-left border border-gray-300">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="px-4 py-2">API Key</th>
+              <th className="px-4 py-2">App Name</th>
+              <th className="px-4 py-2">Usage Count</th>
+              <th className="px-4 py-2">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {apiKeys.map((key) => (
+              <tr key={key.key}>
+                <td className="px-4 py-2 font-mono truncate max-w-[250px]">{key.key}</td>
+                <td className="px-4 py-2">{key.app_name || "—"}</td>
+                <td className="px-4 py-2">{key.usage_count}</td>
+                <td className="px-4 py-2">
+                  <button
+                    onClick={() => handleRevokeApiKey(key.key)}
+                    className="text-red-600 hover:underline"
+                  >
+                    Revoke
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
     </main>
   );
 };
@@ -527,3 +648,4 @@ export default AdminDashboard;
     setShowConfirmation(false);
   };
  */
+

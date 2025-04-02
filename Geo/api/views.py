@@ -17,6 +17,7 @@ import openpyxl
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
+from .serializers import APIKeySerializer
 
 # Create your views here.
 def index(request):
@@ -63,6 +64,12 @@ def message_view(request):
 
 @api_view(["POST"])
 def generate_api_key(request):
+    # Get app name from request
+    app_name = request.data.get("app_name")  
+
+    if not app_name: 
+        return Response({"error": "App name is required"}, status=400)  
+    
     # Generate a secure random key
     raw_key = secrets.token_hex(64)
     
@@ -76,10 +83,11 @@ def generate_api_key(request):
     expiration_time = timezone.make_aware(datetime.now() + timedelta(days=30))
     
     # Save the hashed key
-    api_key = APIKey.objects.create(key=hashed_key, expires_at=expiration_time)
+    api_key = APIKey.objects.create(key=hashed_key, expires_at=expiration_time, app_name=app_name)
     
     return Response({
         "api_key": raw_key,  # Show raw key only once
+        "app_name": app_name,
         "expires_at": expiration_time.strftime('%Y-%m-%d %I:%M %p')  # Format the expiration time
     })
 
@@ -95,7 +103,7 @@ def validate_api_key(request):
     # Iterate over all non-revoked API keys and check if any match the provided key.
     valid_key = None
     for k in APIKey.objects.filter(revoked=False):
-        if check_password(key, k.key):
+        if key == k.key:
             valid_key = k
             break
 
@@ -119,7 +127,7 @@ def revoke_api_key(request):
     # Iterate over all non-revoked API keys and find a match
     valid_key = None
     for k in APIKey.objects.filter(revoked=False):
-        if check_password(key, k.key):
+        if key == k.key:
             valid_key = k
             break
 
@@ -128,3 +136,9 @@ def revoke_api_key(request):
 
     valid_key.revoke()
     return Response({"message": "API key revoked"})
+
+@api_view(["GET"])
+def list_api_keys(request):
+    keys = APIKey.objects.filter(revoked=False).order_by('-created_at')
+    serializer = APIKeySerializer(keys, many=True)
+    return Response(serializer.data)

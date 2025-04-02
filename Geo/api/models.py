@@ -276,6 +276,8 @@ class APIKey(models.Model):
     expires_at = models.DateTimeField(null=True, blank=True)  # Ensure this exists
     usage_count = models.IntegerField(default=0)
     revoked = models.BooleanField(default=False)
+    app_name = models.CharField(max_length=255, null=True, blank=True)
+
 
     def is_valid(self):
         """ Check if the API key is valid (not expired or revoked) """
