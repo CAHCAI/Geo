@@ -1,4 +1,4 @@
-import { TrashIcon } from "lucide-react";
+import { TrashIcon, ClipboardCopy, Check } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { getActiveSessions, ActiveSessionsResponse } from "@/lib/utils";
 
@@ -24,6 +24,8 @@ const AdminDashboard: React.FC = () => {
   const [selectedOption, setSelectedOption] = useState<string>("senate");
   const [adminCount, setAdminCount] = useState<number | null>(null);
   const [normalCount, setNormalCount] = useState<number | null>(null);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [deletingKey, setDeletingKey] = useState<string | null>(null);
 
   interface AdminError {
     id: number;
@@ -128,7 +130,7 @@ const AdminDashboard: React.FC = () => {
       addAlert("error", "Failed to generate API key.");
     }
   };
-  
+
   const handleRevokeApiKey = async (key: string) => {
     try {
       const response = await fetch("http://localhost:8000/api/revoke-api-key/", {
@@ -139,16 +141,48 @@ const AdminDashboard: React.FC = () => {
   
       if (!response.ok) throw new Error("Failed to revoke API key");
   
-      // Re-fetch API keys from the backend to ensure correct display
-      const refreshed = await fetch("http://localhost:8000/api/api-keys/");
-      const data = await refreshed.json();
-      setApiKeys(data);
+      // Trigger animation
+      setDeletingKey(key);
+  
+      // Wait for animation to finish (300ms matches our CSS)
+      setTimeout(() => {
+        setApiKeys((prevKeys) => prevKeys.filter((k) => k.key !== key));
+        setDeletingKey(null);
+      }, 300);
   
       addAlert("success", "API key revoked.");
     } catch (err) {
       console.error("Revoke failed:", err);
       addAlert("error", "Failed to revoke API key.");
     }
+  };
+  
+/*
+  const handleRevokeApiKey = async (key: string) => {
+    try {
+      const response = await fetch("http://localhost:8000/api/revoke-api-key/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ api_key: key }),
+      });
+  
+      if (!response.ok) throw new Error("Failed to revoke API key");
+  
+      // Immediately update UI and remove the api key if revoked
+      setApiKeys((prevKeys) => prevKeys.filter((k) => k.key !== key));
+  
+      addAlert("success", "API key revoked.");
+    } catch (err) {
+      console.error("Revoke failed:", err);
+      addAlert("error", "Failed to revoke API key.");
+    }
+  };
+  */
+  const handleCopy = (key: string) => {
+    navigator.clipboard.writeText(key).then(() => {
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey(null), 2000); // reset after 2 sec
+    });
   };
   
   
@@ -615,8 +649,28 @@ const AdminDashboard: React.FC = () => {
           </thead>
           <tbody>
             {apiKeys.map((key) => (
-              <tr key={key.key}>
-                <td className="px-4 py-2 font-mono truncate max-w-[250px]">{key.key}</td>
+              <tr
+              key={key.key}
+              className={`transition-opacity duration-300 ease-in-out ${
+                deletingKey === key.key ? "opacity-0" : "opacity-100"
+              }`}
+            >            
+                <td className="px-4 py-2 font-mono truncate max-w-[250px]">
+                  <div className="flex items-center gap-2">
+                    <span className="truncate">{key.key}</span>
+                    <button
+                      onClick={() => handleCopy(key.key)}
+                      className="text-blue-500 hover:text-blue-700 transition"
+                      title={copiedKey === key.key ? "Copied!" : "Copy to clipboard"}
+                    >
+                      {copiedKey === key.key ? (
+                        <Check className="w-4 h-4 text-green-600" />
+                      ) : (
+                        <ClipboardCopy className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                </td>
                 <td className="px-4 py-2">{key.app_name || "—"}</td>
                 <td className="px-4 py-2">{key.usage_count}</td>
                 <td className="px-4 py-2">
