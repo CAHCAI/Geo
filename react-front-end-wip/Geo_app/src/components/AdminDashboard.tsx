@@ -585,7 +585,7 @@ const AdminDashboard: React.FC = () => {
       </section>
 
       {/* API Key Management Section */}
-      <section className="bg-gray-50 rounded-lg shadow-lg p-6 mb-6">
+      <section className="bg-gray-50 rounded-lg shadow-lg p-6 mt-10 mb-6">
         <h2 className="text-xl font-bold text-gray-700 mb-4">API Key Management</h2>
 
         <div className="flex mb-4">
