@@ -49,11 +49,13 @@ const MapViewer: React.FC = () => {
         });
 
         if (!response.ok) {
-          throw new Error(`Fetch failed: ${response.status} ${response.statusText}`);
+          throw new Error(
+            `Fetch failed: ${response.status} ${response.statusText}`
+          );
         }
 
         const data = await response.json();
-        console.log(data)
+        console.log(data);
         setGeoData(data);
       } catch (error) {
         console.error("Error fetching district data:", error);
@@ -91,7 +93,7 @@ const MapViewer: React.FC = () => {
   };
 
   return (
-    <div>
+    <section>
       <MapContainer
         center={[38, -121]} // Somewhere in California
         zoom={6}
@@ -107,71 +109,83 @@ const MapViewer: React.FC = () => {
           <LayersControl.Overlay checked={false} name="Assembly Districts">
             // assembly district GeoJSON
             <GeoJSON
-                key={keyFunction(assembly)}
-                data={assembly}
-                style={styles.assembly}
-                onEachFeature={onEachFeature}
+              key={keyFunction(assembly)}
+              data={assembly}
+              style={styles.assembly}
+              onEachFeature={onEachFeature}
             />
           </LayersControl.Overlay>
           <LayersControl.Overlay checked={false} name="Senate Districts">
             <GeoJSON
-                key={keyFunction(senate)}
-                data={senate}
-                style={styles.senate}
-                onEachFeature={onEachFeature}
+              key={keyFunction(senate)}
+              data={senate}
+              style={styles.senate}
+              onEachFeature={onEachFeature}
             />
           </LayersControl.Overlay>
           <LayersControl.Overlay checked={false} name="Congressional Districts">
             <GeoJSON
-                key={keyFunction(congressional)}
-                data={congressional}
-                style={styles.congress}
-                onEachFeature={onEachFeature}
+              key={keyFunction(congressional)}
+              data={congressional}
+              style={styles.congress}
+              onEachFeature={onEachFeature}
             />
           </LayersControl.Overlay>
           <LayersControl.Overlay checked={false} name="Health Service Area">
             <GeoJSON
-                key={keyFunction(hsa)}
-                data={hsa}
-                style={styles.health}
-                onEachFeature={onEachFeature}
+              key={keyFunction(hsa)}
+              data={hsa}
+              style={styles.health}
+              onEachFeature={onEachFeature}
             />
           </LayersControl.Overlay>
-          <LayersControl.Overlay checked={false} name="Medical Service Study Area">
+          <LayersControl.Overlay
+            checked={false}
+            name="Medical Service Study Area"
+          >
             <GeoJSON
-                key={keyFunction(mssa)}
-                data={mssa}
-                style={styles.mssa}
-                onEachFeature={onEachFeature}
+              key={keyFunction(mssa)}
+              data={mssa}
+              style={styles.mssa}
+              onEachFeature={onEachFeature}
             />
           </LayersControl.Overlay>
-          <LayersControl.Overlay checked={false} name="Primary Care Shortage Area">
+          <LayersControl.Overlay
+            checked={false}
+            name="Primary Care Shortage Area"
+          >
             <GeoJSON
-                key={keyFunction(pcsa)}
-                data={pcsa}
-                style={styles.pcsa}
-                onEachFeature={onEachFeature}
+              key={keyFunction(pcsa)}
+              data={pcsa}
+              style={styles.pcsa}
+              onEachFeature={onEachFeature}
             />
           </LayersControl.Overlay>
-          <LayersControl.Overlay checked={false} name="Registered Nurse Shortage Area">
+          <LayersControl.Overlay
+            checked={false}
+            name="Registered Nurse Shortage Area"
+          >
             <GeoJSON
-                key={keyFunction(rnsa)}
-                data={rnsa}
-                style={styles.rnsa}
-                onEachFeature={onEachFeature}
+              key={keyFunction(rnsa)}
+              data={rnsa}
+              style={styles.rnsa}
+              onEachFeature={onEachFeature}
             />
           </LayersControl.Overlay>
-          <LayersControl.Overlay checked={false} name="LA Service Planning Area">
+          <LayersControl.Overlay
+            checked={false}
+            name="LA Service Planning Area"
+          >
             <GeoJSON
-                key={keyFunction(laspa)}
-                data={laspa}
-                style={styles.la}
-                onEachFeature={onEachFeature}
+              key={keyFunction(laspa)}
+              data={laspa}
+              style={styles.la}
+              onEachFeature={onEachFeature}
             />
           </LayersControl.Overlay>
         </LayersControl>
       </MapContainer>
-    </div>
+    </section>
   );
 };
 
