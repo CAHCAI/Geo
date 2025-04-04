@@ -44,7 +44,7 @@ const MapViewer: React.FC = () => {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            "X-API-KEY": import.meta.env.VITE_API_KEY,
+            "X-Api-Key": import.meta.env.VITE_API_KEY,
           },
         });
 
@@ -97,7 +97,7 @@ const MapViewer: React.FC = () => {
       <MapContainer
         center={[38, -121]} // Somewhere in California
         zoom={6}
-        style={{ width: "80vw", height: "70vh" }}
+        style={{ width: "80vw", height: "70vh", zIndex:1 }}
       >
         <TileLayer
           attribution="&copy; OpenStreetMap contributors"

@@ -52,7 +52,6 @@ const App: React.FC = () => {
           <Login
             setLoggedIn={setLoggedIn}
             loggedIn={loggedIn}
-            onClose={() => setActivePage("home")}
           />
         );
       case "admin-dashboard":
