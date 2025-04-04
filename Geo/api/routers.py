@@ -393,14 +393,41 @@ def coordinate_search(request, lat: float, lng: float):
         medicalservicestudyarea_matches = MedicalServiceStudyArea.objects.filter(geom__contains=point)
         primarycareshortagearea_matches = PrimaryCareShortageArea.objects.filter(geom__contains=point)
 
-       
-        RANGE=0.1
-        primary_matches = HPSA_PrimaryCareShortageArea.objects.filter(latitude__range=(lat - RANGE, lat + RANGE),longitude__range=(lng - RANGE, lng + RANGE))
 
-        mental_matches = HPSA_MentalHealthShortageArea.objects.filter(latitude__range=(lat - RANGE, lat + RANGE),longitude__range=(lng - RANGE, lng + RANGE))
+        primary_matches = []
+        mental_matches = []
+        dental_matches = []
+        censuskey = None
 
-        dental_matches = HPSA_DentalHealthShortageArea.objects.filter(latitude__range=(lat - RANGE, lat + RANGE),longitude__range=(lng - RANGE, lng + RANGE))
-      
+        if medicalservicestudyarea_matches.exists():
+            raw_censuskey = medicalservicestudyarea_matches.first().geoid
+            censuskey = raw_censuskey.lstrip("0") if raw_censuskey else None
+            print(f"Raw GEOID: {raw_censuskey} | Stripped: {censuskey}")
+
+        if censuskey:
+            possible_keys = [raw_censuskey, '06107003400', censuskey.zfill(11)]
+            print(f"Trying possible keys: {possible_keys}")
+
+            primary_matches = (
+            HPSA_PrimaryCareShortageArea.objects.filter(hpsa_geography_id__in=possible_keys)
+            .order_by("-hpsa_designation_last_update_date")
+            )
+            primary_match = primary_matches.first()
+            print("Primary Match (Latest):", primary_match)
+
+            mental_matches = (HPSA_MentalHealthShortageArea.objects.filter(
+            hpsa_geography_id__in=possible_keys).order_by("-hpsa_designation_last_update_date")
+            )
+            mental_match = mental_matches.first()
+            print("Mental Match (Latest):", mental_match)
+
+            dental_matches = (HPSA_DentalHealthShortageArea.objects.filter(
+            hpsa_geography_id__in=possible_keys).order_by("-hpsa_designation_last_update_date")
+            )
+            dental_match = dental_matches.first()
+            print("Dental Match (Latest):", dental_match) 
+
+
         
         cache_value = {
             "senate": [to_dict(d) for d in senate_matches],
@@ -411,10 +438,9 @@ def coordinate_search(request, lat: float, lng: float):
             "RegisteredNurseShortageArea": [to_rnsa_dict(d) for d in registerednurseshortagearea_matches],
             "MedicalServiceStudyArea": [to_mssa_dict(d) for d in medicalservicestudyarea_matches],
             "PrimaryCareShortageArea": [to_pcsa_dict(d) for d in primarycareshortagearea_matches],
-            "PrimaryCareHPSA": [to_primary_hpsa_dict(d) for d in primary_matches],
-            "MentalHealthHPSA": [to_mental_hpsa_dict(d) for d in mental_matches],
-            "DentalHealthHPSA": [to_dental_hpsa_dict(d) for d in dental_matches],
-
+            "PrimaryCareHPSA": [to_primary_hpsa_dict(primary_match)],
+            "MentalHealthHPSA": [to_mental_hpsa_dict(mental_match)],
+            "DentalHealthHPSA": [to_dental_hpsa_dict(dental_match)],
         }
 
         if any(cache_value.values()):
@@ -696,37 +722,47 @@ def to_pcsa_dict(obj):
     return {
         "pcsa": obj.pcsa,
         "scoretota": obj.score_tota,
-        "mssa_e": obj.cnty_fips
-        #add more object if needed
+        "mssa": obj.cnty_fips
     }
 
 def to_dental_hpsa_dict(obj):
     return {
-        "Designated": obj.hpsa_name,
-      
+        "HPSA Source ID": obj.hpsa_id or "N/A",
+        "Designated": "Yes",
+        "Designated On": obj.hpsa_designation_date.isoformat() if obj.hpsa_designation_last_update_date else "N/A",
+        "Formal Ratio": obj.hpsa_formal_ratio or "N/A",
+        "Population Below Poverty": obj.percent_population_below_poverty or "N/A",
+        "Designation Population": obj.hpsa_designation_population or "N/A",
+        "Estimated Underserved": obj.hpsa_estimated_underserved_population or "N/A", 
+        "Estimated Served": obj.hpsa_estimated_served_population or "N/A", 
+        "Priority Score": obj.hpsa_score or "N/A",
     }
+
 
 def to_mental_hpsa_dict(obj):
     return {
-        "hpsa_id": obj.hpsa_id,
-        "Designated": obj.hpsa_status,
-        "Designated On": obj.hpsa_designation_last_update_date,
-        "formal ratio": obj.hpsa_formal_ratio,
-        "Population Below Poverty": obj.percent_population_below_poverty,
-        "Designation Population": obj.hpsa_designation_population,
-        "Estimated underserved population": obj.hpsa_designation_population,
-        "Estimated Served Population": obj.hpsa_name,
-        "Priority score": obj.hpsa_score
+        "HPSA Source ID": obj.hpsa_id or "N/A",
+        "Designated": "Yes",
+        "Designated On": obj.hpsa_designation_date.isoformat() if obj.hpsa_designation_last_update_date else "N/A",
+        "Formal Ratio": obj.hpsa_formal_ratio or "N/A",
+        "Population Below Poverty": obj.percent_population_below_poverty or "N/A",
+        "Designation Population": obj.hpsa_designation_population or "N/A",
+        "Estimated Underserved": obj.hpsa_estimated_underserved_population or "N/A", 
+        "Estimated Served": obj.hpsa_estimated_served_population or "N/A", 
+        "Priority Score": obj.hpsa_score or "N/A",
     }
+
+
 
 def to_primary_hpsa_dict(obj):
     return {
-        "Designated": obj.designation_type,
+        "HPSA Source ID": obj.hpsa_id or "N/A",
+        "Designated": "Yes",
+        "Designated On": obj.hpsa_designation_date.isoformat() if obj.hpsa_designation_last_update_date else "N/A",
+        "Formal Ratio": obj.hpsa_formal_ratio or "N/A",
+        "Population Below Poverty": obj.percent_population_below_poverty or "N/A",
+        "Designation Population": obj.hpsa_designation_population or "N/A",
+        "Estimated Underserved": obj.hpsa_estimated_underserved_population or "N/A", 
+        "Estimated Served": obj.hpsa_estimated_served_population or "N/A", 
+        "Priority Score": obj.hpsa_score or "N/A",
     }
-
-#api = Router()
-
-#@api.post("/generate-api-key", tags=["Admin"])
-#def generate_api_key(request):
-   # raw_key = APIKey.generate()  # This returns the unhashed key once
- #   return {"api_key": raw_key}

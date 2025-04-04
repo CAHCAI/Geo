@@ -163,10 +163,20 @@ const HpsaSearchPage: React.FC = () => {
     setAlerts((prevAlerts) => prevAlerts.filter((alert) => alert.id !== id));
   };
 
-  const primaryCareColumns = [
-    { Header: "HPSA Primary Care", accessor: "PrimaryCare" },
+  const primaryHealthCareColumns = [
+    { Header: "HPSA Source ID", accessor: "HPSASourceID" },
+    { Header: "Designated", accessor: "Designated" },
+    { Header: "Designated On", accessor: "DesignatedOn" },
+    { Header: "Formal Ratio", accessor: "Ratio" },
+    { Header: "Population Below Poverty", accessor: "Poverty" },
+    { Header: "Designation Population", accessor: "Population" },
+    { Header: "Estimated Underserved", accessor: "Underserved" },
+    { Header: "Estimated Served", accessor: "Served" },
+    { Header: "Priority Score", accessor: "Score" },
   ];
+
   const mentalHealthCareColumns = [
+    { Header: "HPSA Source ID", accessor: "HPSASourceID" },
     { Header: "Designated", accessor: "Designated" },
     { Header: "Designated On", accessor: "DesignatedOn" },
     { Header: "Formal Ratio", accessor: "Ratio" },
@@ -178,8 +188,17 @@ const HpsaSearchPage: React.FC = () => {
   ];
 
   const dentalHealthCareColumns = [
-    { Header: "HPSA Dental Health", accessor: "DentalHealth" },
+    { Header: "HPSA Source ID", accessor: "HPSASourceID" },
+    { Header: "Designated", accessor: "Designated" },
+    { Header: "Designated On", accessor: "DesignatedOn" },
+    { Header: "Formal Ratio", accessor: "Ratio" },
+    { Header: "Population Below Poverty", accessor: "Poverty" },
+    { Header: "Designation Population", accessor: "Population" },
+    { Header: "Estimated Underserved", accessor: "Underserved" },
+    { Header: "Estimated Served", accessor: "Served" },
+    { Header: "Priority Score", accessor: "Score" },
   ];
+
   const healthServiceAreaColumns = [
     { Header: "Health Service Area", accessor: "HealthServiceArea" },
   ];
@@ -204,6 +223,10 @@ const HpsaSearchPage: React.FC = () => {
     { Header: "Population", accessor: "population" },
   ];
 
+  const emptyMentalHealthRow = {
+    Designated: "No",
+  };
+  
   // Table data
   const baseTableData = [
     {
@@ -250,30 +273,48 @@ const HpsaSearchPage: React.FC = () => {
     },
   ];
 
-  const primaryCareData = searchResults?.PrimaryCareHPSA?.length
-    ? Object.entries(searchResults.PrimaryCareHPSA[0]).map(([key, value]) => ({
-        PrimaryCare: `${key}: ${value}`,
+  const primaryHealthCareData = searchResults?.PrimaryCareHPSA?.length
+    ? searchResults.PrimaryCareHPSA.map((item: any) => ({
+        HPSASourceID: item["HPSA Source ID"] ?? "N/A",
+        Designated: item.Designated ?? "No",
+        DesignatedOn: item["Designated On"] ?? "N/A",
+        Ratio: item["Formal Ratio"] ?? "N/A",
+        Poverty: item["Population Below Poverty"] ?? "N/A",
+        Population: item["Designation Population"] ?? "N/A",
+        Underserved: item["Estimated Underserved"] ?? "N/A",
+        Served: item["Estimated Served"] ?? "N/A",
+        Score: item["Priority Score"] ?? "N/A",
       }))
-    : [{ PrimaryCare: "No Primary Care HPSA data available" }];
+    : [emptyMentalHealthRow];
 
-  const mentalHealthCareData = searchResults?.MentalHealthHPSA?.length
+    const mentalHealthCareData = searchResults?.MentalHealthHPSA?.length
     ? searchResults.MentalHealthHPSA.map((item: any) => ({
-        Designated: item.Designated,
-        DesignatedOn: item["Designated On"],
-        Ratio: item["Formal Ratio"],
-        Poverty: item["Population Below Poverty"],
-        Population: item["Designation Population"],
-        Underserved: item["Estimated Underserved"],
-        Served: item["Estimated Served"],
-        Score: item["Priority Score"],
+        HPSASourceID: item["HPSA Source ID"] ?? "N/A",
+        Designated: item.Designated ?? "No",
+        DesignatedOn: item["Designated On"] ?? "N/A",
+        Ratio: item["Formal Ratio"] ?? "N/A",
+        Poverty: item["Population Below Poverty"] ?? "N/A",
+        Population: item["Designation Population"] ?? "N/A",
+        Underserved: item["Estimated Underserved"] ?? "N/A",
+        Served: item["Estimated Served"] ?? "N/A",
+        Score: item["Priority Score"] ?? "N/A",
       }))
-    : [{ Designated: "No Mental Health HPSA data available" }];
+    : [emptyMentalHealthRow];
+  
+    const dentalHealthCareData = searchResults?.DentalHealthHPSA?.length
+  ? searchResults.DentalHealthHPSA.map((item: any) => ({
+      HPSASourceID: item["HPSA Source ID"] ?? "N/A",
+      Designated: item.Designated ?? "No",
+      DesignatedOn: item["Designated On"] ?? "N/A",
+      Ratio: item["Formal Ratio"] ?? "N/A",
+      Poverty: item["Population Below Poverty"] ?? "N/A",
+      Population: item["Designation Population"] ?? "N/A",
+      Underserved: item["Estimated Underserved"] ?? "N/A",
+      Served: item["Estimated Served"] ?? "N/A",
+      Score: item["Priority Score"] ?? "N/A",
+    }))
+  : [emptyMentalHealthRow]; 
 
-  const dentalHealthCareData = searchResults?.DentalHealthHPSA?.length
-    ? searchResults.DentalHealthHPSA.map((item: { Designated: string }) => ({
-        Designated: item.Designated,
-      }))
-    : [{ Designated: "No Dental Health HPSA data available" }];
 
   const healthServiceAreaData = searchResults?.healthservicearea?.length
     ? searchResults.healthservicearea.map((item: HealthServiceAreaItem) => ({
@@ -283,7 +324,6 @@ const HpsaSearchPage: React.FC = () => {
 
   const laServicePlanningAreaData = searchResults?.LaServicePlanning?.length
     ? searchResults.LaServicePlanning.map((item: { spa_name: string }) => ({
-        // The property name MUST match the table column accessor "spa_name"
         spa_name: item.spa_name,
       }))
     : [
@@ -291,23 +331,6 @@ const HpsaSearchPage: React.FC = () => {
           spa_name: "N/A",
         },
       ];
-
-  const assemblyDistrictData = [
-    { AssemblyDistrict: "Name: 6th Assembly District" },
-    { AssemblyDistrict: "Party" },
-    { AssemblyDistrict: "Website" },
-  ];
-  const senateDistrictData = [
-    { SenateDistrict: "Name: 8th Senate District" },
-    { SenateDistrict: "Party" },
-    { SenateDistrict: "Website" },
-  ];
-  const congressionalDistrictData = [
-    { CongressDistrict: "Name: 6th Congressional District" },
-    { CongressDistrict: "Representative" },
-    { CongressDistrict: "Party" },
-    { CongressDistrict: "Website" },
-  ];
 
   // Transpose the data for the required tables
   const transposedAssemblyData = transposeData(
@@ -345,77 +368,22 @@ const HpsaSearchPage: React.FC = () => {
     { Header: "RNSA", accessor: "RNSA" },
   ]);
 
-  const transposedPrimaryCareData = transposeData(primaryCareData, [
-    { Header: "HPSA Primary Care", accessor: "PrimaryCare" },
-  ]);
+  const transposedPrimaryCareData = transposeData(
+    primaryHealthCareData,
+    primaryHealthCareColumns
+  );
 
   const transposedMentalHealthData = transposeData(
     mentalHealthCareData,
     mentalHealthCareColumns
   );
 
-  const transposedDentalHealthData = transposeData(dentalHealthCareData, [
-    { Header: "HPSA Dental Health", accessor: "Designated" },
-  ]);
-
-  const transposedHSAData = transposeData(
-    searchResults?.healthservicearea?.length
-      ? searchResults.healthservicearea.map((item: HealthServiceAreaItem) => ({
-          hsa_name: item.hsa_name,
-          hsa_number: item.hsa_number,
-        }))
-      : [
-          {
-            hsa_name: "N/A",
-            hsa_number: "N/A",
-          },
-        ],
-    healthServiceAreaColumns
+  const transposedDentalHealthData = transposeData(
+    dentalHealthCareData,
+    dentalHealthCareColumns
   );
 
-  const transposedMSSAData = transposeData(
-    searchResults?.MedicalServiceStudyArea?.length
-      ? searchResults.MedicalServiceStudyArea.map(
-          (item: MedicalServiceStudyAreaItem) => ({
-            mssaid: item.mssaid,
-            definition: item.definition,
-            county: item.county,
-            censustract: item.censustract,
-            censuskey: item.censuskey,
-          })
-        )
-      : [
-          {
-            mssaid: "N/A",
-            definition: "N/A",
-            county: "N/A",
-            censustract: "N/A",
-            censuskey: "N/A",
-          },
-        ],
-    [
-      { Header: "MSSA ID", accessor: "mssaid" },
-      { Header: "Definition", accessor: "definition" },
-      { Header: "County", accessor: "county" },
-      { Header: "Census Tract", accessor: "censustract" },
-      { Header: "Census Key", accessor: "censuskey" },
-    ]
-  );
 
-  const transposedPCSAData = transposeData(
-    searchResults?.PrimaryCareShortageArea?.length
-      ? searchResults.PrimaryCareShortageArea.map(
-          (item: PrimaryCareShortageAreaItem) => ({
-            pcsa: item.pcsa,
-            scoretota: item.scoretota,
-          })
-        )
-      : [{ pcsa: "N/A", scoretota: "N/A" }],
-    [
-      { Header: "PCSA", accessor: "pcsa" },
-      { Header: "Scoretota", accessor: "scoretota" },
-    ]
-  );
 
   return (
     <>
