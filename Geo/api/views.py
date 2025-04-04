@@ -17,7 +17,6 @@ import openpyxl
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
-from .serializers import APIKeySerializer
 
 # Create your views here.
 def index(request):
@@ -137,8 +136,11 @@ def revoke_api_key(request):
     valid_key.revoke()
     return Response({"message": "API key revoked"})
 
+'''
 @api_view(["GET"])
+@api_key_required
 def list_api_keys(request):
     keys = APIKey.objects.filter(revoked=False).order_by('-created_at')
     serializer = APIKeySerializer(keys, many=True)
     return Response(serializer.data)
+'''

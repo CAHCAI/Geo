@@ -43,14 +43,14 @@ const AdminDashboard: React.FC = () => {
   useEffect(() => {
     const fetchInterval = setInterval(() => {
       setRefreshCounter((prev) => prev + 1);
-    }, 10000); // Poll every 10 seconds
+    }, 100); // Poll every 10 seconds
 
     const fetchIssues = async () => {
       try {
         const response = await fetch(
           "http://localhost:8000/api/admin_errors/",
           {
-            headers: { "X-API-KEY": "supersecret" },
+            headers: { "X-API-KEY": fixedApiKey },
           }
         );
         if (!response.ok) throw new Error("Failed to fetch issues");
@@ -88,7 +88,11 @@ const AdminDashboard: React.FC = () => {
   useEffect(() => {
     const fetchApiKeys = async () => {
       try {
-        const response = await fetch("http://localhost:8000/api/api-keys/");
+        const response = await fetch("http://localhost:8000/api/api-keys/", {
+          headers: {
+            "X-API-KEY": fixedApiKey,
+          },
+        });
         const data = await response.json();
         setApiKeys(data);
       } catch (err) {
@@ -97,8 +101,32 @@ const AdminDashboard: React.FC = () => {
       }
     };
   
-    fetchApiKeys();
+    fetchApiKeys(); // Initial fetch
+  }, [refreshCounter]);
+  
+  
+
+  useEffect(() => {
+    const fetchUsageCounts = async () => {
+      try {
+        const response = await fetch("http://localhost:8000/api/api-keys/", {
+          headers: {
+            "X-API-KEY": fixedApiKey,
+          },
+        });
+        const data = await response.json();
+        setApiKeys(data);
+      } catch (err) {
+        console.error("Error fetching updated usage:", err);
+      }
+    };
+  
+    fetchUsageCounts(); // initial fetch
+    const interval = setInterval(fetchUsageCounts, 10000); // every 10s
+    return () => clearInterval(interval);
   }, []);
+  
+    
   
   const handleGenerateApiKey = async () => {
     if (!newAppName.trim()) {
@@ -123,13 +151,13 @@ const AdminDashboard: React.FC = () => {
           app_name: newKey.app_name,
           usage_count: newKey.usage_count || 0,
         },
-      ]);      
+      ]);
       setNewAppName("");
     } catch (err) {
       console.error("Generate failed:", err);
       addAlert("error", "Failed to generate API key.");
     }
-  };
+  };  
 
   const handleRevokeApiKey = async (key: string) => {
     try {
@@ -144,7 +172,7 @@ const AdminDashboard: React.FC = () => {
       // Trigger animation
       setDeletingKey(key);
   
-      // Wait for animation to finish (300ms matches our CSS)
+      // Wait for animation to finish 
       setTimeout(() => {
         setApiKeys((prevKeys) => prevKeys.filter((k) => k.key !== key));
         setDeletingKey(null);
@@ -157,27 +185,6 @@ const AdminDashboard: React.FC = () => {
     }
   };
   
-/*
-  const handleRevokeApiKey = async (key: string) => {
-    try {
-      const response = await fetch("http://localhost:8000/api/revoke-api-key/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ api_key: key }),
-      });
-  
-      if (!response.ok) throw new Error("Failed to revoke API key");
-  
-      // Immediately update UI and remove the api key if revoked
-      setApiKeys((prevKeys) => prevKeys.filter((k) => k.key !== key));
-  
-      addAlert("success", "API key revoked.");
-    } catch (err) {
-      console.error("Revoke failed:", err);
-      addAlert("error", "Failed to revoke API key.");
-    }
-  };
-  */
   const handleCopy = (key: string) => {
     navigator.clipboard.writeText(key).then(() => {
       setCopiedKey(key);
@@ -191,7 +198,7 @@ const AdminDashboard: React.FC = () => {
     try {
       const response = await fetch(
         `http://localhost:8000/api/admin_errors/${errorId}/`,
-        { method: "DELETE", headers: { "X-API-KEY": "supersecret" } }
+        { method: "DELETE", headers: { "X-API-KEY": fixedApiKey } }
       );
       if (!response.ok) throw new Error("Failed to delete error");
       setIssues((prev) => prev.filter((error) => error.id !== errorId));

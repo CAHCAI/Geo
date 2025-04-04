@@ -25,7 +25,7 @@ upload_hsa_shapefile, upload_rnsa_shapefile, upload_mssa_shapefile, upload_pcsa_
 from django.shortcuts import get_object_or_404
 from django.db import connection
 from django.contrib.gis.db.models.functions import AsGeoJSON
-from .models import AssemblyDistrict, SenateDistrict, AdminErrors, CongressionalDistrict, HealthServiceArea, MedicalServiceStudyArea,RegisteredNurseShortageArea, LAServicePlanningArea, PrimaryCareShortageArea, HealthProfessionalShortageArea, HPSA_PrimaryCareShortageArea,HPSA_MentalHealthShortageArea,HPSA_DentalHealthShortageArea
+from .models import AssemblyDistrict, SenateDistrict, AdminErrors, CongressionalDistrict, HealthServiceArea, MedicalServiceStudyArea,RegisteredNurseShortageArea, LAServicePlanningArea, PrimaryCareShortageArea, HealthProfessionalShortageArea, HPSA_PrimaryCareShortageArea,HPSA_MentalHealthShortageArea,HPSA_DentalHealthShortageArea,APIKey
 import json
 from Geo.cache import cache, TTL
 from typing import List, Optional
@@ -666,6 +666,14 @@ class AdminErrorSchema(Schema):
     error_description: str
     created_at: datetime = Field(..., format="iso8601")  
 
+class APIKeySchema(Schema):
+    key: str
+    app_name: str
+    usage_count: int
+
+class APIKeyRevokeIn(Schema):
+    api_key: str
+
 @router.get("/admin_errors/", response=List[AdminErrorSchema])
 def admin_errors(request):
     return AdminErrors.objects.all().order_by('-created_at')
@@ -676,6 +684,26 @@ def delete_admin_error(request, id: int):
     error.delete()
     return {"success": True, "message": f"Error {id} deleted"}
 
+@router.get("/api-keys/", response=List[APIKeySchema])
+def get_api_keys(request):
+    return APIKey.objects.filter(revoked=False).order_by('-created_at')
+
+
+
+@router.post("/revoke-api-key/")
+def revoke_api_key(request, payload: APIKeyRevokeIn):
+    try:
+        key_obj = get_object_or_404(APIKey, key=payload.api_key)
+        key_obj.revoked = True
+        key_obj.save()
+        return {"success": True, "message": f"API key revoked successfully."}
+    except Exception as e:
+        print(f"Failed to revoke API key: {e}")
+        try:
+            AdminErrors.objects.create(error_code=141, error_description=f"Revoke failed: {str(e)}")
+        except:
+            print("Could not log error in AdminErrors.")
+        return {"success": False, "message": f"Failed to revoke API key."}
 
 def to_hsa_dict(obj):
     if not obj:

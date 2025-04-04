@@ -8,9 +8,3 @@ class OverrideLocationSerializer(serializers.ModelSerializer):
         model = OverrideLocation
         fields = ('id', 'address', 'latitude', 'longitude')
 
-
-class APIKeySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = APIKey
-        fields = ['key', 'app_name', 'usage_count', 'revoked', 'created_at']
-        read_only_fields = ['key', 'usage_count', 'revoked', 'created_at']
