@@ -38,12 +38,11 @@ const AdminDashboard: React.FC = () => {
   const [refreshCounter, setRefreshCounter] = useState(0);
   const [apiKeys, setApiKeys] = useState<any[]>([]);
   const [newAppName, setNewAppName] = useState("");
-  
 
   useEffect(() => {
     const fetchInterval = setInterval(() => {
       setRefreshCounter((prev) => prev + 1);
-    }, 100); // Poll every 10 seconds
+    }, 10000); // Poll every 10 seconds
 
     const fetchIssues = async () => {
       try {
@@ -100,11 +99,9 @@ const AdminDashboard: React.FC = () => {
         addAlert("error", "Failed to load API keys.");
       }
     };
-  
+
     fetchApiKeys(); // Initial fetch
   }, [refreshCounter]);
-  
-  
 
   useEffect(() => {
     const fetchUsageCounts = async () => {
@@ -120,27 +117,28 @@ const AdminDashboard: React.FC = () => {
         console.error("Error fetching updated usage:", err);
       }
     };
-  
+
     fetchUsageCounts(); // initial fetch
     const interval = setInterval(fetchUsageCounts, 10000); // every 10s
     return () => clearInterval(interval);
   }, []);
-  
-    
-  
+
   const handleGenerateApiKey = async () => {
     if (!newAppName.trim()) {
       addAlert("error", "Please enter an app name.");
       return;
     }
-  
+
     try {
-      const response = await fetch("http://localhost:8000/api/generate-api-key/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ app_name: newAppName }),
-      });
-  
+      const response = await fetch(
+        "http://localhost:8000/api/generate-api-key/",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ app_name: newAppName }),
+        }
+      );
+
       if (!response.ok) throw new Error("Failed to generate API key");
       const newKey = await response.json();
       addAlert("success", `API key generated for ${newAppName}`);
@@ -157,42 +155,44 @@ const AdminDashboard: React.FC = () => {
       console.error("Generate failed:", err);
       addAlert("error", "Failed to generate API key.");
     }
-  };  
+  };
 
   const handleRevokeApiKey = async (key: string) => {
     try {
-      const response = await fetch("http://localhost:8000/api/revoke-api-key/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ api_key: key }),
-      });
-  
+      const response = await fetch(
+        "http://localhost:8000/api/revoke-api-key/",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ api_key: key }),
+        }
+      );
+
       if (!response.ok) throw new Error("Failed to revoke API key");
-  
+
       // Trigger animation
       setDeletingKey(key);
-  
-      // Wait for animation to finish 
+
+      // Wait for animation to finish
       setTimeout(() => {
         setApiKeys((prevKeys) => prevKeys.filter((k) => k.key !== key));
         setDeletingKey(null);
       }, 300);
-  
+
       addAlert("success", "API key revoked.");
     } catch (err) {
       console.error("Revoke failed:", err);
       addAlert("error", "Failed to revoke API key.");
     }
   };
-  
+
   const handleCopy = (key: string) => {
     navigator.clipboard.writeText(key).then(() => {
       setCopiedKey(key);
       setTimeout(() => setCopiedKey(null), 2000); // reset after 2 sec
     });
   };
-  
-  
+
   //deleting records from the database
   const handleResolveError = async (errorId: number) => {
     try {
@@ -400,7 +400,7 @@ const AdminDashboard: React.FC = () => {
 
       {/* Alerts Section */}
       <section
-        className="bg-gray-50 rounded-lg shadow-lg p-6 mb-6"
+        className="bg-gray-50 rounded-lg shadow-lg p-6 mb-6 max-h-[30vh]"
         role="region"
         aria-labelledby="alerts-heading"
       >
@@ -627,7 +627,9 @@ const AdminDashboard: React.FC = () => {
 
       {/* API Key Management Section */}
       <section className="bg-gray-50 rounded-lg shadow-lg p-6 mt-10 mb-6">
-        <h2 className="text-xl font-bold text-gray-700 mb-4">API Key Management</h2>
+        <h2 className="text-xl font-bold text-gray-700 mb-4">
+          API Key Management
+        </h2>
 
         <div className="flex mb-4">
           <input
@@ -657,18 +659,20 @@ const AdminDashboard: React.FC = () => {
           <tbody>
             {apiKeys.map((key) => (
               <tr
-              key={key.key}
-              className={`transition-opacity duration-300 ease-in-out ${
-                deletingKey === key.key ? "opacity-0" : "opacity-100"
-              }`}
-            >            
+                key={key.key}
+                className={`transition-opacity duration-300 ease-in-out ${
+                  deletingKey === key.key ? "opacity-0" : "opacity-100"
+                }`}
+              >
                 <td className="px-4 py-2 font-mono truncate max-w-[250px]">
                   <div className="flex items-center gap-2">
                     <span className="truncate">{key.key}</span>
                     <button
                       onClick={() => handleCopy(key.key)}
                       className="text-blue-500 hover:text-blue-700 transition"
-                      title={copiedKey === key.key ? "Copied!" : "Copy to clipboard"}
+                      title={
+                        copiedKey === key.key ? "Copied!" : "Copy to clipboard"
+                      }
                     >
                       {copiedKey === key.key ? (
                         <Check className="w-4 h-4 text-green-600" />
@@ -709,4 +713,3 @@ export default AdminDashboard;
     setShowConfirmation(false);
   };
  */
-

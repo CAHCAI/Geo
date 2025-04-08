@@ -97,7 +97,7 @@ const MapViewer: React.FC = () => {
       <MapContainer
         center={[38, -121]} // Somewhere in California
         zoom={6}
-        style={{ width: "80vw", height: "70vh", zIndex:1 }}
+        style={{ width: "65vw", height: "70vh", zIndex: 1 }}
       >
         <TileLayer
           attribution="&copy; OpenStreetMap contributors"

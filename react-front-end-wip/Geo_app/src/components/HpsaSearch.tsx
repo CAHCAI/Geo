@@ -226,7 +226,7 @@ const HpsaSearchPage: React.FC = () => {
   const emptyMentalHealthRow = {
     Designated: "No",
   };
-  
+
   // Table data
   const baseTableData = [
     {
@@ -287,7 +287,7 @@ const HpsaSearchPage: React.FC = () => {
       }))
     : [emptyMentalHealthRow];
 
-    const mentalHealthCareData = searchResults?.MentalHealthHPSA?.length
+  const mentalHealthCareData = searchResults?.MentalHealthHPSA?.length
     ? searchResults.MentalHealthHPSA.map((item: any) => ({
         HPSASourceID: item["HPSA Source ID"] ?? "N/A",
         Designated: item.Designated ?? "No",
@@ -300,21 +300,20 @@ const HpsaSearchPage: React.FC = () => {
         Score: item["Priority Score"] ?? "N/A",
       }))
     : [emptyMentalHealthRow];
-  
-    const dentalHealthCareData = searchResults?.DentalHealthHPSA?.length
-  ? searchResults.DentalHealthHPSA.map((item: any) => ({
-      HPSASourceID: item["HPSA Source ID"] ?? "N/A",
-      Designated: item.Designated ?? "No",
-      DesignatedOn: item["Designated On"] ?? "N/A",
-      Ratio: item["Formal Ratio"] ?? "N/A",
-      Poverty: item["Population Below Poverty"] ?? "N/A",
-      Population: item["Designation Population"] ?? "N/A",
-      Underserved: item["Estimated Underserved"] ?? "N/A",
-      Served: item["Estimated Served"] ?? "N/A",
-      Score: item["Priority Score"] ?? "N/A",
-    }))
-  : [emptyMentalHealthRow]; 
 
+  const dentalHealthCareData = searchResults?.DentalHealthHPSA?.length
+    ? searchResults.DentalHealthHPSA.map((item: any) => ({
+        HPSASourceID: item["HPSA Source ID"] ?? "N/A",
+        Designated: item.Designated ?? "No",
+        DesignatedOn: item["Designated On"] ?? "N/A",
+        Ratio: item["Formal Ratio"] ?? "N/A",
+        Poverty: item["Population Below Poverty"] ?? "N/A",
+        Population: item["Designation Population"] ?? "N/A",
+        Underserved: item["Estimated Underserved"] ?? "N/A",
+        Served: item["Estimated Served"] ?? "N/A",
+        Score: item["Priority Score"] ?? "N/A",
+      }))
+    : [emptyMentalHealthRow];
 
   const healthServiceAreaData = searchResults?.healthservicearea?.length
     ? searchResults.healthservicearea.map((item: HealthServiceAreaItem) => ({
@@ -382,8 +381,6 @@ const HpsaSearchPage: React.FC = () => {
     dentalHealthCareData,
     dentalHealthCareColumns
   );
-
-
 
   return (
     <>
@@ -468,11 +465,11 @@ const HpsaSearchPage: React.FC = () => {
           {searchResults?.senate?.length > 0 && (
             <div className="flex flex-wrap gap-4 pb-4">
               <div className="relative">
-                <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white min-h-[400px] max-h-[400px] overflow-auto resize-x min-w-[300px] w-fit max-w-[350px]">
-                  <h3 className="text-lg font-bold text-gray-900 mb-3 sticky top-0 bg-white">
+                <div className="border border-gray-300 rounded-lg shadow-md bg-white min-h-[400px] max-h-[400px] overflow-auto resize-x min-w-[300px] w-fit max-w-[350px]">
+                  <h3 className="text-lg font-bold text-gray-900 mb-3 sticky top-0 bg-white p-4 ">
                     Primary Health Care
                   </h3>
-                  <div className="space-y-2">
+                  <div className="space-y-2 p-4 ">
                     {transposedPrimaryCareData.map((row, index) => (
                       <div
                         key={index}
@@ -496,11 +493,11 @@ const HpsaSearchPage: React.FC = () => {
                 </div>
               </div>
               <div className="relative">
-                <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white min-h-[400px] max-h-[400px] overflow-auto resize-x min-w-[300px] w-fit max-w-[350px]">
-                  <h3 className="text-lg font-bold text-gray-900 mb-3 sticky top-0 bg-white">
+                <div className="border border-gray-300 rounded-lg shadow-md bg-white min-h-[400px] max-h-[400px] overflow-auto resize-x min-w-[300px] w-fit max-w-[350px]">
+                  <h3 className="text-lg font-bold text-gray-900 mb-3 sticky top-0 bg-white p-4 ">
                     Mental Health Care
                   </h3>
-                  <div className="space-y-2">
+                  <div className="space-y-2 p-4 ">
                     {transposedMentalHealthData.map((row, index) => (
                       <div
                         key={index}
@@ -524,11 +521,11 @@ const HpsaSearchPage: React.FC = () => {
                 </div>
               </div>
               <div className="relative">
-                <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white min-h-[400px] max-h-[400px] overflow-auto resize-x min-w-[300px] w-fit max-w-[350px]">
-                  <h3 className="text-lg font-bold text-gray-900 mb-3 sticky top-0 bg-white">
+                <div className="border border-gray-300 rounded-lg shadow-md bg-white min-h-[400px] max-h-[400px] overflow-auto resize-x min-w-[300px] w-fit max-w-[350px]">
+                  <h3 className="text-lg font-bold text-gray-900 mb-3 sticky top-0 bg-white p-4 ">
                     Dental Health Care
                   </h3>
-                  <div className="space-y-2">
+                  <div className="space-y-2 p-4 ">
                     {transposedDentalHealthData.map((row, index) => (
                       <div
                         key={index}
@@ -552,11 +549,11 @@ const HpsaSearchPage: React.FC = () => {
                 </div>
               </div>
               <div className="relative">
-                <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white min-h-[400px] max-h-[400px] overflow-auto resize-x min-w-[300px] w-fit max-w-[350px]">
-                  <h3 className="text-lg font-bold text-gray-900 mb-3 sticky top-0 bg-white">
+                <div className="border border-gray-300 rounded-lg shadow-md bg-white min-h-[400px] max-h-[400px] overflow-auto resize-x min-w-[300px] w-fit max-w-[350px]">
+                  <h3 className="text-lg font-bold text-gray-900 mb-3 sticky top-0 bg-white p-4 ">
                     Health Service Area
                   </h3>
-                  <div className="space-y-2">
+                  <div className="space-y-2 p-4 ">
                     {transposedHealthServiceAreaData.map((row, index) => (
                       <div
                         key={index}
@@ -581,11 +578,11 @@ const HpsaSearchPage: React.FC = () => {
               </div>
 
               <div className="relative">
-                <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white min-h-[400px] max-h-[400px] overflow-auto resize-x min-w-[300px] w-fit max-w-[350px]">
-                  <h3 className="text-lg font-bold text-gray-900 mb-3 sticky top-0 bg-white">
+                <div className="border border-gray-300 rounded-lg shadow-md bg-white min-h-[400px] max-h-[400px] overflow-auto resize-x min-w-[300px] w-fit max-w-[350px]">
+                  <h3 className="text-lg font-bold text-gray-900 mb-3 sticky top-0 bg-white p-4 ">
                     Planning Area
                   </h3>
-                  <div className="space-y-2">
+                  <div className="space-y-2 p-4 ">
                     {transposedLAServicePlanningData.map((row, index) => (
                       <div
                         key={index}
@@ -611,11 +608,11 @@ const HpsaSearchPage: React.FC = () => {
 
               {searchResults?.assembly?.length > 0 && (
                 <div className="relative">
-                  <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white min-h-[400px] max-h-[400px] overflow-auto resize-x min-w-[300px] w-fit max-w-[350px]">
-                    <h3 className="text-lg font-bold text-gray-900 mb-3 sticky top-0 bg-white">
+                  <div className="border border-gray-300 rounded-lg shadow-md bg-white min-h-[400px] max-h-[400px] overflow-auto resize-x min-w-[300px] w-fit max-w-[350px]">
+                    <h3 className="text-lg font-bold text-gray-900 mb-3 sticky top-0 bg-white p-4 ">
                       Assembly District
                     </h3>
-                    <div className="space-y-2">
+                    <div className="space-y-2 p-4 ">
                       {transposedLAServicePlanningData.map((row, index) => (
                         <div
                           key={index}
@@ -660,11 +657,11 @@ const HpsaSearchPage: React.FC = () => {
               )}
               {searchResults?.senate?.length > 0 && (
                 <div className="relative">
-                  <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white min-h-[400px] max-h-[400px] overflow-auto resize-x min-w-[300px] w-fit max-w-[350px]">
-                    <h3 className="text-lg font-bold text-gray-900 mb-3 sticky top-0 bg-white">
+                  <div className="border border-gray-300 rounded-lg shadow-md bg-white min-h-[400px] max-h-[400px] overflow-auto resize-x min-w-[300px] w-fit max-w-[350px]">
+                    <h3 className="text-lg font-bold text-gray-900 mb-3 sticky top-0 bg-white p-4 ">
                       Senate District
                     </h3>
-                    <div className="space-y-2">
+                    <div className="space-y-2 p-4 ">
                       {transposedSenateData.map((row, index) => (
                         <div
                           key={index}
@@ -690,11 +687,11 @@ const HpsaSearchPage: React.FC = () => {
               )}
               {searchResults?.congressional?.length > 0 && (
                 <div className="relative">
-                  <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white min-h-[400px] max-h-[400px] overflow-auto resize-x min-w-[300px] w-fit max-w-[350px]">
-                    <h3 className="text-lg font-bold text-gray-900 mb-3 sticky top-0 bg-white">
+                  <div className="border border-gray-300 rounded-lg shadow-md bg-white min-h-[400px] max-h-[400px] overflow-auto resize-x min-w-[300px] w-fit max-w-[350px]">
+                    <h3 className="text-lg font-bold text-gray-900 mb-3 sticky top-0 bg-white p-4">
                       Congressional District
                     </h3>
-                    <div className="space-y-2">
+                    <div className="space-y-2 p-4">
                       {transposedCongressionalData.map((row, index) => (
                         <div
                           key={index}
