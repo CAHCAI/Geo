@@ -67,7 +67,11 @@ const MapViewer: React.FC = () => {
 
   // Early return while loading
   if (!geoData) {
-    return <div>Loading map...</div>;
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
+      </div>
+    );
   }
 
   // Convert just the first district type (e.g. assembly_districts)
