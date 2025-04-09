@@ -11,7 +11,7 @@ import secrets
 from django.contrib.gis.geos import Point
 from datetime import timedelta, datetime
 from django.utils import timezone
-from .models import AssemblyDistrict, SenateDistrict, CongressionalDistrict, HealthServiceArea, APIKey
+from .models import AssemblyDistrict, SenateDistrict, CongressionalDistrict, HealthServiceArea, APIKey, AdminErrors
 from .auth import api_key_required
 import openpyxl
 from rest_framework import viewsets, status
@@ -36,8 +36,11 @@ def admin_login(request):
             login(request, user)  # Log the admin in.
             return JsonResponse({"message": "Login successful"}, status=200)
         else:
+            try:
+                AdminErrors.objects.create(error_code=401, error_description=f"Invalid credentials provided during login by {username})", error_time=now())
+            except Exception as e:
+                print(f"Error found but not logged into the database! {e}")
             return JsonResponse({"error": "Invalid credentials"}, status=401)
-
     return JsonResponse({"error": "Invalid request"}, status=400)
 
 # This function logs out the admin.
@@ -67,6 +70,10 @@ def generate_api_key(request):
     app_name = request.data.get("app_name")  
 
     if not app_name: 
+        try:
+             AdminErrors.objects.create(error_code=400, error_description=f"App name is required when generating API key", error_time=now())
+        except Exception as e:
+             print(f"Error found but not logged into the database! {e}")
         return Response({"error": "App name is required"}, status=400)  
     
     # Generate a secure random key
@@ -107,10 +114,18 @@ def validate_api_key(request):
             break
 
     if not valid_key:
+        try:
+             AdminErrors.objects.create(error_code=400, error_description=f"API key is required for validation", error_time=now())
+        except Exception as e:
+             print(f"Error found but not logged into the database! {e}")
         return Response({"error": "Invalid API key"}, status=403)
 
     # Check if the API key has expired
     if valid_key.expires_at and valid_key.expires_at < timezone.now():
+        try:
+             AdminErrors.objects.create(error_code=403, error_description=f"API key has expired", error_time=now())
+        except Exception as e:
+             print(f"Error found but not logged into the database! {e}")
         return Response({"error": "API key has expired"}, status=403)
 
     # Increment usage count if needed
@@ -131,9 +146,17 @@ def revoke_api_key(request):
             break
 
     if not valid_key:
+        try:
+             AdminErrors.objects.create(error_code=404, error_description=f"Invalid API key provided or key not found", error_time=now())
+        except Exception as e:
+             print(f"Error found but not logged into the database! {e}")
         return Response({"error": "API key not found or invalid"}, status=404)
 
     valid_key.revoke()
+    try:
+        AdminErrors.objects.create(error_code=403, error_description=f"API key revoked", error_time=now())
+    except Exception as e:
+        print(f"Error found but not logged into the database! {e}")
     return Response({"message": "API key revoked"})
 
 '''

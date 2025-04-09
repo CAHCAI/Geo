@@ -36,6 +36,7 @@ from django.contrib.sessions.models import Session
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 from docker import DockerClient
+from docker import from_env
 
 
 # Directory to temporarily store uploaded shapefiles
@@ -72,7 +73,7 @@ def test_cache(request):
             AdminErrors.objects.create(error_code=131, error_description=f"Redis failed: {str(e)}")
             print("Error successfully logged in the database")
         except Exception as e:
-            print(f"rror found but not logged into the database! {e}")
+            print(f"Error found but not logged into the database! {e}")
         return JsonResponse({"success": False, "message": f"Redis failed: {str(e)}"})
 
 @router.post("/upload-shapefile/")
@@ -229,6 +230,11 @@ def process_uploaded_zip(file, expected_filename):
         if shp_path:
             break
     if not shp_path:
+        try:
+             AdminErrors.objects.create(error_code=111, error_description=f"No shapefile (.shp) found in the extracted archive.")
+             print("Error successfully logged in the database")
+        except Exception as e:
+             print(f"Error found but not logged into the database! {e}")
         raise ValueError("No shapefile (.shp) found in the extracted archive.")
     return file_path, shp_path
 
@@ -276,7 +282,11 @@ def all_districts_data(request):
             cache_value["used_cache"] = True
             return JsonResponse(cache_value, safe=False)
     except Exception as e:
-        print(f"Error fetching from cache: {e}")
+        try:
+             AdminErrors.objects.create(error_code=100, error_description=f"Reading from Cache failed: {str(e)}")
+             print("Error successfully logged in the database")
+        except Exception as e:
+             print(f"Error fetching from cache: {e}")
 
     # Helper function to clean data handling None values and geom fields
     def clean_data(queryset):
@@ -364,8 +374,11 @@ def all_districts_data(request):
         try:
             cache.set(cache_key, json.dumps(cache_value))
         except Exception as e:
-            print(f"Error caching data: {e}")
-
+            try:
+                 AdminErrors.objects.create(error_code=133, error_description=f"Error caching data: {e}")
+                 print("Error successfully logged in the database")
+            except Exception as e:
+                 print(f"Error caching data: {e}")
     return JsonResponse(cache_value, safe=False)
 
 @router.get("/search")
@@ -531,7 +544,11 @@ def upload_overrides_xlsx(request, file: UploadedFile = File(...)):
         }
 
     except Exception as e:
-        print(f"Error during XLSX upload: {e}")
+        try:
+             AdminErrors.objects.create(error_code=134, error_description=f"Error during XLSX upload: {str(e)}")
+             print("Error successfully logged in the database")
+        except Exception as e:
+             print(f"Error found but not logged into the database! {e}")
         return {"success": False, "message": f"Error processing XLSX: {str(e)}"}
 
 @router.get("/manual-overrides", response=List[OverrideLocationOut])
@@ -546,7 +563,11 @@ def list_overrides(request):
         print(f"Found {count} override(s) in the database.")
         return qs
     except Exception as e:
-        print(f"Error listing overrides: {e}")
+        try:
+            AdminErrors.objects.create(error_code=138, error_description=f"Error listing overrides: {str(e)}")
+            print("Error successfully logged in the database")
+        except Exception as e:
+            print(f"Error found but not logged into the database! {e}")
         return []  # or raise HttpError(400, f"Error: {e}")
 
 
@@ -562,7 +583,11 @@ def create_override(request, payload: OverrideLocationIn):
         print(f"Override created with ID={obj.id}")
         return obj
     except Exception as e:
-        print(f"Error creating override: {e}")
+        try:
+            AdminErrors.objects.create(error_code=140, error_description=f"Error creating override: {str(e)}")
+            print("Error successfully logged in the database")
+        except Exception as e:
+            print(f"Error found but not logged into the database! {e}")
         # Return a fallback or raise an exception
         # but we must conform to response=OverrideLocationOut
         # So let's do a minimal approach:
@@ -581,7 +606,11 @@ def retrieve_override(request, override_id: int):
         print(f"Found override: {obj}")
         return obj
     except Exception as e:
-        print(f"Error retrieving override {override_id}: {e}")
+        try:
+             AdminErrors.objects.create(error_code=142, error_description=f"Error retrieving override {override_id}: {str(e)}")
+             print("Error successfully logged in the database")
+        except Exception as e:
+             print(f"Error found but not logged into the database! {e}")
         raise Exception(f"Failed to retrieve override: {str(e)}")
 
 
@@ -600,7 +629,11 @@ def update_override(request, override_id: int, payload: OverrideLocationIn):
         print(f"Override with ID={override_id} updated successfully.")
         return obj
     except Exception as e:
-        print(f"Error updating override {override_id}: {e}")
+        try:
+             AdminErrors.objects.create(error_code=143, error_description=f"Error updating override {override_id}: {str(e)}")
+             print("Error successfully logged in the database")
+        except Exception as e:
+             print(f"Error found but not logged into the database! {e}")
         raise Exception(f"Failed to update override: {str(e)}")
 
 @router.delete("/manual-overrides/{override_id}")
@@ -733,7 +766,7 @@ def check_postgis_status():
 @router.get("/service_status/")
 def service_status(request):
     try:
-        client = DockerClient(base_url='unix://var/run/docker.sock')
+        client = from_env()
     except Exception as e:
         try:
             AdminErrors.objects.create(error_code=161, error_description=f"Error connecting to Docker: {str(e)}")
