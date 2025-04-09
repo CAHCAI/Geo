@@ -10,6 +10,13 @@ interface Alert {
   message: string;
 }
 
+interface ContainerStatus {
+  redis: boolean;
+  postgis: boolean;
+  django: boolean;
+  react: boolean;
+}
+
 const AdminDashboard: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [alerts, setAlerts] = useState<Alert[]>([]);
@@ -26,6 +33,7 @@ const AdminDashboard: React.FC = () => {
   const [normalCount, setNormalCount] = useState<number | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [deletingKey, setDeletingKey] = useState<string | null>(null);
+  const [containerStatus, setContainerStatus] = useState<ContainerStatus | null>(null);
 
   interface AdminError {
     id: number;
@@ -38,6 +46,28 @@ const AdminDashboard: React.FC = () => {
   const [refreshCounter, setRefreshCounter] = useState(0);
   const [apiKeys, setApiKeys] = useState<any[]>([]);
   const [newAppName, setNewAppName] = useState("");
+
+  useEffect(() => {
+    const fetchContainerStatus = async () => {
+      try {
+        const response = await fetch("http://localhost:8000/api/service_status/", {
+          headers: { "X-API-KEY": fixedApiKey }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setContainerStatus(data);
+        } else {
+          console.error("Failed to fetch container status");
+        }
+      } catch (error) {
+        console.error("Error fetching container status:", error);
+      }
+    };
+  
+    fetchContainerStatus();
+    const interval = setInterval(fetchContainerStatus, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const fetchInterval = setInterval(() => {
@@ -531,6 +561,24 @@ const AdminDashboard: React.FC = () => {
           </table>
         </div>
       </section>
+
+      {/* Container Status */}
+      <ul className="space-y-2">
+      <h2 className="text-xl font-bold text-gray-700 mb-4">Service Status</h2>
+        {containerStatus && Object.entries(containerStatus).map(([name, isRunning]) => (
+          <li key={name} className="flex items-center gap-2">
+            <span
+              className={`inline-block w-3 h-3 rounded-full ${
+                isRunning ? "bg-green-500" : "bg-red-500"
+              }`}
+            />
+            <span className="font-semibold capitalize">{name}:</span>
+            <span className={isRunning ? "text-green-600" : "text-red-600"}>
+              {isRunning ? "Running" : "Stopped"}
+            </span>
+          </li>
+        ))}
+      </ul>
 
       {/* Dropdown Menu (above file upload) */}
       <section

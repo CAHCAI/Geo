@@ -35,6 +35,7 @@ from .models import OverrideLocation
 from django.contrib.sessions.models import Session
 from django.utils import timezone
 from django.contrib.auth import get_user_model
+from docker import DockerClient
 
 
 # Directory to temporarily store uploaded shapefiles
@@ -704,6 +705,51 @@ def revoke_api_key(request, payload: APIKeyRevokeIn):
         except:
             print("Could not log error in AdminErrors.")
         return {"success": False, "message": f"Failed to revoke API key."}
+    
+
+def check_container_status(client, container_name):
+    try:
+        container = client.containers.get(container_name)
+        return container.status == 'running'
+    except Exception:
+        try:
+            AdminErrors.objects.create(error_code=150, error_description=f"Checking container status failed")
+        except Exception as e:
+            print(f"Error found but not logged into the database! {e}")
+        return False
+
+def check_postgis_status():
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            return True
+    except Exception:
+        try:
+            AdminErrors.objects.create(error_code=150, error_description=f"Error while checking PostGIS status")
+        except Exception as e:
+            print(f"Error found but not logged into the database! {e}")
+        return False
+
+@router.get("/service_status/")
+def service_status(request):
+    try:
+        client = DockerClient(base_url='unix://var/run/docker.sock')
+    except Exception as e:
+        try:
+            AdminErrors.objects.create(error_code=161, error_description=f"Error connecting to Docker: {str(e)}")
+        except Exception as e:
+            print(f"Error found but not logged into the database! {e}")
+        return JsonResponse({"error": f"Error connecting to docker: {e}"}, status=500)
+    
+    status = {
+        'redis': check_container_status(client, 'geo_cache'),
+        'postgis': check_postgis_status(),
+        'django': check_container_status(client, 'geo_django'),
+        'react': check_container_status(client, 'geo_react')
+    }
+    return status
+
+
 
 def to_hsa_dict(obj):
     if not obj:

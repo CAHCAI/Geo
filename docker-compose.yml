@@ -48,6 +48,7 @@ services:
     volumes:
       - ./Geo:/app
       - ./sql:/app/sql  # Mount the SQL directory from the host to the container
+      - /var/run/docker.sock:/var/run/docker.sock # for container status in the admin dashboard ma boii
     ports:
       - "8000:8000"
     environment:

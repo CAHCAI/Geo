@@ -22,3 +22,4 @@ djangorestframework
 psycopg2
 openpyxl
 python-dotenv
+docker
