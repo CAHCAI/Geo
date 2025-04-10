@@ -1,6 +1,8 @@
 import datetime
 import os
 from shutil import rmtree
+import sys
+import traceback
 from .auth import APIKeyAuth, api_key_required
 import subprocess
 import uuid
@@ -70,8 +72,8 @@ def test_cache(request):
             return JsonResponse({"success": True, "message": "test api, successful. Will use cache next time."})
     except Exception as e:
         try:
-            AdminErrors.objects.create(error_code=131, error_description=f"Redis failed: {str(e)}")
-            print("Error successfully logged in the database")
+            stack = traceback.extract_stack()
+            error_response(131, f"Redis failed: {str(e)}", stack)
         except Exception as e:
             print(f"Error found but not logged into the database! {e}")
         return JsonResponse({"success": False, "message": f"Redis failed: {str(e)}"})
@@ -88,8 +90,8 @@ def upload_shapefile(request, file: UploadedFile = File(...), file_type: str = F
     file_type = file_type.lower()
     if file_type not in valid_types:
         try:
-            AdminErrors.objects.create(error_code=503, error_description="Invalid file type specifier")
-            print("Error successfully logged in the database")
+            stack = traceback.extract_stack()
+            error_response(503, "Invalid file type specifier.", stack)
         except Exception as e:
             print(f"Error found but not logged into the database! {e}")
         return JsonResponse({"success" : False, "message" : "Invalid file type specifier"})
@@ -102,8 +104,8 @@ def upload_shapefile(request, file: UploadedFile = File(...), file_type: str = F
         return JsonResponse({"success" : True, "message" : "HPSA data uploaded"}, status=200)
     elif (file_type != "hpsa" and file.name.lower().endswith(".csv")):
         try:
-            AdminErrors.objects.create(error_code=500, error_description="CSV must be uploaded under Health Provider Shortage Areas (HPSA)")
-            print("Error successfully logged in the database")
+            stack = traceback.extract_stack()
+            error_response(500, "CSV must be uploaded under Health Provider Shortage Areas (HPSA)", stack)
         except Exception as e:
             print(f"Error found but not logged into the database! {e}")
         return JsonResponse({"success" : False, "message" : "CSV must be uploaded under Health Provider Shortage Areas (HPSA)"}, status=500)
@@ -119,8 +121,8 @@ def upload_shapefile(request, file: UploadedFile = File(...), file_type: str = F
         # Check if a shapefile is found
         if not shapefile_path:
             try:
-                AdminErrors.objects.create(error_code=501, error_description="No shapefile found in the .zip archive.")
-                print("Error successfully logged in the database")
+                stack = traceback.extract_stack()
+                error_response(501, "No shapefile found in the .zip archive.", stack)
             except Exception as e:
                 print(f"Error found but not logged into the database! {e}")
             return {"error": "No shapefile found in the .zip archive."}
@@ -136,8 +138,8 @@ def upload_shapefile(request, file: UploadedFile = File(...), file_type: str = F
         if file_type != validated_file_type:
             print(f"mismatched filetype | valid: {validated_file_type}, given: {file_type}")
             try:
-                AdminErrors.objects.create(error_code=400, error_description="Invalid selected shapefile type.")
-                print("Error successfully logged in the database")
+                stack = traceback.extract_stack()
+                error_response(400, "Invalid selected shapefile type.", stack)
             except Exception as e:
                 print(f"Error creating error log in table: {e}")
             return JsonResponse({"success": False, "error": "Invalid selected shapefile type."}, status=400)
@@ -162,16 +164,16 @@ def upload_shapefile(request, file: UploadedFile = File(...), file_type: str = F
                 upload_pcsa_shapefile(layer)
             else:
                 try:
-                    AdminErrors.objects.create(error_code=400, error_description="Unknown shapefile type")
-                    print("Error successfully logged in the database")
+                    stack = traceback.extract_stack()
+                    error_response(400, "Unknown shapefile type", stack)
                 except Exception as e:
                     print(f"Error creating log in the database: {e}")
                 return JsonResponse({"success": False, "error": "Unknown shapefile type", "status":400}, status=400)
         except Exception as e:
             print(f"Error uploading shapefile of type {file_type}: {e}")
             try:
-                AdminErrors.objects.create(error_code=400, error_description=f"Shapefile of type '{file_type}' failed: {e}")
-                print("Error successfully logged in the database")
+                stack = traceback.extract_stack()
+                error_response(400, f"Shapefile of type '{file_type}' failed: {e}", stack)
             except Exception as e:
                 print(f"Error creating log in the database: {e}")
             return JsonResponse({"success" : False, "message": f"Shapefile of type '{file_type}' failed: {e}"}, status=400)
@@ -179,8 +181,8 @@ def upload_shapefile(request, file: UploadedFile = File(...), file_type: str = F
         return JsonResponse({"success" : True, "message": f"Shapefile of type '{file_type}' uploaded and processed successfully."})
     except Exception as e:
         try:
-            AdminErrors.objects.create(error_code=400, error_description=f"Error response {e}")
-            print("Error successfully logged in the database")
+            stack = traceback.extract_stack()
+            error_response(400, f"Error response {e}", stack)
         except Exception as e:
             print(f"Error creating log in the database: {e}")
         return JsonResponse({"success": False, "error": f"Error response {e}"}, status=400)
@@ -201,6 +203,11 @@ def process_uploaded_zip(file, expected_filename):
     Raises a ValueError if the file is not valid.
     """
     if file.name.lower() != expected_filename.lower():
+        try:
+            stack = traceback.extract_stack()
+            error_response(502, f"Uploaded file must be named {expected_filename}", stack)
+        except Exception as e:
+            print(f"Error creating log in the database: {e}")
         raise ValueError(f"Uploaded file must be named {expected_filename}")
     
     unique_filename = f"{uuid.uuid4()}_{file.name}"
@@ -218,6 +225,11 @@ def process_uploaded_zip(file, expected_filename):
         with zipfile.ZipFile(file_path, 'r') as zf:
             zf.extractall(upload_dir)
     except zipfile.BadZipFile:
+        try:
+            stack = traceback.extract_stack()
+            error_response(503, "Uploaded file is not a valid zip file.", stack)
+        except Exception as e:
+            print(f"Error creating log in the database: {e}")
         raise ValueError("Uploaded file is not a valid zip file.")
     
     # Recursively search for a .shp file in the extracted directory
@@ -231,8 +243,8 @@ def process_uploaded_zip(file, expected_filename):
             break
     if not shp_path:
         try:
-             AdminErrors.objects.create(error_code=111, error_description=f"No shapefile (.shp) found in the extracted archive.")
-             print("Error successfully logged in the database")
+            stack = traceback.extract_stack()
+            error_response(111, "No shapefile (.shp) found in the extracted archive.", stack)
         except Exception as e:
              print(f"Error found but not logged into the database! {e}")
         raise ValueError("No shapefile (.shp) found in the extracted archive.")
@@ -283,8 +295,8 @@ def all_districts_data(request):
             return JsonResponse(cache_value, safe=False)
     except Exception as e:
         try:
-             AdminErrors.objects.create(error_code=100, error_description=f"Reading from Cache failed: {str(e)}")
-             print("Error successfully logged in the database")
+            stack = traceback.extract_stack()
+            error_response(100, f"Reading from Cache failed: {str(e)}", stack)
         except Exception as e:
              print(f"Error fetching from cache: {e}")
 
@@ -375,10 +387,10 @@ def all_districts_data(request):
             cache.set(cache_key, json.dumps(cache_value))
         except Exception as e:
             try:
-                 AdminErrors.objects.create(error_code=133, error_description=f"Error caching data: {e}")
-                 print("Error successfully logged in the database")
+                stack = traceback.extract_stack()
+                error_response(132, f"Error caching data: {str(e)}", stack)
             except Exception as e:
-                 print(f"Error caching data: {e}")
+                print(f"Error caching data: {e}")
     return JsonResponse(cache_value, safe=False)
 
 @router.get("/search")
@@ -463,10 +475,9 @@ def coordinate_search(request, lat: float, lng: float):
         return JsonResponse(cache_value, safe=False)
 
     except Exception as e:
-        
         try:
-            AdminErrors.objects.create(error_code=130, error_description=f"Error: {e}")
-            print("Error successfully logged in the database")
+            stack = traceback.extract_stack()
+            error_response(130, f"Error: {e}", stack)
         except Exception as e:
             print(f"Error found but not logged into the database! {e}")
         return JsonResponse({"success": False, "message": f"Error: {e}"}, safe=False)
@@ -528,8 +539,8 @@ def upload_overrides_xlsx(request, file: UploadedFile = File(...)):
         if not new_overrides:
             print("No valid rows found in XLSX.")
             try:
-                AdminErrors.objects.create(error_code=110, error_description="No valid rows found in XLSX")
-                print("Error successfully logged in the database")
+                stack = traceback.extract_stack()
+                error_response(110, "No valid rows found in XLSX.", stack)
             except Exception as e:
                 print(f"Error found but not logged into the database! {e}")
             return {"success": False, "message": "No valid rows found in XLSX"}
@@ -545,8 +556,8 @@ def upload_overrides_xlsx(request, file: UploadedFile = File(...)):
 
     except Exception as e:
         try:
-             AdminErrors.objects.create(error_code=134, error_description=f"Error during XLSX upload: {str(e)}")
-             print("Error successfully logged in the database")
+            stack = traceback.extract_stack()
+            error_response(133, f"Error during XLSX upload: {str(e)}", stack)
         except Exception as e:
              print(f"Error found but not logged into the database! {e}")
         return {"success": False, "message": f"Error processing XLSX: {str(e)}"}
@@ -564,8 +575,8 @@ def list_overrides(request):
         return qs
     except Exception as e:
         try:
-            AdminErrors.objects.create(error_code=138, error_description=f"Error listing overrides: {str(e)}")
-            print("Error successfully logged in the database")
+            stack = traceback.extract_stack()
+            error_response(134, f"Error listing overrides: {str(e)}", stack)
         except Exception as e:
             print(f"Error found but not logged into the database! {e}")
         return []  # or raise HttpError(400, f"Error: {e}")
@@ -584,8 +595,8 @@ def create_override(request, payload: OverrideLocationIn):
         return obj
     except Exception as e:
         try:
-            AdminErrors.objects.create(error_code=140, error_description=f"Error creating override: {str(e)}")
-            print("Error successfully logged in the database")
+            stack = traceback.extract_stack()
+            error_response(135, f"Error creating override: {str(e)}", stack)
         except Exception as e:
             print(f"Error found but not logged into the database! {e}")
         # Return a fallback or raise an exception
@@ -607,8 +618,8 @@ def retrieve_override(request, override_id: int):
         return obj
     except Exception as e:
         try:
-             AdminErrors.objects.create(error_code=142, error_description=f"Error retrieving override {override_id}: {str(e)}")
-             print("Error successfully logged in the database")
+            stack = traceback.extract_stack()
+            error_response(136, f"Error retrieving override {override_id}: {str(e)}", stack)
         except Exception as e:
              print(f"Error found but not logged into the database! {e}")
         raise Exception(f"Failed to retrieve override: {str(e)}")
@@ -630,8 +641,8 @@ def update_override(request, override_id: int, payload: OverrideLocationIn):
         return obj
     except Exception as e:
         try:
-             AdminErrors.objects.create(error_code=143, error_description=f"Error updating override {override_id}: {str(e)}")
-             print("Error successfully logged in the database")
+            stack = traceback.extract_stack()
+            error_response(137, f"Error updating override {override_id}: {str(e)}", stack)
         except Exception as e:
              print(f"Error found but not logged into the database! {e}")
         raise Exception(f"Failed to update override: {str(e)}")
@@ -652,8 +663,8 @@ def delete_override(request, override_id: int):
     except Exception as e:
         print(f"Error deleting override {override_id}: {e}")
         try:
-            AdminErrors.objects.create(error_code=111, error_description=f"Failed to delete: {str(e)}")
-            print("Error successfully logged in the database")
+            stack = traceback.extract_stack()
+            error_response(138, f"Error deleting override {override_id}: {str(e)}", stack)
         except Exception as e:
             print(f"Error found but not logged into the database! {e}")
         return {"success": False, "message": f"Failed to delete: {str(e)}"}
@@ -698,6 +709,8 @@ class AdminErrorSchema(Schema):
     id: int
     error_code: int
     error_description: str
+    files_name: str
+    line_number: str
     created_at: datetime = Field(..., format="iso8601")  
 
 class APIKeySchema(Schema):
@@ -734,11 +747,22 @@ def revoke_api_key(request, payload: APIKeyRevokeIn):
     except Exception as e:
         print(f"Failed to revoke API key: {e}")
         try:
-            AdminErrors.objects.create(error_code=141, error_description=f"Revoke failed: {str(e)}")
+            stack = traceback.extract_stack()
+            error_response(140, f"Revoke failed: {str(e)}", stack)
         except:
             print("Could not log error in AdminErrors.")
         return {"success": False, "message": f"Failed to revoke API key."}
     
+def error_response(code, description, stk):
+    caller_frame = stk[-1]  
+    filename = caller_frame.filename
+    line = caller_frame.lineno
+    AdminErrors.objects.create(
+        error_code=code,
+        error_description=description,
+        files_name=filename,
+        line_number=str(line)
+    )
 
 def check_container_status(client, container_name):
     try:
@@ -746,7 +770,8 @@ def check_container_status(client, container_name):
         return container.status == 'running'
     except Exception:
         try:
-            AdminErrors.objects.create(error_code=150, error_description=f"Checking container status failed")
+            stack = traceback.extract_stack()
+            error_response(150, f"Checking container status failed", stack)
         except Exception as e:
             print(f"Error found but not logged into the database! {e}")
         return False
@@ -758,7 +783,8 @@ def check_postgis_status():
             return True
     except Exception:
         try:
-            AdminErrors.objects.create(error_code=150, error_description=f"Error while checking PostGIS status")
+            stack = traceback.extract_stack()
+            error_response(150, f"PostGIS status check failed", stack)
         except Exception as e:
             print(f"Error found but not logged into the database! {e}")
         return False
@@ -769,7 +795,8 @@ def service_status(request):
         client = from_env()
     except Exception as e:
         try:
-            AdminErrors.objects.create(error_code=161, error_description=f"Error connecting to Docker: {str(e)}")
+            stack = traceback.extract_stack()
+            error_response(160, f"Error connecting to Docker: {str(e)}", stack)
         except Exception as e:
             print(f"Error found but not logged into the database! {e}")
         return JsonResponse({"error": f"Error connecting to docker: {e}"}, status=500)

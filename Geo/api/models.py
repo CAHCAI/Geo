@@ -324,6 +324,8 @@ class AdminErrors(models.Model):
     id = models.AutoField(primary_key=True)
     error_code = models.IntegerField()
     error_description = models.TextField()
+    files_name = models.TextField(default="Untraceable file name")
+    line_number = models.TextField(default="Untraceable line number")
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):

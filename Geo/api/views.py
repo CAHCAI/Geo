@@ -1,3 +1,4 @@
+import traceback
 from django.shortcuts import render
 from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
@@ -22,6 +23,19 @@ from rest_framework.response import Response
 def index(request):
     return render(request,'frontend.html'),
 
+def error_response(code, description, stk):
+    # caller_frame = stk[-1]  
+    caller_frame = stk[-2]
+    filename = caller_frame.filename
+    line = caller_frame.lineno
+    AdminErrors.objects.create(
+        error_code=code,
+        error_description=description,
+        files_name=filename,
+        line_number=str(line),
+        created_at=now()
+    )
+
 # Admin login from the frontend.
 @csrf_exempt  # Disables CSRF protection for API calls (needed for frontend requests).
 def admin_login(request):
@@ -37,6 +51,8 @@ def admin_login(request):
             return JsonResponse({"message": "Login successful"}, status=200)
         else:
             try:
+                stack = traceback.extract_stack()
+                error_response(401, f"Invalid credentials provided during login by {username})", stack)
                 AdminErrors.objects.create(error_code=401, error_description=f"Invalid credentials provided during login by {username})", error_time=now())
             except Exception as e:
                 print(f"Error found but not logged into the database! {e}")
@@ -71,9 +87,10 @@ def generate_api_key(request):
 
     if not app_name: 
         try:
-             AdminErrors.objects.create(error_code=400, error_description=f"App name is required when generating API key", error_time=now())
+            stack = traceback.extract_stack()
+            error_response(400, f"App name is required when generating API key", stack)
         except Exception as e:
-             print(f"Error found but not logged into the database! {e}")
+            print(f"Error found but not logged into the database! {e}")
         return Response({"error": "App name is required"}, status=400)  
     
     # Generate a secure random key
@@ -115,7 +132,8 @@ def validate_api_key(request):
 
     if not valid_key:
         try:
-             AdminErrors.objects.create(error_code=400, error_description=f"API key is required for validation", error_time=now())
+            stack = traceback.extract_stack()
+            error_response(400, f"Invalid API key provided for validation {key}", stack)
         except Exception as e:
              print(f"Error found but not logged into the database! {e}")
         return Response({"error": "Invalid API key"}, status=403)
@@ -123,7 +141,8 @@ def validate_api_key(request):
     # Check if the API key has expired
     if valid_key.expires_at and valid_key.expires_at < timezone.now():
         try:
-             AdminErrors.objects.create(error_code=403, error_description=f"API key has expired", error_time=now())
+            stack = traceback.extract_stack()
+            error_response(403, f"API key has expired", stack)
         except Exception as e:
              print(f"Error found but not logged into the database! {e}")
         return Response({"error": "API key has expired"}, status=403)
@@ -147,14 +166,16 @@ def revoke_api_key(request):
 
     if not valid_key:
         try:
-             AdminErrors.objects.create(error_code=404, error_description=f"Invalid API key provided or key not found", error_time=now())
+            stack = traceback.extract_stack()
+            error_response(404, f"Invalid API key provided or key not found", stack)
         except Exception as e:
              print(f"Error found but not logged into the database! {e}")
         return Response({"error": "API key not found or invalid"}, status=404)
 
     valid_key.revoke()
     try:
-        AdminErrors.objects.create(error_code=403, error_description=f"API key revoked", error_time=now())
+        stack = traceback.extract_stack()
+        error_response(403, f"API key revoked", stack)
     except Exception as e:
         print(f"Error found but not logged into the database! {e}")
     return Response({"message": "API key revoked"})

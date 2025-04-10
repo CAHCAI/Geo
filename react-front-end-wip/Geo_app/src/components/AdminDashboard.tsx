@@ -39,6 +39,8 @@ const AdminDashboard: React.FC = () => {
     id: number;
     error_code: number;
     error_description: string;
+    files_name: string;
+    line_number: string;
     created_at: string;
   }
 
@@ -516,6 +518,12 @@ const AdminDashboard: React.FC = () => {
                   Description
                 </th>
                 <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-48">
+                  Error File
+                </th>
+                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-48">
+                  Error Line
+                </th>
+                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-48">
                   Date Occurred
                 </th>
                 <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-32">
@@ -529,12 +537,17 @@ const AdminDashboard: React.FC = () => {
                   <td className="px-8 py-4 whitespace-nowrap text-base font-mono text-red-600">
                     {error.id}
                   </td>
-                  {/*I will remove this after demo*/}
                   <td className="px-8 py-4 whitespace-nowrap text-base font-mono text-red-600">
                     {error.error_code}
                   </td>
                   <td className="px-8 py-4 whitespace-normal text-base text-gray-900 max-w-2xl">
                     {error.error_description}
+                  </td>
+                  <td className="px-8 py-4 whitespace-normal text-base text-gray-900 max-w-2xl">
+                    {error.files_name}
+                  </td>
+                  <td className="px-8 py-4 whitespace-normal text-base text-gray-900 max-w-2xl">
+                    {error.line_number}
                   </td>
                   <td className="px-8 py-4 whitespace-nowrap text-base text-gray-500">
                     {new Date(error.created_at).toLocaleDateString("en-US", {
@@ -552,7 +565,7 @@ const AdminDashboard: React.FC = () => {
                       aria-label={`Mark error ${error.id} as resolved`}
                     >
                       <TrashIcon className="w-5 h-5" />
-                      <span>Resolve</span>
+                      <span>Clear</span>
                     </button>
                   </td>
                 </tr>
