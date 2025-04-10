@@ -423,7 +423,7 @@ def coordinate_search(request, lat: float, lng: float):
         primary_matches = []
         mental_matches = []
         dental_matches = []
-        censuskey = None
+        censuskey = 0
 
         if medicalservicestudyarea_matches.exists():
             raw_censuskey = medicalservicestudyarea_matches.first().geoid
@@ -431,7 +431,7 @@ def coordinate_search(request, lat: float, lng: float):
             print(f"Raw GEOID: {raw_censuskey} | Stripped: {censuskey}")
 
         if censuskey:
-            possible_keys = [raw_censuskey, '06107003400', censuskey.zfill(11)]
+            possible_keys = [raw_censuskey, censuskey, censuskey.zfill(11)]
             print(f"Trying possible keys: {possible_keys}")
 
             primary_matches = (
@@ -454,6 +454,7 @@ def coordinate_search(request, lat: float, lng: float):
             print("Dental Match (Latest):", dental_match) 
 
 
+
         
         cache_value = {
             "senate": [to_dict(d) for d in senate_matches],
@@ -464,9 +465,9 @@ def coordinate_search(request, lat: float, lng: float):
             "RegisteredNurseShortageArea": [to_rnsa_dict(d) for d in registerednurseshortagearea_matches],
             "MedicalServiceStudyArea": [to_mssa_dict(d) for d in medicalservicestudyarea_matches],
             "PrimaryCareShortageArea": [to_pcsa_dict(d) for d in primarycareshortagearea_matches],
-            "PrimaryCareHPSA": [to_primary_hpsa_dict(primary_match)],
-            "MentalHealthHPSA": [to_mental_hpsa_dict(mental_match)],
-            "DentalHealthHPSA": [to_dental_hpsa_dict(dental_match)],
+            "PrimaryCareHPSA": [to_primary_hpsa_dict(primary_match)] if primary_match else [],
+            "MentalHealthHPSA": [to_mental_hpsa_dict(mental_match)]if mental_match else [],
+            "DentalHealthHPSA": [to_dental_hpsa_dict(dental_match)]if dental_match else [],
         }
 
         if any(cache_value.values()):
