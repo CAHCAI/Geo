@@ -30,17 +30,39 @@ const APIReference: React.FC = () => {
   );
   const [activeSubSection, setActiveSubSection] = useState<string | null>(null);
   const [showSidebar, setShowSidebar] = useState(true); // Toggle for collapsible sidebar
+  const [apiSchema, setApiSchema] = useState<any>(null);
+  const [exampleData, setExampleData] = useState<any>(null);
 
-  useEffect(() => {
-    fetch("/api/openapi.json")
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("OpenAPI JSON:", data);
-      })
-      .catch((error) => {
-        console.error("Error fetching OpenAPI JSON:", error);
-      });
-  }, []);
+useEffect(() => {
+  fetch("/api/openapi.json")
+    .then((response) => response.json())
+    .then((data) => {
+      setApiSchema(data);
+    })
+    .catch((error) => {
+      console.error("Error fetching OpenAPI JSON:", error);
+    });
+}, []);
+
+// Fetch real example data
+useEffect(() => {
+  const lat = 34;
+  const lng = -118;
+  const API_KEY = import.meta.env.VITE_API_KEY;
+
+  fetch(`/api/search?lat=${lat}&lng=${lng}`, {
+    headers: {
+      "X-API-KEY": API_KEY, 
+     },
+  })  
+    .then((response) => response.json())
+    .then((data) => {
+      setExampleData(data);
+    })
+    .catch((error) => {
+      console.error("Error fetching example data:", error);
+    });
+}, []);
 
   // For quickly finding the main parent of each subsection
   const PARENT_SECTION: Record<string, string> = {
@@ -274,47 +296,7 @@ const APIReference: React.FC = () => {
             http://localhost:8000/api/search?lat=${"{lat}"}&lng=${"{lng}"}
           </code>
           <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto text-sm mt-2">
-            {`{
-  "senate": [
-    {
-      "district_number": 30,
-      "district_label": "30|0.32%",
-      "population": 991239
-    }
-  ],
-  "assembly": [
-    {
-      "district_number": 56,
-      "district_label": "56|-0.18%",
-      "population": 493173
-    }
-  ],
-  "congressional": [
-    {
-      "district_number": 38,
-      "district_label": "38|-0%",
-      "population": 760065
-    }
-  ],
-  "healthservicearea": [
-    {
-      "hsa_name": "Los Angeles"
-    }
-  ],
-  "LaServicePlanning": [
-    {
-      "spa_name": "San Gabriel"
-    }
-  ],
-  "RegisteredNurseShortageArea": [
-    {
-      "rnsa": "Yes",
-      "Effective": "Low"
-    }
-  ],
-  "MedicalServiceStudyArea": [],
-  "PrimaryCareShortageArea": []
-}`}
+          {exampleData ? JSON.stringify(exampleData, null, 2) : "Loading example..."}
           </pre>
         </section>
         {/* GetHPSDesignations Section */}
@@ -393,47 +375,7 @@ const APIReference: React.FC = () => {
             Response Example
           </h2>
           <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto text-sm mt-2">
-            {`{
-  "senate": [
-    {
-      "district_number": 30,
-      "district_label": "30|0.32%",
-      "population": 991239
-    }
-  ],
-  "assembly": [
-    {
-      "district_number": 56,
-      "district_label": "56|-0.18%",
-      "population": 493173
-    }
-  ],
-  "congressional": [
-    {
-      "district_number": 38,
-      "district_label": "38|-0%",
-      "population": 760065
-    }
-  ],
-  "healthservicearea": [
-    {
-      "hsa_name": "Los Angeles"
-    }
-  ],
-  "LaServicePlanning": [
-    {
-      "spa_name": "San Gabriel"
-    }
-  ],
-  "RegisteredNurseShortageArea": [
-    {
-      "rnsa": "Yes",
-      "Effective": "Low"
-    }
-  ],
-  "MedicalServiceStudyArea": [],
-  "PrimaryCareShortageArea": []
-}`}
+          {exampleData ? JSON.stringify(exampleData, null, 2) : "Loading example..."}
           </pre>
         </section>
       </div>
