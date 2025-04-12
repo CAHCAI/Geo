@@ -326,3 +326,5 @@ SESSION_ENGINE = "django.contrib.sessions.backends.db"
 # Session Settings
 SESSION_COOKIE_AGE = 1800  # 30 minutes
 SESSION_SAVE_EVERY_REQUEST = True  # refresh session expiration with every request
+
+AZURE_MAPS_API_KEY = "Put key here" #Azure API KEY

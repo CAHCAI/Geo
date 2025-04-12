@@ -1,5 +1,6 @@
 import datetime
 import os
+from django.http import JsonResponse
 from shutil import rmtree
 import sys
 import traceback
@@ -490,6 +491,49 @@ class OverrideLocationSchema(Schema):
     lon: float
     address: str
 
+@router.get("/override-locations")
+def check_override_location(request, address: str):
+    """
+    Check if the address is in the override list. If not, geocode it using Azure Maps.
+    """
+    # Check for override match
+    try:
+        override = OverrideLocation.objects.get(address__iexact=address.strip())
+        print(override.latitude, override.longitude)
+        return {
+            "found": True,
+            "latitude": override.latitude,
+            "longitude": override.longitude,
+        }
+    except OverrideLocation.DoesNotExist:
+        pass
+    
+    #print("override-locations: " + address + "\n")
+    ''' 
+    # Call Azure Maps if not found
+    azure_key = settings.AZURE_MAPS_API_KEY
+    response = requests.get(
+        "https://atlas.microsoft.com/search/address/json",
+        params={
+            "api-version": "1.0",
+            "subscription-key": azure_key,
+            "query": address,
+        },
+    )
+  
+    if response.status_code == 200:
+        results = response.json().get("results", [])
+        if results:
+            position = results[0]["position"]
+            return {
+                "found": False,
+                "latitude": position["lat"],
+                "longitude": position["lon"],
+            }
+    '''   
+    return JsonResponse({"error": "Unable to geocode address"}, status=404)
+
+
 @router.post("/override-location/")
 def override_location(request, data: OverrideLocationSchema):
     """
@@ -901,3 +945,5 @@ def to_primary_hpsa_dict(obj):
         "Estimated Served": obj.hpsa_estimated_served_population or "N/A", 
         "Priority Score": obj.hpsa_score or "N/A",
     }
+
+
