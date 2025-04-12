@@ -168,6 +168,13 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 
+AZURE_CLIENT_ID = os.getenv("AZURE_CLIENT_ID")
+AZURE_TENANT_ID = os.getenv("AZURE_TENANT_ID")
+AZURE_CLIENT_SECRET = os.getenv("AZURE_CLIENT_SECRET")
+AZURE_MAPS_CLIENT_ID = os.getenv("AZURE_MAPS_CLIENT_ID")
+
+#print("Client ID:", os.getenv("AZURE_CLIENT_ID"))  # for debugging only
+
 # Media files (for file uploads)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -327,4 +334,9 @@ SESSION_ENGINE = "django.contrib.sessions.backends.db"
 SESSION_COOKIE_AGE = 1800  # 30 minutes
 SESSION_SAVE_EVERY_REQUEST = True  # refresh session expiration with every request
 
-AZURE_MAPS_API_KEY = "Put key here" #Azure API KEY
+import logging
+
+# Suppress Azure SDK INFO/debug logs
+logging.getLogger("azure").setLevel(logging.WARNING)
+logging.getLogger("azure.core.pipeline.policies.http_logging_policy").setLevel(logging.ERROR)
+logging.getLogger("azure.identity").setLevel(logging.WARNING)

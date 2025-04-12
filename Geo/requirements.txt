@@ -23,3 +23,7 @@ psycopg2
 openpyxl
 python-dotenv
 docker
+azure-mgmt-maps
+azure-identity
+requests
+azure-maps-search

@@ -40,6 +40,10 @@ from django.utils import timezone
 from django.contrib.auth import get_user_model
 from docker import DockerClient
 from docker import from_env
+from azure.identity import ClientSecretCredential
+from azure.maps.search import MapsSearchClient
+import requests
+
 
 
 # Directory to temporarily store uploaded shapefiles
@@ -485,11 +489,13 @@ def coordinate_search(request, lat: float, lng: float):
         return JsonResponse({"success": False, "message": f"Error: {e}"}, safe=False)
         
 
+
 # Define a schema for expected data
 class OverrideLocationSchema(Schema):
     lat: float
     lon: float
     address: str
+
 
 @router.get("/override-locations")
 def check_override_location(request, address: str):
@@ -499,38 +505,35 @@ def check_override_location(request, address: str):
     # Check for override match
     try:
         override = OverrideLocation.objects.get(address__iexact=address.strip())
-        print(override.latitude, override.longitude)
+        #print(override.latitude, override.longitude)
+        
         return {
             "found": True,
             "latitude": override.latitude,
             "longitude": override.longitude,
         }
+        
     except OverrideLocation.DoesNotExist:
         pass
     
     #print("override-locations: " + address + "\n")
-    ''' 
-    # Call Azure Maps if not found
-    azure_key = settings.AZURE_MAPS_API_KEY
-    response = requests.get(
-        "https://atlas.microsoft.com/search/address/json",
-        params={
-            "api-version": "1.0",
-            "subscription-key": azure_key,
-            "query": address,
-        },
+    credential = ClientSecretCredential(
+        tenant_id=settings.AZURE_TENANT_ID,
+        client_id=settings.AZURE_CLIENT_ID,
+        client_secret=settings.AZURE_CLIENT_SECRET,
     )
-  
-    if response.status_code == 200:
-        results = response.json().get("results", [])
-        if results:
-            position = results[0]["position"]
-            return {
-                "found": False,
-                "latitude": position["lat"],
-                "longitude": position["lon"],
-            }
-    '''   
+    maps_search_client = MapsSearchClient(credential=credential, client_id=settings.AZURE_MAPS_CLIENT_ID)
+
+    result = maps_search_client.get_geocoding(query=address)
+
+    if result["features"]:
+        coordinates = result["features"][0]["geometry"]["coordinates"]
+        return {
+            "found": False,
+            "latitude": coordinates[1],
+            "longitude": coordinates[0],
+        }
+
     return JsonResponse({"error": "Unable to geocode address"}, status=404)
 
 

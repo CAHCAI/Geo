@@ -120,7 +120,13 @@ const HpsaSearchPage: React.FC = () => {
         if (overrideRes.ok && overrideData.latitude && overrideData.longitude) {
           lat = overrideData.latitude;
           lng = overrideData.longitude;
-          console.log("Using coordinates from override:", lat, lng);
+
+          if(overrideData.found){
+            console.log("Using coordinates from override:", lat, lng);
+          }else{
+            console.log("Using coordinates from azure:", lat, lng);
+          }
+          
         } else {
           console.error("Could not resolve address to coordinates.");
           setError("Could not resolve address to coordinates.");
@@ -448,10 +454,10 @@ const HpsaSearchPage: React.FC = () => {
           fetchResults={fetchResults}
           isLoading={isLoading}
         />
-        
+
         <p className="text-sm text-gray-500 mt-1">
           Example: <span className="italic">37.7749, -122.4194</span> or{" "}
-          <span className="italic">California Men’s Colony, San Luis Obispo, CA</span>
+          <span className="italic">California State Capitol, 1315 10th St, Sacramento, CA 95814</span>
         </p>
 
 
