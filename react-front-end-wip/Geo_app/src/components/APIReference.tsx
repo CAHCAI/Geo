@@ -128,11 +128,13 @@ useEffect(() => {
 
       {/* Sidebar */}
       <nav
-        className={`w-full md:w-1/4 bg-gray-100 shadow-md p-6 md:sticky md:h-[calc(100vh-8rem)] overflow-y-auto ${
+        className={`w-full md:w-1/4 bg-gray-100 dark:bg-gray-800 shadow-md p-6 md:sticky md:h-[calc(100vh-8rem)] overflow-y-auto ${
           !showSidebar ? "hidden" : "block"
         } md:block`}
       >
-        <h2 className="text-xl font-bold mb-4">API Reference</h2>
+        <h2 className="text-xl font-bold mb-4 dark:text-white">
+          API Reference
+        </h2>
         <ul className="space-y-2">
           {sections.map((section) => (
             <li key={section.id}>
@@ -140,7 +142,7 @@ useEffect(() => {
                 className={`block w-full text-left px-4 py-2 rounded-md transition-all ${
                   activeMainSection === section.id
                     ? "bg-blue-600 text-white font-semibold"
-                    : "text-gray-700 hover:bg-gray-300"
+                    : "text-gray-700 dark:text-gray-200 dark:hover:text-black  hover:bg-gray-300"
                 }`}
                 onClick={() => handleScrollTo(section.id)}
               >
@@ -155,7 +157,7 @@ useEffect(() => {
                         className={`block w-full text-left px-3 py-1 rounded-md transition-all ${
                           activeSubSection === subsection.id
                             ? "bg-blue-400 text-white font-semibold"
-                            : "text-gray-600 hover:bg-gray-200"
+                            : "text-gray-600 dark:text-gray-200 dark:hover:text-black hover:bg-gray-200"
                         }`}
                         onClick={() => handleScrollTo(subsection.id)}
                       >
@@ -182,13 +184,13 @@ useEffect(() => {
           ref={(el) =>
             (sectionRefs.current["geocode"] = el as HTMLDivElement | null)
           }
-          className="p-6 bg-white shadow-md rounded-lg"
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
         >
           <h2 className="text-2xl font-bold text-blue-600 mb-2">
             Geocode & Shortage Designations
           </h2>
 
-          <p className="text-gray-700">
+          <p className="text-gray-700 dark:text-gray-300">
             Geocode Web service is designed get an address's geographic
             coordinates. This method can also be used to validate and
             standardize an address even if you don't need geographic
@@ -197,12 +199,12 @@ useEffect(() => {
             California.
           </p>
 
-          <p className="text-gray-700 mt-2">
+          <p className="text-gray-700 mt-2 dark:text-gray-300">
             Geocode web service takes a full or partial address string and
             returns a matching address sorted by best match in JSON format.
           </p>
 
-          <h3 className="text-xl font-semibold mt-4">
+          <h3 className="text-xl font-semibold mt-4 dark:text-gray-100">
             BELOW IS AN EXAMPLE WEB SERVICE URL WITH SOME PARAMETERS.
           </h3>
           <code className="block bg-gray-200 p-3 rounded-lg text-sm break-words overflow-x-auto w-full">
@@ -215,60 +217,62 @@ useEffect(() => {
           ref={(el) =>
             (sectionRefs.current["parameters"] = el as HTMLDivElement | null)
           }
-          className="p-6 bg-white shadow-md rounded-lg"
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
         >
           <h2 className="text-2xl font-bold text-blue-600 mb-4">Parameters</h2>
 
           <ul className="space-y-3">
-            <li className="p-3 bg-gray-50 rounded-md shadow-sm">
+            <li className="p-3 bg-gray-50 dark:bg-gray-800 rounded-md shadow-sm">
               <div className="text-blue-800 font-semibold">key (required)</div>
-              <p className="text-gray-700 mt-1">
+              <p className="text-gray-700 dark:text-gray-300 mt-1">
                 An API key must be provided to use this service. The API is for
                 HCAI applications only and not open to the public.
               </p>
             </li>
 
-            <li className="p-3 bg-gray-50 rounded-md shadow-sm">
+            <li className="p-3 bg-gray-50 dark:bg-gray-800 rounded-md shadow-sm">
               <div className="text-blue-800 font-semibold">
                 address (required)
               </div>
-              <p className="text-gray-700 mt-1">Input address.</p>
+              <p className="text-gray-700 mt-1 dark:text-gray-300">
+                Input address.
+              </p>
             </li>
 
-            <li className="p-3 bg-gray-50 rounded-md shadow-sm">
+            <li className="p-3 bg-gray-50 dark:bg-gray-800 rounded-md shadow-sm">
               <div className="text-blue-800 font-semibold">maxlocations</div>
-              <p className="text-gray-700 mt-1">
+              <p className="text-gray-700 mt-1 dark:text-gray-300">
                 Returns the requested number of locations matching the search
                 criteria (capped at 10, default is 5).
               </p>
             </li>
 
-            <li className="p-3 bg-gray-50 rounded-md shadow-sm">
+            <li className="p-3 bg-gray-50 dark:bg-gray-800 rounded-md shadow-sm">
               <div className="text-blue-800 font-semibold">
                 findshortagedesignations
               </div>
-              <p className="text-gray-700 mt-1">
+              <p className="text-gray-700 mt-1 dark:text-gray-300">
                 When set to true, the response will include shortage
                 designations for each address returned.
               </p>
             </li>
 
-            <li className="p-3 bg-gray-50 rounded-md shadow-sm">
+            <li className="p-3 bg-gray-50 dark:bg-gray-800 rounded-md shadow-sm">
               <div className="text-blue-800 font-semibold">calreachdoctype</div>
-              <p className="text-gray-700 mt-1">
+              <p className="text-gray-700 mt-1 dark:text-gray-300">
                 Given this parameter, the{" "}
-                <code className="bg-gray-200 px-1 py-0.5 rounded text-sm">
+                <code className="bg-gray-200 dark:bg-gray-900 px-1 py-0.5 rounded text-sm">
                   in_umn
                 </code>
                 flag may be determined differently. Currently, the SongBrown
                 program may require this flag to be computed differently for
                 various programs. For example, an address’s{" "}
-                <code className="bg-gray-200 px-1 py-0.5 rounded text-sm">
+                <code className="bg-gray-200 dark:bg-gray-900 px-1 py-0.5 rounded text-sm">
                   in_umn
                 </code>
                 flag for a Registered Nurse Special Program’s application only
                 considers{" "}
-                <code className="bg-gray-200 px-1 py-0.5 rounded text-sm">
+                <code className="bg-gray-200 dark:bg-gray-900 px-1 py-0.5 rounded text-sm">
                   rnsa
                 </code>
                 (Registered Nurse Shortage Area).
@@ -283,12 +287,12 @@ useEffect(() => {
           ref={(el) =>
             (sectionRefs.current["response"] = el as HTMLDivElement | null)
           }
-          className="p-6 bg-white shadow-md rounded-lg"
+          className="p-6 bg-white dark:bg-gray-800 shadow-md rounded-lg"
         >
           <h2 className="text-xl font-bold text-blue-500 mb-2">
             JSON RESPONSE EXAMPLE
           </h2>
-          <p className="text-gray-700">
+          <p className="text-gray-700 dark:text-gray-300">
             Geocode service may return multiple addresses if a partial address
             was given. Below is an example of that:
           </p>
@@ -306,16 +310,18 @@ useEffect(() => {
             (sectionRefs.current["gethpsdesignations"] =
               el as HTMLDivElement | null)
           }
-          className="p-6 bg-white shadow-md rounded-lg"
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
         >
           <h2 className="text-2xl font-bold text-blue-600 mb-2">
             GetHPSDesignations
           </h2>
-          <p className="text-gray-700">
+          <p className="text-gray-700 dark:text-gray-300">
             The GetHPSDesignations service retrieves health professional
             shortage area (HPSA) designations for a given location.
           </p>
-          <h3 className="text-xl font-semibold mt-4">Example API Request</h3>
+          <h3 className="text-xl font-semibold mt-4 dark:text-white">
+            Example API Request
+          </h3>
           <code className="block bg-gray-200 p-3 rounded-lg text-sm break-words overflow-x-auto w-full">
             http://localhost:8000/api/search?lat=${"{lat}"}&lng=${"{lng}"}
           </code>
@@ -328,10 +334,10 @@ useEffect(() => {
             (sectionRefs.current["hps-parameters"] =
               el as HTMLDivElement | null)
           }
-          className="p-6 bg-white shadow-md rounded-lg"
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
         >
           <h2 className="text-2xl font-bold text-blue-600 mb-2">Parameters</h2>
-          <ul className="list-disc ml-6 space-y-2 text-gray-700">
+          <ul className="list-disc ml-6 space-y-2 text-gray-700 dark:text-gray-300">
             <li>
               <strong>key (required):</strong> An API key must be provided to
               use this service. The API is for HCAI applications only and not
@@ -369,7 +375,7 @@ useEffect(() => {
           ref={(el) =>
             (sectionRefs.current["hps-response"] = el as HTMLDivElement | null)
           }
-          className="p-6 bg-white shadow-md rounded-lg"
+          className="p-6 bg-white shadow-md rounded-lg dark:bg-gray-800"
         >
           <h2 className="text-xl font-bold text-blue-500 mb-2">
             Response Example

@@ -50,7 +50,7 @@ export default function Login({ loggedIn, setLoggedIn }: LoginProps) {
   };
 
   return (
-    <section className="h-full w-full bg-white flex flex-col px-6 py-8 justify-between">
+    <section className="h-full w-full bg-white dark:bg-gray-900 flex flex-col px-6 py-8 justify-between">
       {/* Logo */}
       <div className="flex items-center justify-center mb-8">
         <img src={HcaiLogo} alt="HCAI Logo" className="h-10" />
@@ -106,11 +106,11 @@ export default function Login({ loggedIn, setLoggedIn }: LoginProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
           >
-            <h2 className="text-2xl font-semibold text-center text-gray-900 mb-2">
-              <span className="font-light">Sign in to</span>{" "}
+            <h2 className="text-2xl font-semibold text-center text-gray-900 dark:text-gray-100 mb-2">
+              <span className="font-light ">Sign in to</span>{" "}
               <span className="font-bold">Your Account</span>
             </h2>
-            <p className="text-sm text-gray-500 text-center mb-6">
+            <p className="text-sm text-gray-500 text-center mb-6 dark:text-gray-200">
               Use your HCAI credentials to login.
             </p>
           </motion.div>
@@ -120,7 +120,7 @@ export default function Login({ loggedIn, setLoggedIn }: LoginProps) {
             <div>
               <label
                 htmlFor="username"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-gray-700 dark:text-white mb-1"
               >
                 Username
               </label>
@@ -132,7 +132,7 @@ export default function Login({ loggedIn, setLoggedIn }: LoginProps) {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="Enter your username"
-                  className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all"
+                  className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all dark:bg-gray-600 dark:text-white"
                   required
                 />
               </div>
@@ -142,7 +142,7 @@ export default function Login({ loggedIn, setLoggedIn }: LoginProps) {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-gray-700 mb-1 dark:text-white"
               >
                 Password
               </label>
@@ -154,7 +154,7 @@ export default function Login({ loggedIn, setLoggedIn }: LoginProps) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
-                  className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all"
+                  className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all dark:bg-gray-600 dark:text-white"
                   required
                 />
               </div>

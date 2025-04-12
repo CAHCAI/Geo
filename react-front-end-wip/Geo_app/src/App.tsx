@@ -74,10 +74,10 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="bg-white">
+    <div className="bg-white dark:bg-black">
       {/* Navbar */}
       <nav className="drop-shadow-lg z-50">
-        <div className="lg:block hidden px-4 bg-gray-100 w-full">
+        <div className="lg:block hidden px-4  w-full">
           <TopNavBar />
         </div>
 
@@ -142,8 +142,8 @@ const App: React.FC = () => {
 
               {/* 🧾 Hamburger opens login sidebar */}
               <Sheet>
-                <SheetTrigger className="hover:bg-black whitespace-nowrap text-white px-2 sm:px-4 py-3 text-sm sm:text-base rounded-md">
-                  <AlignJustify className="text-white" />
+                <SheetTrigger className="hover:bg-black  whitespace-nowrap text-white px-2 sm:px-4 py-3 text-sm sm:text-base rounded-md">
+                  <AlignJustify className="text-white " />
                 </SheetTrigger>
                 <SheetContent className="bg-white p-0 w-full sm:w-[550px]">
                   <Login setLoggedIn={setLoggedIn} loggedIn={loggedIn} />
@@ -155,11 +155,11 @@ const App: React.FC = () => {
       </nav>
 
       {/* Main Content */}
-      <main className="container mx-auto flex-grow p-4">
+      <main className="container mx-auto flex-grow p-4 ">
         {renderContent()}
       </main>
 
-      <footer className="px-4 bg-gray-50 w-full border-t border-gray-300">
+      <footer className="px-4  w-full border-t border-gray-300 ">
         <Footer_2 />
       </footer>
     </div>

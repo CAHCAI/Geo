@@ -6,6 +6,7 @@ import "./index.css";
 // Import local fonts
 import "./fonts/GeistMonoVF.woff";
 import "./fonts/GeistVF.woff";
+import { ThemeProvider } from "./utils/ThemeContext";
 
 // Main Root Layout Component
 const RootLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -15,10 +16,12 @@ const RootLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   }, []);
 
   return (
-    <html lang="en">
-      <body className="">
+    <html lang="en" className=" scroll-smooth">
+      <body className=" bg-white dark:bg-black min-h-screen">
+        <ThemeProvider>
         {/* Main Content */}
-        <main className="">{children}</main>
+          <main>{children}</main>
+        </ThemeProvider>
       </body>
     </html>
   );

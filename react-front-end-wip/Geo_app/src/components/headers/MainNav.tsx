@@ -1,6 +1,6 @@
 const MainNav = () => {
   return (
-    <div className="bg-blue-800 w-full">
+    <div className="bg-blue-800 dark:bg-black w-full">
       <div className=" flex items-center w-full max-w-screen-xl mx-auto">
         <div className="flex justify-between text-white text-base font-bold w-full items-center ">
           <a

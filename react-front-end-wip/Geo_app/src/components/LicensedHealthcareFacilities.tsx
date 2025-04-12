@@ -93,7 +93,7 @@ const LicensedHealthcareFacilities: React.FC = () => {
 
   return (
     <main className="container mx-auto pt-5 px-4 space-y-4">
-      <section className="border border-gray-300 rounded-lg p-4 shadow-md bg-white overflow-auto">
+      <section className="border border-gray-300 dark:bg-gray-800 rounded-lg p-4 shadow-md bg-white overflow-auto">
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
@@ -165,7 +165,7 @@ const LicensedHealthcareFacilities: React.FC = () => {
               >
                 Previous
               </Button>
-              <span className="text-sm font-medium">
+              <span className="text-sm font-medium dark:text-gray-400">
                 Page {currentPage} of {totalPages}
               </span>
               <Button
