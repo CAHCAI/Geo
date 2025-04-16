@@ -19,6 +19,102 @@ const sections = [
       { id: "hps-response", label: "Response" },
     ],
   },
+  {
+    id: "testcache",
+    label: "TestCache",
+    subsections: [
+      { id: "testcache-parameters", label: "Parameters" },
+      { id: "testcache-response", label: "Response" },
+    ],
+  },
+  {
+    id: "listtables",
+    label: "ListTables",
+    subsections: [
+      { id: "listtables-parameters", label: "Parameters" },
+      { id: "listtables-response", label: "Response" },
+    ],
+  },
+  {
+    id: "alldistrictdata",
+    label: "AllDistrictData",
+    subsections: [
+      { id: "alldistrictdata-parameters", label: "Parameters" },
+      { id: "alldistrictdata-response", label: "Response" },
+    ],
+  },
+  {
+    id: "testapi",
+    label: "Test",
+    subsections: [
+      { id: "testapi-parameters", label: "Parameters" },
+      { id: "testapi-response", label: "Response" },
+    ],
+  },
+  {
+    id: "devcredentials",
+    label: "DevCredentials",
+    subsections: [
+      { id: "devcredentials-parameters", label: "Parameters" },
+      { id: "devcredentials-response", label: "Response" },
+    ],
+  },
+  {
+    id: "overridelocations",
+    label: "OverrideLocations",
+    subsections: [
+      { id: "overridelocations-parameters", label: "Parameters" },
+      { id: "overridelocations-response", label: "Response" },
+    ],
+  },
+  {
+    id: "manualoverrides",
+    label: "ManualOverrides",
+    subsections: [
+      { id: "manualoverrides-parameters", label: "Parameters" },
+      { id: "manualoverrides-response", label: "Response" },
+    ],
+  },
+  {
+    id: "manualoverridesid",
+    label: "ManualOverrides/{override_id}",
+    subsections: [
+      { id: "manualoverridesid-parameters", label: "Parameters" },
+      { id: "manualoverridesid-response", label: "Response" },
+    ],
+  },
+  {
+    id: "activesessions",
+    label: "ActiveSessions",
+    subsections: [
+      { id: "activesessions-parameters", label: "Parameters" },
+      { id: "activesessions-response", label: "Response" },
+    ],
+  },
+  {
+    id: "adminerrors",
+    label: "AdminErrors",
+    subsections: [
+      { id: "adminerrors-parameters", label: "Parameters" },
+      { id: "adminerrors-response", label: "Response" },
+    ],
+  },
+  {
+    id: "apikeys",
+    label: "ApiKeys",
+    subsections: [
+      { id: "apikeys-parameters", label: "Parameters" },
+      { id: "apikeys-response", label: "Response" },
+    ],
+  },
+  {
+    id: "servicestatus",
+    label: "ServiceStatus",
+    subsections: [
+      { id: "servicestatus-parameters", label: "Parameters" },
+      { id: "servicestatus-response", label: "Response" },
+    ],
+  }
 ];
 
 const APIReference: React.FC = () => {
@@ -32,6 +128,18 @@ const APIReference: React.FC = () => {
   const [showSidebar, setShowSidebar] = useState(true); // Toggle for collapsible sidebar
   const [apiSchema, setApiSchema] = useState<any>(null);
   const [exampleData, setExampleData] = useState<any>(null);
+  const [testCacheData, setTestCacheData] = useState<any>(null);
+  const [listTablesData, setListTablesData] = useState<any>(null);
+  const [allDistrictData, setAllDistrictData] = useState<any>(null);
+  const [testapiData, setTestapiData] = useState<any>(null);
+  const [devcredentialsData, setDevcredentialsData] = useState<any>(null);
+  const [overridelocationsData, setOverridelocationsData] = useState<any>(null);
+  const [manualoverridesData, setManualoverridesData] = useState<any>(null);
+  const [manualoverridesidData, setManualoverridesidData] = useState<any>(null);
+  const [activesessionsData, setActivesessionsData] = useState<any>(null);
+  const [adminerrorsData, setAdminerrorsData] = useState<any>(null);
+  const [apikeysData, setApikeysData] = useState<any>(null);
+  const [servicestatusData, setServicestatusData] = useState<any>(null);
 
 useEffect(() => {
   fetch("/api/openapi.json")
@@ -64,12 +172,193 @@ useEffect(() => {
     });
 }, []);
 
+useEffect(() => {
+  const API_KEY = import.meta.env.VITE_API_KEY;
+  fetch("/api/test-cache", {
+    headers: {
+      "X-API-KEY": API_KEY,
+    },
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      setTestCacheData(data);
+    })
+    .catch((error) => {
+      console.error("Error fetching test-cache data:", error);
+    });
+}, []);
+
+useEffect(() => {
+  const API_KEY = import.meta.env.VITE_API_KEY;
+  fetch("/api/list-tables", {
+    headers: {
+      "X-API-KEY": API_KEY,
+    },
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      setListTablesData(data);
+    })
+    .catch((error) => {
+      console.error("Error fetching list-tables data:", error);
+    });
+}, []);
+
+useEffect(() => {
+  const API_KEY = import.meta.env.VITE_API_KEY;
+  fetch("/api/all-district-data", {
+    headers: {
+      "X-API-KEY": API_KEY,
+    },
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      setAllDistrictData(data);
+    })
+    .catch((error) => {
+      console.error("Error fetching all-district-data:", error);
+    });
+}, []);
+
+useEffect(() => {
+  const API_KEY = import.meta.env.VITE_API_KEY;
+  fetch("/api/test", {
+    headers: {
+      "X-API-KEY": API_KEY,
+    },
+  })
+    .then((res) => res.json())
+    .then((data) => setTestapiData(data))
+    .catch((err) => console.error("Error fetching /api/test:", err));
+}, []);
+
+useEffect(() => {
+  const API_KEY = import.meta.env.VITE_API_KEY;
+  fetch("/api/dev-credentials", {
+    headers: {
+      "X-API-KEY": API_KEY,
+    },
+  })
+    .then((res) => res.json())
+    .then((data) => setDevcredentialsData(data))
+    .catch((err) => console.error("Error fetching /api/dev-credentials:", err));
+}, []);
+
+useEffect(() => {
+  const API_KEY = import.meta.env.VITE_API_KEY;
+  fetch("/api/override-locations", {
+    headers: {
+      "X-API-KEY": API_KEY,
+    },
+  })
+    .then((res) => res.json())
+    .then((data) => setOverridelocationsData(data))
+    .catch((err) => console.error("Error fetching /api/override-locations:", err));
+}, []);
+
+useEffect(() => {
+  const API_KEY = import.meta.env.VITE_API_KEY;
+  fetch("/api/manual-overrides", {
+    headers: {
+      "X-API-KEY": API_KEY,
+    },
+  })
+    .then((res) => res.json())
+    .then((data) => setManualoverridesData(data))
+    .catch((err) => console.error("Error fetching /api/manual-overrides:", err));
+}, []);
+
+useEffect(() => {
+  const API_KEY = import.meta.env.VITE_API_KEY;
+  fetch("/api/manual-overrides/1", {
+    // Example for {override_id} set to 123
+    headers: {
+      "X-API-KEY": API_KEY,
+    },
+  })
+    .then((res) => res.json())
+    .then((data) => setManualoverridesidData(data))
+    .catch((err) => console.error("Error fetching /api/manual-overrides/123:", err));
+}, []);
+
+useEffect(() => {
+  const API_KEY = import.meta.env.VITE_API_KEY;
+  fetch("/api/active-sessions", {
+    headers: {
+      "X-API-KEY": API_KEY,
+    },
+  })
+    .then((res) => res.json())
+    .then((data) => setActivesessionsData(data))
+    .catch((err) => console.error("Error fetching /api/active-sessions:", err));
+}, []);
+
+useEffect(() => {
+  const API_KEY = import.meta.env.VITE_API_KEY;
+  fetch("/api/admin_errors", {
+    headers: {
+      "X-API-KEY": API_KEY,
+    },
+  })
+    .then((res) => res.json())
+    .then((data) => setAdminerrorsData(data))
+    .catch((err) => console.error("Error fetching /api/admin_errors:", err));
+}, []);
+
+useEffect(() => {
+  const API_KEY = import.meta.env.VITE_API_KEY;
+  fetch("/api/api-keys", {
+    headers: {
+      "X-API-KEY": API_KEY,
+    },
+  })
+    .then((res) => res.json())
+    .then((data) => setApikeysData(data))
+    .catch((err) => console.error("Error fetching /api/api-keys:", err));
+}, []);
+
+useEffect(() => {
+  const API_KEY = import.meta.env.VITE_API_KEY;
+  fetch("/api/service_status", {
+    headers: {
+      "X-API-KEY": API_KEY,
+    },
+  })
+    .then((res) => res.json())
+    .then((data) => setServicestatusData(data))
+    .catch((err) => console.error("Error fetching /api/service_status:", err));
+}, []);
+
   // For quickly finding the main parent of each subsection
   const PARENT_SECTION: Record<string, string> = {
     parameters: "geocode",
     response: "geocode",
     "hps-parameters": "gethpsdesignations",
     "hps-response": "gethpsdesignations",
+    "testcache-parameters": "testcache",
+    "testcache-response": "testcache",
+    "listtables-parameters": "listtables",
+    "listtables-response": "listtables",
+    "alldistrictdata-parameters": "alldistrictdata",
+    "alldistrictdata-response": "alldistrictdata",
+    "testapi-parameters": "testapi",
+    "testapi-response": "testapi",
+    "devcredentials-parameters": "devcredentials",
+    "devcredentials-response": "devcredentials",
+    "overridelocations-parameters": "overridelocations",
+    "overridelocations-response": "overridelocations",
+    "manualoverrides-parameters": "manualoverrides",
+    "manualoverrides-response": "manualoverrides",
+    "manualoverridesid-parameters": "manualoverridesid",
+    "manualoverridesid-response": "manualoverridesid",
+    "activesessions-parameters": "activesessions",
+    "activesessions-response": "activesessions",
+    "adminerrors-parameters": "adminerrors",
+    "adminerrors-response": "adminerrors",
+    "apikeys-parameters": "apikeys",
+    "apikeys-response": "apikeys",
+    "servicestatus-parameters": "servicestatus",
+    "servicestatus-response": "servicestatus",
   };
 
   // IntersectionObserver highlights the active tab
@@ -384,6 +673,574 @@ useEffect(() => {
           {exampleData ? JSON.stringify(exampleData, null, 2) : "Loading example..."}
           </pre>
         </section>
+
+        <section
+          id="testcache"
+          ref={(el) =>
+            (sectionRefs.current["testcache"] = el as HTMLDivElement | null)
+          }
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
+        >
+          <h2 className="text-2xl font-bold text-blue-600 mb-2">TestCache</h2>
+          <p className="text-gray-700 dark:text-gray-300">
+            This endpoint demonstrates testing a caching mechanism.
+          </p>
+          <h3 className="text-xl font-semibold mt-4 dark:text-white">
+            Example API Request
+          </h3>
+          <code className="block bg-gray-200 p-3 rounded-lg text-sm break-words overflow-x-auto w-full">
+            http://localhost:8000/api/test-cache
+          </code>
+        </section>
+
+        <section
+          id="testcache-parameters"
+          ref={(el) =>
+            (sectionRefs.current["testcache-parameters"] =
+              el as HTMLDivElement | null)
+          }
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
+        >
+          <h2 className="text-2xl font-bold text-blue-600 mb-2">Parameters</h2>
+          <ul className="list-disc ml-6 space-y-2 text-gray-700 dark:text-gray-300">
+            <li>
+              <strong>key (required):</strong> An API key must be provided to
+              use this service.
+            </li>
+          </ul>
+        </section>
+
+        <section
+          id="testcache-response"
+          ref={(el) =>
+            (sectionRefs.current["testcache-response"] =
+              el as HTMLDivElement | null)
+          }
+          className="p-6 bg-white shadow-md rounded-lg dark:bg-gray-800"
+        >
+          <h2 className="text-xl font-bold text-blue-500 mb-2">Response</h2>
+          <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto text-sm mt-2">
+{testCacheData ? JSON.stringify(testCacheData, null, 2) : "Loading TestCache data..."}
+          </pre>
+        </section>
+
+        <section
+          id="listtables"
+          ref={(el) =>
+            (sectionRefs.current["listtables"] = el as HTMLDivElement | null)
+          }
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
+        >
+          <h2 className="text-2xl font-bold text-blue-600 mb-2">ListTables</h2>
+          <p className="text-gray-700 dark:text-gray-300">
+            This endpoint provides a list of tables from the data source.
+          </p>
+          <h3 className="text-xl font-semibold mt-4 dark:text-white">
+            Example API Request
+          </h3>
+          <code className="block bg-gray-200 p-3 rounded-lg text-sm break-words overflow-x-auto w-full">
+            http://localhost:8000/api/list-tables
+          </code>
+        </section>
+
+        <section
+          id="listtables-parameters"
+          ref={(el) =>
+            (sectionRefs.current["listtables-parameters"] =
+              el as HTMLDivElement | null)
+          }
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
+        >
+          <h2 className="text-2xl font-bold text-blue-600 mb-2">Parameters</h2>
+          <ul className="list-disc ml-6 space-y-2 text-gray-700 dark:text-gray-300">
+            <li>
+              <strong>key (required):</strong> An API key must be provided to
+              use this service.
+            </li>
+          </ul>
+        </section>
+
+        <section
+          id="listtables-response"
+          ref={(el) =>
+            (sectionRefs.current["listtables-response"] =
+              el as HTMLDivElement | null)
+          }
+          className="p-6 bg-white shadow-md rounded-lg dark:bg-gray-800"
+        >
+          <h2 className="text-xl font-bold text-blue-500 mb-2">Response</h2>
+          <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto text-sm mt-2">
+          {listTablesData ? JSON.stringify(listTablesData, null, 2) : "Loading ListTables data..."}
+          </pre>
+        </section>
+
+        <section
+          id="alldistrictdata"
+          ref={(el) =>
+            (sectionRefs.current["alldistrictdata"] =
+              el as HTMLDivElement | null)
+          }
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
+        >
+          <h2 className="text-2xl font-bold text-blue-600 mb-2">
+            AllDistrictData
+          </h2>
+          <p className="text-gray-700 dark:text-gray-300">
+            This endpoint returns all district-level data.
+          </p>
+          <h3 className="text-xl font-semibold mt-4 dark:text-white">
+            Example API Request
+          </h3>
+          <code className="block bg-gray-200 p-3 rounded-lg text-sm break-words overflow-x-auto w-full">
+            http://localhost:8000/api/all-district-data
+          </code>
+        </section>
+
+        <section
+          id="alldistrictdata-parameters"
+          ref={(el) =>
+            (sectionRefs.current["alldistrictdata-parameters"] =
+              el as HTMLDivElement | null)
+          }
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
+        >
+          <h2 className="text-2xl font-bold text-blue-600 mb-2">Parameters</h2>
+          <ul className="list-disc ml-6 space-y-2 text-gray-700 dark:text-gray-300">
+            <li>
+              <strong>key (required):</strong> An API key must be provided to
+              use this service.
+            </li>
+          </ul>
+        </section>
+
+        <section
+          id="alldistrictdata-response"
+          ref={(el) =>
+            (sectionRefs.current["alldistrictdata-response"] =
+              el as HTMLDivElement | null)
+          }
+          className="p-6 bg-white shadow-md rounded-lg dark:bg-gray-800"
+        >
+          <h2 className="text-xl font-bold text-blue-500 mb-2">Response</h2>
+          <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto text-sm mt-2">
+          {allDistrictData ? JSON.stringify(allDistrictData, null, 2) : "Loading AllDistrictData..."}
+          </pre>
+        </section>
+
+        <section
+          id="testapi"
+          ref={(el) => (sectionRefs.current["testapi"] = el)}
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
+        >
+          <h2 className="text-2xl font-bold text-blue-600 mb-2">Test</h2>
+          <p className="text-gray-700 dark:text-gray-300">
+            This endpoint illustrates a simple test call.
+          </p>
+          <h3 className="text-xl font-semibold mt-4 dark:text-white">
+            Example API Request
+          </h3>
+          <code className="block bg-gray-200 p-3 rounded-lg text-sm break-words overflow-x-auto w-full">
+            http://localhost:8000/api/test
+          </code>
+        </section>
+
+        <section
+          id="testapi-parameters"
+          ref={(el) => (sectionRefs.current["testapi-parameters"] = el)}
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
+        >
+          <h2 className="text-2xl font-bold text-blue-600 mb-2">Parameters</h2>
+          <ul className="list-disc ml-6 space-y-2 text-gray-700 dark:text-gray-300">
+            <li>
+              <strong>key (required):</strong> API key for internal usage.
+            </li>
+          </ul>
+        </section>
+
+        <section
+          id="testapi-response"
+          ref={(el) => (sectionRefs.current["testapi-response"] = el)}
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
+        >
+          <h2 className="text-xl font-bold text-blue-500 mb-2">Response</h2>
+          <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto text-sm mt-2">
+{testapiData ? JSON.stringify(testapiData, null, 2) : "Loading Test API data..."}
+          </pre>
+        </section>
+
+        <section
+          id="devcredentials"
+          ref={(el) => (sectionRefs.current["devcredentials"] = el)}
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
+        >
+          <h2 className="text-2xl font-bold text-blue-600 mb-2">
+            DevCredentials
+          </h2>
+          <p className="text-gray-700 dark:text-gray-300">
+            This endpoint retrieves developer credentials for internal usage.
+          </p>
+          <h3 className="text-xl font-semibold mt-4 dark:text-white">
+            Example API Request
+          </h3>
+          <code className="block bg-gray-200 p-3 rounded-lg text-sm break-words overflow-x-auto w-full">
+            http://localhost:8000/api/dev-credentials
+          </code>
+        </section>
+
+        <section
+          id="devcredentials-parameters"
+          ref={(el) =>
+            (sectionRefs.current["devcredentials-parameters"] = el)
+          }
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
+        >
+          <h2 className="text-2xl font-bold text-blue-600 mb-2">Parameters</h2>
+          <ul className="list-disc ml-6 space-y-2 text-gray-700 dark:text-gray-300">
+            <li>
+              <strong>key (required):</strong> API key for internal usage.
+            </li>
+          </ul>
+        </section>
+
+        <section
+          id="devcredentials-response"
+          ref={(el) =>
+            (sectionRefs.current["devcredentials-response"] = el)
+          }
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
+        >
+          <h2 className="text-xl font-bold text-blue-500 mb-2">Response</h2>
+          <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto text-sm mt-2">
+{devcredentialsData ? JSON.stringify(devcredentialsData, null, 2) : "Loading DevCredentials data..."}
+          </pre>
+        </section>
+
+        <section
+          id="overridelocations"
+          ref={(el) => (sectionRefs.current["overridelocations"] = el)}
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
+        >
+          <h2 className="text-2xl font-bold text-blue-600 mb-2">
+            OverrideLocations
+          </h2>
+          <p className="text-gray-700 dark:text-gray-300">
+            This endpoint retrieves override location data.
+          </p>
+          <h3 className="text-xl font-semibold mt-4 dark:text-white">
+            Example API Request
+          </h3>
+          <code className="block bg-gray-200 p-3 rounded-lg text-sm break-words overflow-x-auto w-full">
+            http://localhost:8000/api/override-locations
+          </code>
+        </section>
+
+        <section
+          id="overridelocations-parameters"
+          ref={(el) =>
+            (sectionRefs.current["overridelocations-parameters"] = el)
+          }
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
+        >
+          <h2 className="text-2xl font-bold text-blue-600 mb-2">Parameters</h2>
+          <ul className="list-disc ml-6 space-y-2 text-gray-700 dark:text-gray-300">
+            <li>
+              <strong>key (required):</strong> API key for internal usage.
+            </li>
+          </ul>
+        </section>
+
+        <section
+          id="overridelocations-response"
+          ref={(el) =>
+            (sectionRefs.current["overridelocations-response"] = el)
+          }
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
+        >
+          <h2 className="text-xl font-bold text-blue-500 mb-2">Response</h2>
+          <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto text-sm mt-2">
+{overridelocationsData ? JSON.stringify(overridelocationsData, null, 2) : "Loading OverrideLocations data..."}
+          </pre>
+        </section>
+
+        <section
+          id="manualoverrides"
+          ref={(el) => (sectionRefs.current["manualoverrides"] = el)}
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
+        >
+          <h2 className="text-2xl font-bold text-blue-600 mb-2">
+            ManualOverrides
+          </h2>
+          <p className="text-gray-700 dark:text-gray-300">
+            This endpoint retrieves all manual overrides.
+          </p>
+          <h3 className="text-xl font-semibold mt-4 dark:text-white">
+            Example API Request
+          </h3>
+          <code className="block bg-gray-200 p-3 rounded-lg text-sm break-words overflow-x-auto w-full">
+            http://localhost:8000/api/manual-overrides
+          </code>
+        </section>
+
+        <section
+          id="manualoverrides-parameters"
+          ref={(el) =>
+            (sectionRefs.current["manualoverrides-parameters"] = el)
+          }
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
+        >
+          <h2 className="text-2xl font-bold text-blue-600 mb-2">Parameters</h2>
+          <ul className="list-disc ml-6 space-y-2 text-gray-700 dark:text-gray-300">
+            <li>
+              <strong>key (required):</strong> API key for internal usage.
+            </li>
+          </ul>
+        </section>
+
+        <section
+          id="manualoverrides-response"
+          ref={(el) =>
+            (sectionRefs.current["manualoverrides-response"] = el)
+          }
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
+        >
+          <h2 className="text-xl font-bold text-blue-500 mb-2">Response</h2>
+          <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto text-sm mt-2">
+{manualoverridesData ? JSON.stringify(manualoverridesData, null, 2) : "Loading ManualOverrides data..."}
+          </pre>
+        </section>
+
+        <section
+          id="manualoverridesid"
+          ref={(el) => (sectionRefs.current["manualoverridesid"] = el)}
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
+        >
+          <h2 className="text-2xl font-bold text-blue-600 mb-2">
+            ManualOverrides/{`{override_id}`}
+          </h2>
+          <p className="text-gray-700 dark:text-gray-300">
+            This endpoint retrieves a single manual override by ID.
+          </p>
+          <h3 className="text-xl font-semibold mt-4 dark:text-white">
+            Example API Request
+          </h3>
+          <code className="block bg-gray-200 p-3 rounded-lg text-sm break-words overflow-x-auto w-full">
+            http://localhost:8000/api/manual-overrides/123
+          </code>
+        </section>
+
+        <section
+          id="manualoverridesid-parameters"
+          ref={(el) =>
+            (sectionRefs.current["manualoverridesid-parameters"] = el)
+          }
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
+        >
+          <h2 className="text-2xl font-bold text-blue-600 mb-2">Parameters</h2>
+          <ul className="list-disc ml-6 space-y-2 text-gray-700 dark:text-gray-300">
+            <li>
+              <strong>override_id (required):</strong> The ID to fetch.
+            </li>
+            <li>
+              <strong>key (required):</strong> API key for internal usage.
+            </li>
+          </ul>
+        </section>
+
+        <section
+          id="manualoverridesid-response"
+          ref={(el) =>
+            (sectionRefs.current["manualoverridesid-response"] = el)
+          }
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
+        >
+          <h2 className="text-xl font-bold text-blue-500 mb-2">Response</h2>
+          <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto text-sm mt-2">
+{manualoverridesidData ? JSON.stringify(manualoverridesidData, null, 2) : "Loading ManualOverrides/{override_id} data..."}
+          </pre>
+        </section>
+
+        <section
+          id="activesessions"
+          ref={(el) => (sectionRefs.current["activesessions"] = el)}
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
+        >
+          <h2 className="text-2xl font-bold text-blue-600 mb-2">
+            ActiveSessions
+          </h2>
+          <p className="text-gray-700 dark:text-gray-300">
+            This endpoint retrieves all active sessions.
+          </p>
+          <h3 className="text-xl font-semibold mt-4 dark:text-white">
+            Example API Request
+          </h3>
+          <code className="block bg-gray-200 p-3 rounded-lg text-sm break-words overflow-x-auto w-full">
+            http://localhost:8000/api/active-sessions
+          </code>
+        </section>
+
+        <section
+          id="activesessions-parameters"
+          ref={(el) =>
+            (sectionRefs.current["activesessions-parameters"] = el)
+          }
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
+        >
+          <h2 className="text-2xl font-bold text-blue-600 mb-2">Parameters</h2>
+          <ul className="list-disc ml-6 space-y-2 text-gray-700 dark:text-gray-300">
+            <li>
+              <strong>key (required):</strong> API key for internal usage.
+            </li>
+          </ul>
+        </section>
+
+        <section
+          id="activesessions-response"
+          ref={(el) =>
+            (sectionRefs.current["activesessions-response"] = el)
+          }
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
+        >
+          <h2 className="text-xl font-bold text-blue-500 mb-2">Response</h2>
+          <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto text-sm mt-2">
+{activesessionsData ? JSON.stringify(activesessionsData, null, 2) : "Loading ActiveSessions data..."}
+          </pre>
+        </section>
+
+        <section
+          id="adminerrors"
+          ref={(el) => (sectionRefs.current["adminerrors"] = el)}
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
+        >
+          <h2 className="text-2xl font-bold text-blue-600 mb-2">AdminErrors</h2>
+          <p className="text-gray-700 dark:text-gray-300">
+            This endpoint retrieves error logs for administrators.
+          </p>
+          <h3 className="text-xl font-semibold mt-4 dark:text-white">
+            Example API Request
+          </h3>
+          <code className="block bg-gray-200 p-3 rounded-lg text-sm break-words overflow-x-auto w-full">
+            http://localhost:8000/api/admin_errors
+          </code>
+        </section>
+
+        <section
+          id="adminerrors-parameters"
+          ref={(el) => (sectionRefs.current["adminerrors-parameters"] = el)}
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
+        >
+          <h2 className="text-2xl font-bold text-blue-600 mb-2">Parameters</h2>
+          <ul className="list-disc ml-6 space-y-2 text-gray-700 dark:text-gray-300">
+            <li>
+              <strong>key (required):</strong> API key for internal usage.
+            </li>
+          </ul>
+        </section>
+
+        <section
+          id="adminerrors-response"
+          ref={(el) => (sectionRefs.current["adminerrors-response"] = el)}
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
+        >
+          <h2 className="text-xl font-bold text-blue-500 mb-2">Response</h2>
+          <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto text-sm mt-2">
+{adminerrorsData ? JSON.stringify(adminerrorsData, null, 2) : "Loading AdminErrors data..."}
+          </pre>
+        </section>
+
+        <section
+          id="apikeys"
+          ref={(el) => (sectionRefs.current["apikeys"] = el)}
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
+        >
+          <h2 className="text-2xl font-bold text-blue-600 mb-2">ApiKeys</h2>
+          <p className="text-gray-700 dark:text-gray-300">
+            This endpoint retrieves a list of existing API keys.
+          </p>
+          <h3 className="text-xl font-semibold mt-4 dark:text-white">
+            Example API Request
+          </h3>
+          <code className="block bg-gray-200 p-3 rounded-lg text-sm break-words overflow-x-auto w-full">
+            http://localhost:8000/api/api-keys
+          </code>
+        </section>
+
+        <section
+          id="apikeys-parameters"
+          ref={(el) => (sectionRefs.current["apikeys-parameters"] = el)}
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
+        >
+          <h2 className="text-2xl font-bold text-blue-600 mb-2">Parameters</h2>
+          <ul className="list-disc ml-6 space-y-2 text-gray-700 dark:text-gray-300">
+            <li>
+              <strong>key (required):</strong> API key for internal usage.
+            </li>
+          </ul>
+        </section>
+
+        <section
+          id="apikeys-response"
+          ref={(el) => (sectionRefs.current["apikeys-response"] = el)}
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
+        >
+          <h2 className="text-xl font-bold text-blue-500 mb-2">Response</h2>
+          <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto text-sm mt-2">
+          {`[
+  {
+    "key": "a8943nj9wuwhc98whin23989823nc399578hubc73478hf982hbx932bx87xb2x",
+    "app_name": "Googleee",
+    "usage_count": 5
+  }
+]`}
+          </pre>
+        </section>
+
+        <section
+          id="servicestatus"
+          ref={(el) => (sectionRefs.current["servicestatus"] = el)}
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
+        >
+          <h2 className="text-2xl font-bold text-blue-600 mb-2">
+            ServiceStatus
+          </h2>
+          <p className="text-gray-700 dark:text-gray-300">
+            This endpoint returns the current status of the service.
+          </p>
+          <h3 className="text-xl font-semibold mt-4 dark:text-white">
+            Example API Request
+          </h3>
+          <code className="block bg-gray-200 p-3 rounded-lg text-sm break-words overflow-x-auto w-full">
+            http://localhost:8000/api/service_status
+          </code>
+        </section>
+
+        <section
+          id="servicestatus-parameters"
+          ref={(el) =>
+            (sectionRefs.current["servicestatus-parameters"] = el)
+          }
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
+        >
+          <h2 className="text-2xl font-bold text-blue-600 mb-2">Parameters</h2>
+          <ul className="list-disc ml-6 space-y-2 text-gray-700 dark:text-gray-300">
+            <li>
+              <strong>key (required):</strong> API key for internal usage.
+            </li>
+          </ul>
+        </section>
+
+        <section
+          id="servicestatus-response"
+          ref={(el) =>
+            (sectionRefs.current["servicestatus-response"] = el)
+          }
+          className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
+        >
+          <h2 className="text-xl font-bold text-blue-500 mb-2">Response</h2>
+          <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto text-sm mt-2">
+{servicestatusData ? JSON.stringify(servicestatusData, null, 2) : "Loading ServiceStatus data..."}
+          </pre>
+        </section>
+
       </div>
       {/* Back to Top Button */}
       <button
