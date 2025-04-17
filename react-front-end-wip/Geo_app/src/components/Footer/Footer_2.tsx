@@ -9,18 +9,20 @@ import {
 
 const Footer_2 = () => {
   return (
-    <div className="max-w-screen-xl mx-auto pb-20">
+    <div className="max-w-screen-xl mx-auto pb-20 bg-white dark:bg-black">
       {/* ========== top section start here==========  */}
       <div className="py-10 px-6">
         <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 text-sm text-gray-800">
           {/* Services */}
           <div>
-            <h3 className="font-bold text-blue-900 mb-3">Services</h3>
-            <ul className="space-y-2">
+            <h3 className="font-bold text-blue-900 dark:text-white mb-3">
+              Services
+            </h3>
+            <ul className="space-y-2 ">
               <li>
                 <a
                   href="https://hcai.ca.gov/data/submit-data/"
-                  className="hover:underline text-blue-900"
+                  className="hover:underline text-blue-900 dark:text-gray-300"
                 >
                   Submit Data
                 </a>
@@ -28,7 +30,7 @@ const Footer_2 = () => {
               <li>
                 <a
                   href="https://hcai.ca.gov/workforce/financial-assistance/loan-repayment/"
-                  className="hover:underline text-blue-900"
+                  className="hover:underline text-blue-900 dark:text-gray-300"
                 >
                   Loan Repayment Programs
                 </a>
@@ -36,7 +38,7 @@ const Footer_2 = () => {
               <li>
                 <a
                   href="https://hcai.ca.gov/workforce/financial-assistance/scholarships/"
-                  className="hover:underline text-blue-900"
+                  className="hover:underline text-blue-900 dark:text-gray-300"
                 >
                   Scholarships
                 </a>
@@ -44,7 +46,7 @@ const Footer_2 = () => {
               <li>
                 <a
                   href="https://hcai.ca.gov/workforce/financial-assistance/grants/"
-                  className="hover:underline text-blue-900"
+                  className="hover:underline text-blue-900 dark:text-gray-300"
                 >
                   Grants for Organizations
                 </a>
@@ -52,7 +54,7 @@ const Footer_2 = () => {
               <li>
                 <a
                   href="https://hcai.ca.gov/hearing-office/"
-                  className="hover:underline text-blue-900"
+                  className="hover:underline text-blue-900 dark:text-gray-300"
                 >
                   Penalty Appeals
                 </a>
@@ -62,12 +64,14 @@ const Footer_2 = () => {
 
           {/* Data Submissions */}
           <div>
-            <h3 className="font-bold text-blue-900 mb-3">Data Submissions</h3>
+            <h3 className="font-bold text-blue-900 mb-3 dark:text-white">
+              Data Submissions
+            </h3>
             <ul className="space-y-2">
               <li>
                 <a
                   href="https://hcai.ca.gov/data/submit-data/patient-data/"
-                  className="hover:underline text-blue-900"
+                  className="hover:underline text-blue-900 dark:text-gray-300"
                 >
                   Patient-Level Administrative Data
                 </a>
@@ -75,7 +79,7 @@ const Footer_2 = () => {
               <li>
                 <a
                   href="https://hcai.ca.gov/data/submit-data/facility-utilization-data/"
-                  className="hover:underline text-blue-900"
+                  className="hover:underline text-blue-900 dark:text-gray-300"
                 >
                   Health Facility Utilizations
                 </a>
@@ -83,7 +87,7 @@ const Footer_2 = () => {
               <li>
                 <a
                   href="https://hcai.ca.gov/data/submit-data/financial-reporting/"
-                  className="hover:underline text-blue-900"
+                  className="hover:underline text-blue-900 dark:text-gray-300"
                 >
                   Hospital & LTC Financials
                 </a>
@@ -91,7 +95,7 @@ const Footer_2 = () => {
               <li>
                 <a
                   href="https://hcai.ca.gov/data/submit-data/coronary-artery-bypass-grafts/"
-                  className="hover:underline text-blue-900"
+                  className="hover:underline text-blue-900 dark:text-gray-300"
                 >
                   Coronary Artery Bypass Graft Surgeries
                 </a>
@@ -99,7 +103,7 @@ const Footer_2 = () => {
               <li>
                 <a
                   href="https://hcai.ca.gov/data/cost-transparency/hospital-fair-pricing-policies"
-                  className="hover:underline text-blue-900"
+                  className="hover:underline text-blue-900 dark:text-gray-300"
                 >
                   Healthcare Financial Assistance Policies
                 </a>
@@ -107,7 +111,7 @@ const Footer_2 = () => {
               <li>
                 <a
                   href="https://hcai.ca.gov/data/cost-transparency/hospital-chargemasters/"
-                  className="hover:underline text-blue-900"
+                  className="hover:underline text-blue-900 dark:text-gray-300"
                 >
                   Hospital Chargemasters
                 </a>
@@ -117,14 +121,14 @@ const Footer_2 = () => {
 
           {/* CA Healthcare Infrastructure */}
           <div>
-            <h3 className="font-bold text-blue-900 mb-3">
+            <h3 className="font-bold text-blue-900 mb-3 dark:text-white">
               CA Healthcare Infrastructure
             </h3>
             <ul className="space-y-2">
               <li>
                 <a
                   href="https://hcai.ca.gov/facility-finder/"
-                  className="hover:underline text-blue-900"
+                  className="hover:underline text-blue-900 dark:text-gray-300"
                 >
                   All Facilities
                 </a>
@@ -132,7 +136,7 @@ const Footer_2 = () => {
               <li>
                 <a
                   href="https://hcai.ca.gov/facilities/building-safety/facility-detail/"
-                  className="hover:underline text-blue-900"
+                  className="hover:underline text-blue-900 dark:text-gray-300"
                 >
                   Healthcare Facility Detail
                 </a>
@@ -140,7 +144,7 @@ const Footer_2 = () => {
               <li>
                 <a
                   href="https://hcai.ca.gov/facilities/building-safety/seismic-compliance-and-safety/"
-                  className="hover:underline text-blue-900"
+                  className="hover:underline text-blue-900 dark:text-gray-300"
                 >
                   Seismic Compliance and Safety
                 </a>
@@ -148,7 +152,7 @@ const Footer_2 = () => {
               <li>
                 <a
                   href="https://hcai.ca.gov/data/cost-transparency/hospital-community-benefit-plans/"
-                  className="hover:underline text-blue-900"
+                  className="hover:underline text-blue-900 dark:text-gray-300"
                 >
                   Hospital Community Benefit Plans
                 </a>
@@ -156,7 +160,7 @@ const Footer_2 = () => {
               <li>
                 <a
                   href="https://hcai.ca.gov/workforce/health-workforce/california-primary-care-office/"
-                  className="hover:underline text-blue-900"
+                  className="hover:underline text-blue-900 dark:text-gray-300"
                 >
                   California Primary Care Office
                 </a>
@@ -166,14 +170,14 @@ const Footer_2 = () => {
 
           {/* Public Transparency */}
           <div>
-            <h3 className="font-bold text-blue-900 mb-3">
+            <h3 className="font-bold text-blue-900 mb-3 dark:text-white">
               Public Transparency
             </h3>
             <ul className="space-y-2">
               <li>
                 <a
                   href="https://hcai.ca.gov/public-meetings/"
-                  className="hover:underline text-blue-900"
+                  className="hover:underline text-blue-900 dark:text-gray-300"
                 >
                   Public Meetings
                 </a>
@@ -181,7 +185,7 @@ const Footer_2 = () => {
               <li>
                 <a
                   href="https://hcai.ca.gov/home/public-transparency/public-records/"
-                  className="hover:underline text-blue-900"
+                  className="hover:underline text-blue-900 dark:text-gray-300"
                 >
                   Public Records
                 </a>
@@ -189,7 +193,7 @@ const Footer_2 = () => {
               <li>
                 <a
                   href="https://hcai.ca.gov/home/public-transparency/form-801/"
-                  className="hover:underline text-blue-900"
+                  className="hover:underline text-blue-900 dark:text-gray-300"
                 >
                   Payment to Agency Reports
                 </a>
@@ -199,12 +203,14 @@ const Footer_2 = () => {
 
           {/* About HCAI */}
           <div>
-            <h3 className="font-bold text-blue-900 mb-3">About HCAI</h3>
+            <h3 className="font-bold text-blue-900 mb-3 dark:text-white">
+              About HCAI
+            </h3>
             <ul className="space-y-2">
               <li>
                 <a
                   href="https://hcai.ca.gov/media-center/"
-                  className="hover:underline text-blue-900"
+                  className="hover:underline text-blue-900 dark:text-gray-300"
                 >
                   Newsroom
                 </a>
@@ -212,7 +218,7 @@ const Footer_2 = () => {
               <li>
                 <a
                   href="https://hcai.ca.gov/about/programs/"
-                  className="hover:underline text-blue-900"
+                  className="hover:underline text-blue-900 dark:text-gray-300"
                 >
                   Divisions
                 </a>
@@ -220,7 +226,7 @@ const Footer_2 = () => {
               <li>
                 <a
                   href="https://hcai.ca.gov/about/laws-regulations/"
-                  className="hover:underline text-blue-900"
+                  className="hover:underline text-blue-900 dark:text-gray-300"
                 >
                   Laws & Regulations
                 </a>
@@ -228,7 +234,7 @@ const Footer_2 = () => {
               <li>
                 <a
                   href="https://hcai.ca.gov/public-meetings/"
-                  className="hover:underline text-blue-900"
+                  className="hover:underline text-blue-900 dark:text-gray-300"
                 >
                   Public Meetings
                 </a>
@@ -236,7 +242,7 @@ const Footer_2 = () => {
               <li>
                 <a
                   href="https://hcai.ca.gov/about/careers/"
-                  className="hover:underline text-blue-900"
+                  className="hover:underline text-blue-900 dark:text-gray-300"
                 >
                   Careers
                 </a>
@@ -244,7 +250,7 @@ const Footer_2 = () => {
               <li>
                 <a
                   href="https://hcai.ca.gov/about/contact-us/"
-                  className="hover:underline text-blue-900"
+                  className="hover:underline text-blue-900 dark:text-gray-300"
                 >
                   Contact Us
                 </a>
@@ -271,7 +277,7 @@ const Footer_2 = () => {
           <div>
             <a
               href="https://geo.hcai.ca.gov/mailing-list/"
-              className="bg-white flex items-center text-sm font-bold border px-6 py-4 hover:text-blue-900 hover:underline transition-all border-orange-600 cursor-pointer"
+              className="bg-white dark:bg-gray-200 flex items-center text-sm font-bold border px-6 py-4 hover:text-blue-900 hover:underline transition-all border-orange-600 cursor-pointer"
               style={{
                 boxShadow: "-5px -5px 0px 5px rgba(225,243,253,1)",
               }}
@@ -284,48 +290,48 @@ const Footer_2 = () => {
         </div>
 
         <div className="flex items-center gap-10 justify-between">
-          <p className="sm:block hidden text-base">
+          <p className="sm:block hidden text-base dark:text-gray-300">
             © Copyright 2021 State of California
           </p>
           <ul className="flex items-center flex-wrap gap-3 text-sm">
             <a
               href="https://www.covid19.ca.gov/"
-              className="group flex flex-col text-blue-900 hover:text-blue-700"
+              className="group flex flex-col text-blue-900 dark:text-gray-300 dark:hover:text-blue-500 hover:text-blue-700"
             >
               <span>COVID-19 Updates</span>
               <span className="w-0 h-[1px] group-hover:w-full group-hover:bg-blue-900 transition-all duration-200 ease-linear"></span>
             </a>
             <a
               href="https://registertovote.ca.gov/"
-              className="group flex flex-col text-blue-900 hover:text-blue-700"
+              className="group flex flex-col text-blue-900 dark:text-gray-300 dark:hover:text-blue-500 hover:text-blue-700"
             >
               <span>Register to Vote</span>
               <span className="w-0 h-[1px] group-hover:w-full group-hover:bg-blue-900 transition-all duration-200 ease-linear"></span>
             </a>
             <a
               href="https://hcai.ca.gov/home/privacy-policy/"
-              className="group flex flex-col text-blue-900 hover:text-blue-700"
+              className="group flex flex-col text-blue-900 dark:text-gray-300 dark:hover:text-blue-500 hover:text-blue-700"
             >
               <span>Privacy</span>
               <span className="w-0 h-[1px] group-hover:w-full group-hover:bg-blue-900 transition-all duration-200 ease-linear"></span>
             </a>
             <a
               href="https://hcai.ca.gov/home/accessibility/"
-              className="group flex flex-col text-blue-900 hover:text-blue-700"
+              className="group flex flex-col text-blue-900 dark:text-gray-300 dark:hover:text-blue-500 hover:text-blue-700"
             >
               <span>Accessibility</span>
               <span className="w-0 h-[1px] group-hover:w-full group-hover:bg-blue-900 transition-all duration-200 ease-linear"></span>
             </a>
             <a
               href="https://hcai.ca.gov/home/conditions-of-use/"
-              className="group flex flex-col text-blue-900 hover:text-blue-700"
+              className="group flex flex-col text-blue-900 dark:text-gray-300 dark:hover:text-blue-500 hover:text-blue-700"
             >
               <span>Conditions of Use</span>
               <span className="w-0 h-[1px] group-hover:w-full group-hover:bg-blue-900 transition-all duration-200 ease-linear"></span>
             </a>
             <a
               href="https://hcai.ca.gov/about/contact-us/"
-              className="group flex flex-col text-blue-900 hover:text-blue-700"
+              className="group flex flex-col text-blue-900 dark:text-gray-300 dark:hover:text-blue-500 hover:text-blue-700"
             >
               <span>Contact Us</span>
               <span className="w-0 h-[1px] group-hover:w-full group-hover:bg-blue-900 transition-all duration-200 ease-linear"></span>

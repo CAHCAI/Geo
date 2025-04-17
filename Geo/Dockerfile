@@ -25,6 +25,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the Django project files into the container
 COPY . /app/
 
+# Create the directory for SQL data
+RUN mkdir -p /app/sql/data
+
 # Expose the Django development server port
 EXPOSE 8000
 

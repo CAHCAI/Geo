@@ -1,3 +1,4 @@
+import traceback
 from django.shortcuts import render
 from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
@@ -11,7 +12,7 @@ import secrets
 from django.contrib.gis.geos import Point
 from datetime import timedelta, datetime
 from django.utils import timezone
-from .models import AssemblyDistrict, SenateDistrict, CongressionalDistrict, HealthServiceArea, APIKey
+from .models import AssemblyDistrict, SenateDistrict, CongressionalDistrict, HealthServiceArea, APIKey, AdminErrors
 from .auth import api_key_required
 import openpyxl
 from rest_framework import viewsets, status
@@ -21,6 +22,19 @@ from rest_framework.response import Response
 # Create your views here.
 def index(request):
     return render(request,'frontend.html'),
+
+def error_response(code, description, stk):
+    # caller_frame = stk[-1]  
+    caller_frame = stk[-2]
+    filename = caller_frame.filename
+    line = caller_frame.lineno
+    AdminErrors.objects.create(
+        error_code=code,
+        error_description=description,
+        files_name=filename,
+        line_number=str(line),
+        created_at=now()
+    )
 
 # Admin login from the frontend.
 @csrf_exempt  # Disables CSRF protection for API calls (needed for frontend requests).
@@ -36,8 +50,13 @@ def admin_login(request):
             login(request, user)  # Log the admin in.
             return JsonResponse({"message": "Login successful"}, status=200)
         else:
+            try:
+                stack = traceback.extract_stack()
+                error_response(401, f"Invalid credentials provided during login by {username})", stack)
+                AdminErrors.objects.create(error_code=401, error_description=f"Invalid credentials provided during login by {username})", error_time=now())
+            except Exception as e:
+                print(f"Error found but not logged into the database! {e}")
             return JsonResponse({"error": "Invalid credentials"}, status=401)
-
     return JsonResponse({"error": "Invalid request"}, status=400)
 
 # This function logs out the admin.
@@ -63,6 +82,17 @@ def message_view(request):
 
 @api_view(["POST"])
 def generate_api_key(request):
+    # Get app name from request
+    app_name = request.data.get("app_name")  
+
+    if not app_name: 
+        try:
+            stack = traceback.extract_stack()
+            error_response(400, f"App name is required when generating API key", stack)
+        except Exception as e:
+            print(f"Error found but not logged into the database! {e}")
+        return Response({"error": "App name is required"}, status=400)  
+    
     # Generate a secure random key
     raw_key = secrets.token_hex(64)
     
@@ -76,10 +106,11 @@ def generate_api_key(request):
     expiration_time = timezone.make_aware(datetime.now() + timedelta(days=30))
     
     # Save the hashed key
-    api_key = APIKey.objects.create(key=hashed_key, expires_at=expiration_time)
+    api_key = APIKey.objects.create(key=hashed_key, expires_at=expiration_time, app_name=app_name)
     
     return Response({
         "api_key": raw_key,  # Show raw key only once
+        "app_name": app_name,
         "expires_at": expiration_time.strftime('%Y-%m-%d %I:%M %p')  # Format the expiration time
     })
 
@@ -95,15 +126,25 @@ def validate_api_key(request):
     # Iterate over all non-revoked API keys and check if any match the provided key.
     valid_key = None
     for k in APIKey.objects.filter(revoked=False):
-        if check_password(key, k.key):
+        if key == k.key:
             valid_key = k
             break
 
     if not valid_key:
+        try:
+            stack = traceback.extract_stack()
+            error_response(400, f"Invalid API key provided for validation {key}", stack)
+        except Exception as e:
+             print(f"Error found but not logged into the database! {e}")
         return Response({"error": "Invalid API key"}, status=403)
 
     # Check if the API key has expired
     if valid_key.expires_at and valid_key.expires_at < timezone.now():
+        try:
+            stack = traceback.extract_stack()
+            error_response(403, f"API key has expired", stack)
+        except Exception as e:
+             print(f"Error found but not logged into the database! {e}")
         return Response({"error": "API key has expired"}, status=403)
 
     # Increment usage count if needed
@@ -119,12 +160,31 @@ def revoke_api_key(request):
     # Iterate over all non-revoked API keys and find a match
     valid_key = None
     for k in APIKey.objects.filter(revoked=False):
-        if check_password(key, k.key):
+        if key == k.key:
             valid_key = k
             break
 
     if not valid_key:
+        try:
+            stack = traceback.extract_stack()
+            error_response(404, f"Invalid API key provided or key not found", stack)
+        except Exception as e:
+             print(f"Error found but not logged into the database! {e}")
         return Response({"error": "API key not found or invalid"}, status=404)
 
     valid_key.revoke()
+    try:
+        stack = traceback.extract_stack()
+        error_response(403, f"API key revoked", stack)
+    except Exception as e:
+        print(f"Error found but not logged into the database! {e}")
     return Response({"message": "API key revoked"})
+
+'''
+@api_view(["GET"])
+@api_key_required
+def list_api_keys(request):
+    keys = APIKey.objects.filter(revoked=False).order_by('-created_at')
+    serializer = APIKeySerializer(keys, many=True)
+    return Response(serializer.data)
+'''

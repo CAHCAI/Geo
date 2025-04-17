@@ -19,6 +19,7 @@ urlpatterns = [
     path("generate-api-key/", generate_api_key, name="generate-api-key"),
     path("validate-api-key/", validate_api_key, name="validate-api-key"),
     path("revoke-api-key/", revoke_api_key, name="revoke-api-key"),
+    #path("api/api-keys/", list_api_keys, name="list_api_keys"),
 
     # NinjaAPI endpoints
     path("", api.urls),

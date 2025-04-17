@@ -1,6 +1,9 @@
 import datetime
 import os
+from django.http import JsonResponse
 from shutil import rmtree
+import sys
+import traceback
 from .auth import APIKeyAuth, api_key_required
 import subprocess
 import uuid
@@ -25,7 +28,7 @@ upload_hsa_shapefile, upload_rnsa_shapefile, upload_mssa_shapefile, upload_pcsa_
 from django.shortcuts import get_object_or_404
 from django.db import connection
 from django.contrib.gis.db.models.functions import AsGeoJSON
-from .models import AssemblyDistrict, SenateDistrict, AdminErrors, CongressionalDistrict, HealthServiceArea, MedicalServiceStudyArea,RegisteredNurseShortageArea, LAServicePlanningArea, PrimaryCareShortageArea, HealthProfessionalShortageArea, HPSA_PrimaryCareShortageArea,HPSA_MentalHealthShortageArea,HPSA_DentalHealthShortageArea
+from .models import AssemblyDistrict, SenateDistrict, AdminErrors, CongressionalDistrict, HealthServiceArea, MedicalServiceStudyArea,RegisteredNurseShortageArea, LAServicePlanningArea, PrimaryCareShortageArea, HealthProfessionalShortageArea, HPSA_PrimaryCareShortageArea,HPSA_MentalHealthShortageArea,HPSA_DentalHealthShortageArea,APIKey
 import json
 from Geo.cache import cache, TTL
 from typing import List, Optional
@@ -35,6 +38,12 @@ from .models import OverrideLocation
 from django.contrib.sessions.models import Session
 from django.utils import timezone
 from django.contrib.auth import get_user_model
+from docker import DockerClient
+from docker import from_env
+from azure.identity import ClientSecretCredential
+from azure.maps.search import MapsSearchClient
+import requests
+
 
 
 # Directory to temporarily store uploaded shapefiles
@@ -45,8 +54,6 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 router = Router()
 
 #router = Router(auth=APIKeyAuth())
-
-
 
 @router.get("/test")
 def test(request):
@@ -70,10 +77,10 @@ def test_cache(request):
             return JsonResponse({"success": True, "message": "test api, successful. Will use cache next time."})
     except Exception as e:
         try:
-            AdminErrors.objects.create(error_code=131, error_description=f"Redis failed: {str(e)}")
-            print("Error successfully logged in the database")
+            stack = traceback.extract_stack()
+            error_response(131, f"Redis failed: {str(e)}", stack)
         except Exception as e:
-            print(f"rror found but not logged into the database! {e}")
+            print(f"Error found but not logged into the database! {e}")
         return JsonResponse({"success": False, "message": f"Redis failed: {str(e)}"})
 
 @router.post("/upload-shapefile/")
@@ -88,8 +95,8 @@ def upload_shapefile(request, file: UploadedFile = File(...), file_type: str = F
     file_type = file_type.lower()
     if file_type not in valid_types:
         try:
-            AdminErrors.objects.create(error_code=503, error_description="Invalid file type specifier")
-            print("Error successfully logged in the database")
+            stack = traceback.extract_stack()
+            error_response(503, "Invalid file type specifier.", stack)
         except Exception as e:
             print(f"Error found but not logged into the database! {e}")
         return JsonResponse({"success" : False, "message" : "Invalid file type specifier"})
@@ -102,8 +109,8 @@ def upload_shapefile(request, file: UploadedFile = File(...), file_type: str = F
         return JsonResponse({"success" : True, "message" : "HPSA data uploaded"}, status=200)
     elif (file_type != "hpsa" and file.name.lower().endswith(".csv")):
         try:
-            AdminErrors.objects.create(error_code=500, error_description="CSV must be uploaded under Health Provider Shortage Areas (HPSA)")
-            print("Error successfully logged in the database")
+            stack = traceback.extract_stack()
+            error_response(500, "CSV must be uploaded under Health Provider Shortage Areas (HPSA)", stack)
         except Exception as e:
             print(f"Error found but not logged into the database! {e}")
         return JsonResponse({"success" : False, "message" : "CSV must be uploaded under Health Provider Shortage Areas (HPSA)"}, status=500)
@@ -119,8 +126,8 @@ def upload_shapefile(request, file: UploadedFile = File(...), file_type: str = F
         # Check if a shapefile is found
         if not shapefile_path:
             try:
-                AdminErrors.objects.create(error_code=501, error_description="No shapefile found in the .zip archive.")
-                print("Error successfully logged in the database")
+                stack = traceback.extract_stack()
+                error_response(501, "No shapefile found in the .zip archive.", stack)
             except Exception as e:
                 print(f"Error found but not logged into the database! {e}")
             return {"error": "No shapefile found in the .zip archive."}
@@ -136,8 +143,8 @@ def upload_shapefile(request, file: UploadedFile = File(...), file_type: str = F
         if file_type != validated_file_type:
             print(f"mismatched filetype | valid: {validated_file_type}, given: {file_type}")
             try:
-                AdminErrors.objects.create(error_code=400, error_description="Invalid selected shapefile type.")
-                print("Error successfully logged in the database")
+                stack = traceback.extract_stack()
+                error_response(400, "Invalid selected shapefile type.", stack)
             except Exception as e:
                 print(f"Error creating error log in table: {e}")
             return JsonResponse({"success": False, "error": "Invalid selected shapefile type."}, status=400)
@@ -162,16 +169,16 @@ def upload_shapefile(request, file: UploadedFile = File(...), file_type: str = F
                 upload_pcsa_shapefile(layer)
             else:
                 try:
-                    AdminErrors.objects.create(error_code=400, error_description="Unknown shapefile type")
-                    print("Error successfully logged in the database")
+                    stack = traceback.extract_stack()
+                    error_response(400, "Unknown shapefile type", stack)
                 except Exception as e:
                     print(f"Error creating log in the database: {e}")
                 return JsonResponse({"success": False, "error": "Unknown shapefile type", "status":400}, status=400)
         except Exception as e:
             print(f"Error uploading shapefile of type {file_type}: {e}")
             try:
-                AdminErrors.objects.create(error_code=400, error_description=f"Shapefile of type '{file_type}' failed: {e}")
-                print("Error successfully logged in the database")
+                stack = traceback.extract_stack()
+                error_response(400, f"Shapefile of type '{file_type}' failed: {e}", stack)
             except Exception as e:
                 print(f"Error creating log in the database: {e}")
             return JsonResponse({"success" : False, "message": f"Shapefile of type '{file_type}' failed: {e}"}, status=400)
@@ -179,8 +186,8 @@ def upload_shapefile(request, file: UploadedFile = File(...), file_type: str = F
         return JsonResponse({"success" : True, "message": f"Shapefile of type '{file_type}' uploaded and processed successfully."})
     except Exception as e:
         try:
-            AdminErrors.objects.create(error_code=400, error_description=f"Error response {e}")
-            print("Error successfully logged in the database")
+            stack = traceback.extract_stack()
+            error_response(400, f"Error response {e}", stack)
         except Exception as e:
             print(f"Error creating log in the database: {e}")
         return JsonResponse({"success": False, "error": f"Error response {e}"}, status=400)
@@ -201,6 +208,11 @@ def process_uploaded_zip(file, expected_filename):
     Raises a ValueError if the file is not valid.
     """
     if file.name.lower() != expected_filename.lower():
+        try:
+            stack = traceback.extract_stack()
+            error_response(502, f"Uploaded file must be named {expected_filename}", stack)
+        except Exception as e:
+            print(f"Error creating log in the database: {e}")
         raise ValueError(f"Uploaded file must be named {expected_filename}")
     
     unique_filename = f"{uuid.uuid4()}_{file.name}"
@@ -218,6 +230,11 @@ def process_uploaded_zip(file, expected_filename):
         with zipfile.ZipFile(file_path, 'r') as zf:
             zf.extractall(upload_dir)
     except zipfile.BadZipFile:
+        try:
+            stack = traceback.extract_stack()
+            error_response(503, "Uploaded file is not a valid zip file.", stack)
+        except Exception as e:
+            print(f"Error creating log in the database: {e}")
         raise ValueError("Uploaded file is not a valid zip file.")
     
     # Recursively search for a .shp file in the extracted directory
@@ -230,6 +247,11 @@ def process_uploaded_zip(file, expected_filename):
         if shp_path:
             break
     if not shp_path:
+        try:
+            stack = traceback.extract_stack()
+            error_response(111, "No shapefile (.shp) found in the extracted archive.", stack)
+        except Exception as e:
+             print(f"Error found but not logged into the database! {e}")
         raise ValueError("No shapefile (.shp) found in the extracted archive.")
     return file_path, shp_path
 
@@ -267,88 +289,93 @@ def all_districts_data(request):
     """
     Fetches data for all districts, with geometry converted to GeoJSON strings.
     """
-    # Assembly with GeoJSON
+    cache_key = "geoJson-all-data"
+
+    # Check if data is already cached
+    try:
+        cache_value = cache.get(cache_key)
+        if cache_value:
+            cache_value = json.loads(cache_value)
+            cache_value["used_cache"] = True
+            return JsonResponse(cache_value, safe=False)
+    except Exception as e:
+        try:
+            stack = traceback.extract_stack()
+            error_response(100, f"Reading from Cache failed: {str(e)}", stack)
+        except Exception as e:
+             print(f"Error fetching from cache: {e}")
+
+    # Helper function to clean data handling None values and geom fields
+    def clean_data(queryset):
+        return [
+            {key: value for key, value in item.items() if key != "geom"}  # Exclude 'geom'
+            for item in queryset
+        ]
+
     assembly_qs = (
         AssemblyDistrict.objects
         .annotate(geom_geojson=AsGeoJSON('geom'))  # Convert geom to GeoJSON
-        .values(
-            'id', 'district_number', 'area', 'population',
-            # list all the numeric fields you want,
-            'geom_geojson'  # The annotated GeoJSON field
-        )
+        .values()  
     )
-    assembly_data = list(assembly_qs)
+    assembly_data = clean_data(assembly_qs)
 
-    # Senate with GeoJSON
+
     senate_qs = (
         SenateDistrict.objects
         .annotate(geom_geojson=AsGeoJSON('geom'))
-        .values(
-            'id', 'district_number', 'area', 'population',
-            'geom_geojson'
-        )
+        .values()  
     )
-    senate_data = list(senate_qs)
+    senate_data = clean_data(senate_qs)
 
-    # Congressional with GeoJSON
     congress_qs = (
         CongressionalDistrict.objects
         .annotate(geom_geojson=AsGeoJSON('geom'))
-        .values(
-            'id', 'district_number', 'area', 'population',
-            'geom_geojson'
-        )
+        .values()  
     )
-    congress_data = list(congress_qs)
+    congress_data = clean_data(congress_qs)
 
-    # HSA with GeoJSON
+    # Health Service Area with GeoJSON
     hsa_qs = (
         HealthServiceArea.objects
         .annotate(geom_geojson=AsGeoJSON('geom'))
-        .values(
-            'hsa_name', 'geom_geojson'
-        )
+        .values()  # Include all fields
     )
-    hsa_data = list(hsa_qs)
+    hsa_data = clean_data(hsa_qs)
 
+    # LA Service Planning Area with GeoJSON
     laspa_qs = (
         LAServicePlanningArea.objects
         .annotate(geom_geojson=AsGeoJSON('geom'))
-        .values(
-            'spa_name', 'geom_geojson'
-        )
+        .values()  # Include all fields
     )
-    laspa_data = list(laspa_qs)
+    laspa_data = clean_data(laspa_qs)
 
+    # Registered Nurse Shortage Area with GeoJSON
     rnsa_qs = (
         RegisteredNurseShortageArea.objects
         .annotate(geom_geojson=AsGeoJSON('geom'))
-        .values(
-            'rnsa','severity', 'geom_geojson'
-        )
+        .values()  # Include all fields
     )
-    rnsa_data = list(rnsa_qs)
+    rnsa_data = clean_data(rnsa_qs)
 
+    # Medical Service Study Area with GeoJSON
     mssa_qs = (
         MedicalServiceStudyArea.objects
         .annotate(geom_geojson=AsGeoJSON('geom'))
-        .values(
-            'mssaid', 'geom_geojson'
-        )
+        .values()  # Include all fields
     )
-    mssa_data = list(mssa_qs)
+    mssa_data = clean_data(mssa_qs)
 
+    # Primary Care Shortage Area with GeoJSON
     pcsa_qs = (
         PrimaryCareShortageArea.objects
         .annotate(geom_geojson=AsGeoJSON('geom'))
-        .values(
-            'pcsa', 'geom_geojson'
-        )
+        .values()  # Include all fields
     )
-    pcsa_data = list(pcsa_qs)
+    pcsa_data = clean_data(pcsa_qs)
 
-
-    return JsonResponse({
+    # Combine all data into a single dictionary
+    cache_value = {
         "assembly_districts": assembly_data,
         "senate_districts": senate_data,
         "congressional_districts": congress_data,
@@ -357,7 +384,19 @@ def all_districts_data(request):
         "rnsa": rnsa_data,
         "mssa": mssa_data,
         "pcsa": pcsa_data,
-    })
+    }
+
+    # Cache the result for future requests
+    if any(cache_value.values()):
+        try:
+            cache.set(cache_key, json.dumps(cache_value))
+        except Exception as e:
+            try:
+                stack = traceback.extract_stack()
+                error_response(132, f"Error caching data: {str(e)}", stack)
+            except Exception as e:
+                print(f"Error caching data: {e}")
+    return JsonResponse(cache_value, safe=False)
 
 @router.get("/search")
 def coordinate_search(request, lat: float, lng: float):
@@ -385,14 +424,42 @@ def coordinate_search(request, lat: float, lng: float):
         medicalservicestudyarea_matches = MedicalServiceStudyArea.objects.filter(geom__contains=point)
         primarycareshortagearea_matches = PrimaryCareShortageArea.objects.filter(geom__contains=point)
 
-       
-        RANGE=0.1
-        primary_matches = HPSA_PrimaryCareShortageArea.objects.filter(latitude__range=(lat - RANGE, lat + RANGE),longitude__range=(lng - RANGE, lng + RANGE))
 
-        mental_matches = HPSA_MentalHealthShortageArea.objects.filter(latitude__range=(lat - RANGE, lat + RANGE),longitude__range=(lng - RANGE, lng + RANGE))
+        primary_matches = []
+        mental_matches = []
+        dental_matches = []
+        censuskey = 0
 
-        dental_matches = HPSA_DentalHealthShortageArea.objects.filter(latitude__range=(lat - RANGE, lat + RANGE),longitude__range=(lng - RANGE, lng + RANGE))
-      
+        if medicalservicestudyarea_matches.exists():
+            raw_censuskey = medicalservicestudyarea_matches.first().geoid
+            censuskey = raw_censuskey.lstrip("0") if raw_censuskey else None
+            print(f"Raw GEOID: {raw_censuskey} | Stripped: {censuskey}")
+
+        if censuskey:
+            possible_keys = [raw_censuskey, censuskey, censuskey.zfill(11)]
+            print(f"Trying possible keys: {possible_keys}")
+
+            primary_matches = (
+            HPSA_PrimaryCareShortageArea.objects.filter(hpsa_geography_id__in=possible_keys)
+            .order_by("-hpsa_designation_last_update_date")
+            )
+            primary_match = primary_matches.first()
+            print("Primary Match (Latest):", primary_match)
+
+            mental_matches = (HPSA_MentalHealthShortageArea.objects.filter(
+            hpsa_geography_id__in=possible_keys).order_by("-hpsa_designation_last_update_date")
+            )
+            mental_match = mental_matches.first()
+            print("Mental Match (Latest):", mental_match)
+
+            dental_matches = (HPSA_DentalHealthShortageArea.objects.filter(
+            hpsa_geography_id__in=possible_keys).order_by("-hpsa_designation_last_update_date")
+            )
+            dental_match = dental_matches.first()
+            print("Dental Match (Latest):", dental_match) 
+
+
+
         
         cache_value = {
             "senate": [to_dict(d) for d in senate_matches],
@@ -403,10 +470,9 @@ def coordinate_search(request, lat: float, lng: float):
             "RegisteredNurseShortageArea": [to_rnsa_dict(d) for d in registerednurseshortagearea_matches],
             "MedicalServiceStudyArea": [to_mssa_dict(d) for d in medicalservicestudyarea_matches],
             "PrimaryCareShortageArea": [to_pcsa_dict(d) for d in primarycareshortagearea_matches],
-            "PrimaryCareHPSA": [to_primary_hpsa_dict(d) for d in primary_matches],
-            "MentalHealthHPSA": [to_mental_hpsa_dict(d) for d in mental_matches],
-            "DentalHealthHPSA": [to_dental_hpsa_dict(d) for d in dental_matches],
-
+            "PrimaryCareHPSA": [to_primary_hpsa_dict(primary_match)] if primary_match else [],
+            "MentalHealthHPSA": [to_mental_hpsa_dict(mental_match)]if mental_match else [],
+            "DentalHealthHPSA": [to_dental_hpsa_dict(dental_match)]if dental_match else [],
         }
 
         if any(cache_value.values()):
@@ -415,20 +481,61 @@ def coordinate_search(request, lat: float, lng: float):
         return JsonResponse(cache_value, safe=False)
 
     except Exception as e:
-        
         try:
-            AdminErrors.objects.create(error_code=130, error_description=f"Error: {e}")
-            print("Error successfully logged in the database")
+            stack = traceback.extract_stack()
+            error_response(130, f"Error: {e}", stack)
         except Exception as e:
             print(f"Error found but not logged into the database! {e}")
         return JsonResponse({"success": False, "message": f"Error: {e}"}, safe=False)
         
+
 
 # Define a schema for expected data
 class OverrideLocationSchema(Schema):
     lat: float
     lon: float
     address: str
+
+
+@router.get("/override-locations")
+def check_override_location(request, address: str):
+    """
+    Check if the address is in the override list. If not, geocode it using Azure Maps.
+    """
+    # Check for override match
+    try:
+        override = OverrideLocation.objects.get(address__iexact=address.strip())
+        #print(override.latitude, override.longitude)
+        
+        return {
+            "found": True,
+            "latitude": override.latitude,
+            "longitude": override.longitude,
+        }
+        
+    except OverrideLocation.DoesNotExist:
+        pass
+    
+    #print("override-locations: " + address + "\n")
+    credential = ClientSecretCredential(
+        tenant_id=settings.AZURE_TENANT_ID,
+        client_id=settings.AZURE_CLIENT_ID,
+        client_secret=settings.AZURE_CLIENT_SECRET,
+    )
+    maps_search_client = MapsSearchClient(credential=credential, client_id=settings.AZURE_MAPS_CLIENT_ID)
+
+    result = maps_search_client.get_geocoding(query=address)
+
+    if result["features"]:
+        coordinates = result["features"][0]["geometry"]["coordinates"]
+        return {
+            "found": False,
+            "latitude": coordinates[1],
+            "longitude": coordinates[0],
+        }
+
+    return JsonResponse({"error": "Unable to geocode address"}, status=404)
+
 
 @router.post("/override-location/")
 def override_location(request, data: OverrideLocationSchema):
@@ -480,8 +587,8 @@ def upload_overrides_xlsx(request, file: UploadedFile = File(...)):
         if not new_overrides:
             print("No valid rows found in XLSX.")
             try:
-                AdminErrors.objects.create(error_code=110, error_description="No valid rows found in XLSX")
-                print("Error successfully logged in the database")
+                stack = traceback.extract_stack()
+                error_response(110, "No valid rows found in XLSX.", stack)
             except Exception as e:
                 print(f"Error found but not logged into the database! {e}")
             return {"success": False, "message": "No valid rows found in XLSX"}
@@ -496,7 +603,11 @@ def upload_overrides_xlsx(request, file: UploadedFile = File(...)):
         }
 
     except Exception as e:
-        print(f"Error during XLSX upload: {e}")
+        try:
+            stack = traceback.extract_stack()
+            error_response(133, f"Error during XLSX upload: {str(e)}", stack)
+        except Exception as e:
+             print(f"Error found but not logged into the database! {e}")
         return {"success": False, "message": f"Error processing XLSX: {str(e)}"}
 
 @router.get("/manual-overrides", response=List[OverrideLocationOut])
@@ -511,7 +622,11 @@ def list_overrides(request):
         print(f"Found {count} override(s) in the database.")
         return qs
     except Exception as e:
-        print(f"Error listing overrides: {e}")
+        try:
+            stack = traceback.extract_stack()
+            error_response(134, f"Error listing overrides: {str(e)}", stack)
+        except Exception as e:
+            print(f"Error found but not logged into the database! {e}")
         return []  # or raise HttpError(400, f"Error: {e}")
 
 
@@ -527,7 +642,11 @@ def create_override(request, payload: OverrideLocationIn):
         print(f"Override created with ID={obj.id}")
         return obj
     except Exception as e:
-        print(f"Error creating override: {e}")
+        try:
+            stack = traceback.extract_stack()
+            error_response(135, f"Error creating override: {str(e)}", stack)
+        except Exception as e:
+            print(f"Error found but not logged into the database! {e}")
         # Return a fallback or raise an exception
         # but we must conform to response=OverrideLocationOut
         # So let's do a minimal approach:
@@ -546,7 +665,11 @@ def retrieve_override(request, override_id: int):
         print(f"Found override: {obj}")
         return obj
     except Exception as e:
-        print(f"Error retrieving override {override_id}: {e}")
+        try:
+            stack = traceback.extract_stack()
+            error_response(136, f"Error retrieving override {override_id}: {str(e)}", stack)
+        except Exception as e:
+             print(f"Error found but not logged into the database! {e}")
         raise Exception(f"Failed to retrieve override: {str(e)}")
 
 
@@ -565,7 +688,11 @@ def update_override(request, override_id: int, payload: OverrideLocationIn):
         print(f"Override with ID={override_id} updated successfully.")
         return obj
     except Exception as e:
-        print(f"Error updating override {override_id}: {e}")
+        try:
+            stack = traceback.extract_stack()
+            error_response(137, f"Error updating override {override_id}: {str(e)}", stack)
+        except Exception as e:
+             print(f"Error found but not logged into the database! {e}")
         raise Exception(f"Failed to update override: {str(e)}")
 
 @router.delete("/manual-overrides/{override_id}")
@@ -584,8 +711,8 @@ def delete_override(request, override_id: int):
     except Exception as e:
         print(f"Error deleting override {override_id}: {e}")
         try:
-            AdminErrors.objects.create(error_code=111, error_description=f"Failed to delete: {str(e)}")
-            print("Error successfully logged in the database")
+            stack = traceback.extract_stack()
+            error_response(138, f"Error deleting override {override_id}: {str(e)}", stack)
         except Exception as e:
             print(f"Error found but not logged into the database! {e}")
         return {"success": False, "message": f"Failed to delete: {str(e)}"}
@@ -630,7 +757,17 @@ class AdminErrorSchema(Schema):
     id: int
     error_code: int
     error_description: str
+    files_name: str
+    line_number: str
     created_at: datetime = Field(..., format="iso8601")  
+
+class APIKeySchema(Schema):
+    key: str
+    app_name: str
+    usage_count: int
+
+class APIKeyRevokeIn(Schema):
+    api_key: str
 
 @router.get("/admin_errors/", response=List[AdminErrorSchema])
 def admin_errors(request):
@@ -641,6 +778,85 @@ def delete_admin_error(request, id: int):
     error = get_object_or_404(AdminErrors, id=id)
     error.delete()
     return {"success": True, "message": f"Error {id} deleted"}
+
+@router.get("/api-keys/", response=List[APIKeySchema])
+def get_api_keys(request):
+    return APIKey.objects.filter(revoked=False).order_by('-created_at')
+
+
+
+@router.post("/revoke-api-key/")
+def revoke_api_key(request, payload: APIKeyRevokeIn):
+    try:
+        key_obj = get_object_or_404(APIKey, key=payload.api_key)
+        key_obj.revoked = True
+        key_obj.save()
+        return {"success": True, "message": f"API key revoked successfully."}
+    except Exception as e:
+        print(f"Failed to revoke API key: {e}")
+        try:
+            stack = traceback.extract_stack()
+            error_response(140, f"Revoke failed: {str(e)}", stack)
+        except:
+            print("Could not log error in AdminErrors.")
+        return {"success": False, "message": f"Failed to revoke API key."}
+    
+def error_response(code, description, stk):
+    caller_frame = stk[-1]  
+    filename = caller_frame.filename
+    line = caller_frame.lineno
+    AdminErrors.objects.create(
+        error_code=code,
+        error_description=description,
+        files_name=filename,
+        line_number=str(line)
+    )
+
+def check_container_status(client, container_name):
+    try:
+        container = client.containers.get(container_name)
+        return container.status == 'running'
+    except Exception:
+        try:
+            stack = traceback.extract_stack()
+            error_response(150, f"Checking container status failed", stack)
+        except Exception as e:
+            print(f"Error found but not logged into the database! {e}")
+        return False
+
+def check_postgis_status():
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            return True
+    except Exception:
+        try:
+            stack = traceback.extract_stack()
+            error_response(150, f"PostGIS status check failed", stack)
+        except Exception as e:
+            print(f"Error found but not logged into the database! {e}")
+        return False
+
+@router.get("/service_status/")
+def service_status(request):
+    try:
+        client = from_env()
+    except Exception as e:
+        try:
+            stack = traceback.extract_stack()
+            error_response(160, f"Error connecting to Docker: {str(e)}", stack)
+        except Exception as e:
+            print(f"Error found but not logged into the database! {e}")
+        return JsonResponse({"error": f"Error connecting to docker: {e}"}, status=500)
+    
+    status = {
+        'redis': check_container_status(client, 'geo_cache'),
+        'postgis': check_postgis_status(),
+        'django': check_container_status(client, 'geo_django'),
+        'react': check_container_status(client, 'geo_react')
+    }
+    return status
+
 
 
 def to_hsa_dict(obj):
@@ -688,37 +904,49 @@ def to_pcsa_dict(obj):
     return {
         "pcsa": obj.pcsa,
         "scoretota": obj.score_tota,
-        "mssa_e": obj.cnty_fips
-        #add more object if needed
+        "mssa": obj.cnty_fips
     }
 
 def to_dental_hpsa_dict(obj):
     return {
-        "Designated": obj.hpsa_name,
-      
+        "HPSA Source ID": obj.hpsa_id or "N/A",
+        "Designated": "Yes",
+        "Designated On": obj.hpsa_designation_date.isoformat() if obj.hpsa_designation_last_update_date else "N/A",
+        "Formal Ratio": obj.hpsa_formal_ratio or "N/A",
+        "Population Below Poverty": obj.percent_population_below_poverty or "N/A",
+        "Designation Population": obj.hpsa_designation_population or "N/A",
+        "Estimated Underserved": obj.hpsa_estimated_underserved_population or "N/A", 
+        "Estimated Served": obj.hpsa_estimated_served_population or "N/A", 
+        "Priority Score": obj.hpsa_score or "N/A",
     }
+
 
 def to_mental_hpsa_dict(obj):
     return {
-        "hpsa_id": obj.hpsa_id,
-        "Designated": obj.hpsa_status,
-        "Designated On": obj.hpsa_designation_last_update_date,
-        "formal ratio": obj.hpsa_formal_ratio,
-        "Population Below Poverty": obj.percent_population_below_poverty,
-        "Designation Population": obj.hpsa_designation_population,
-        "Estimated underserved population": obj.hpsa_designation_population,
-        "Estimated Served Population": obj.hpsa_name,
-        "Priority score": obj.hpsa_score
+        "HPSA Source ID": obj.hpsa_id or "N/A",
+        "Designated": "Yes",
+        "Designated On": obj.hpsa_designation_date.isoformat() if obj.hpsa_designation_last_update_date else "N/A",
+        "Formal Ratio": obj.hpsa_formal_ratio or "N/A",
+        "Population Below Poverty": obj.percent_population_below_poverty or "N/A",
+        "Designation Population": obj.hpsa_designation_population or "N/A",
+        "Estimated Underserved": obj.hpsa_estimated_underserved_population or "N/A", 
+        "Estimated Served": obj.hpsa_estimated_served_population or "N/A", 
+        "Priority Score": obj.hpsa_score or "N/A",
     }
+
+
 
 def to_primary_hpsa_dict(obj):
     return {
-        "Designated": obj.designation_type,
+        "HPSA Source ID": obj.hpsa_id or "N/A",
+        "Designated": "Yes",
+        "Designated On": obj.hpsa_designation_date.isoformat() if obj.hpsa_designation_last_update_date else "N/A",
+        "Formal Ratio": obj.hpsa_formal_ratio or "N/A",
+        "Population Below Poverty": obj.percent_population_below_poverty or "N/A",
+        "Designation Population": obj.hpsa_designation_population or "N/A",
+        "Estimated Underserved": obj.hpsa_estimated_underserved_population or "N/A", 
+        "Estimated Served": obj.hpsa_estimated_served_population or "N/A", 
+        "Priority Score": obj.hpsa_score or "N/A",
     }
 
-#api = Router()
 
-#@api.post("/generate-api-key", tags=["Admin"])
-#def generate_api_key(request):
-   # raw_key = APIKey.generate()  # This returns the unhashed key once
- #   return {"api_key": raw_key}

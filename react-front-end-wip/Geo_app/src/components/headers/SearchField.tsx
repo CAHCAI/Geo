@@ -8,11 +8,11 @@ const SearchField: React.FC = () => {
   };
   return (
     <>
-      <div className=" hidden lg:flex items-center w-full max-w-md  rounded-lg px-4 py-2 bg-gray-50 sm:py-3 shadow border-b border-gray-400   transition duration-200">
+      <div className=" hidden lg:flex items-center w-full max-w-md  rounded-lg px-4 py-2 bg-gray-50 dark:bg-gray-700 sm:py-3 shadow border-b border-gray-400   transition duration-200">
         <input
           type="text"
           placeholder="Search..."
-          className="w-full text-sm md:text-base border-none focus:outline-none bg-transparent"
+          className="w-full text-sm md:text-base border-none focus:outline-none bg-transparent dark:text-white"
         />
         <Search className="text-gray-500 ml-2 cursor-pointer" />
       </div>

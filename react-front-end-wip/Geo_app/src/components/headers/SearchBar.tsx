@@ -14,7 +14,7 @@ const SearchBar = ({
     handleOpenMenu(isOpenMenu);
   };
   return (
-    <div className="bg-gray-50 h-20 sm:h-24 shadow-md border-b border-gray-200 flex items-center w-full px-4 relative">
+    <div className="bg-gray-50 dark:bg-black h-20 sm:h-24 shadow-md border-b border-gray-200 flex items-center w-full px-4 relative">
       <div className="flex justify-between items-center w-full max-w-screen-xl mx-auto">
         {/* HCAI Logo */}
         <button

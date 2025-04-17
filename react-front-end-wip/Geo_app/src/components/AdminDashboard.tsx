@@ -1,7 +1,6 @@
-import { TrashIcon } from "lucide-react";
+import { TrashIcon, ClipboardCopy, Check } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { getActiveSessions, ActiveSessionsResponse } from "@/lib/utils";
-
 
 const fixedApiKey = import.meta.env.VITE_API_KEY;
 
@@ -9,6 +8,13 @@ interface Alert {
   id: number;
   type: "error" | "success" | "info";
   message: string;
+}
+
+interface ContainerStatus {
+  redis: boolean;
+  postgis: boolean;
+  django: boolean;
+  react: boolean;
 }
 
 const AdminDashboard: React.FC = () => {
@@ -25,16 +31,45 @@ const AdminDashboard: React.FC = () => {
   const [selectedOption, setSelectedOption] = useState<string>("senate");
   const [adminCount, setAdminCount] = useState<number | null>(null);
   const [normalCount, setNormalCount] = useState<number | null>(null);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [deletingKey, setDeletingKey] = useState<string | null>(null);
+  const [containerStatus, setContainerStatus] = useState<ContainerStatus | null>(null);
 
   interface AdminError {
     id: number;
     error_code: number;
     error_description: string;
+    files_name: string;
+    line_number: string;
     created_at: string;
   }
 
   const [issues, setIssues] = useState<AdminError[]>([]);
   const [refreshCounter, setRefreshCounter] = useState(0);
+  const [apiKeys, setApiKeys] = useState<any[]>([]);
+  const [newAppName, setNewAppName] = useState("");
+
+  useEffect(() => {
+    const fetchContainerStatus = async () => {
+      try {
+        const response = await fetch("http://localhost:8000/api/service_status/", {
+          headers: { "X-API-KEY": fixedApiKey }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setContainerStatus(data);
+        } else {
+          console.error("Failed to fetch container status");
+        }
+      } catch (error) {
+        console.error("Error fetching container status:", error);
+      }
+    };
+  
+    fetchContainerStatus();
+    const interval = setInterval(fetchContainerStatus, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const fetchInterval = setInterval(() => {
@@ -46,7 +81,7 @@ const AdminDashboard: React.FC = () => {
         const response = await fetch(
           "http://localhost:8000/api/admin_errors/",
           {
-            headers: { "X-API-KEY": "supersecret" },
+            headers: { "X-API-KEY": fixedApiKey },
           }
         );
         if (!response.ok) throw new Error("Failed to fetch issues");
@@ -67,7 +102,7 @@ const AdminDashboard: React.FC = () => {
         const { admin_count, normal_count } = await getActiveSessions();
         setAdminCount(admin_count);
         if (normal_count !== null) {
-          setNormalCount(Math.round(normal_count/10));
+          setNormalCount(Math.round(normal_count / 10));
         } else {
           setNormalCount(null);
         }
@@ -75,18 +110,127 @@ const AdminDashboard: React.FC = () => {
         console.error("Failed to fetch active sessions:", err);
       }
     }
-  
+
     fetchSessions();
     const intervalId = setInterval(fetchSessions, 30000);
     return () => clearInterval(intervalId);
   }, []);
+
+  useEffect(() => {
+    const fetchApiKeys = async () => {
+      try {
+        const response = await fetch("http://localhost:8000/api/api-keys/", {
+          headers: {
+            "X-API-KEY": fixedApiKey,
+          },
+        });
+        const data = await response.json();
+        setApiKeys(data);
+      } catch (err) {
+        console.error("Failed to fetch API keys:", err);
+        addAlert("error", "Failed to load API keys.");
+      }
+    };
+
+    fetchApiKeys(); // Initial fetch
+  }, [refreshCounter]);
+
+  useEffect(() => {
+    const fetchUsageCounts = async () => {
+      try {
+        const response = await fetch("http://localhost:8000/api/api-keys/", {
+          headers: {
+            "X-API-KEY": fixedApiKey,
+          },
+        });
+        const data = await response.json();
+        setApiKeys(data);
+      } catch (err) {
+        console.error("Error fetching updated usage:", err);
+      }
+    };
+
+    fetchUsageCounts(); // initial fetch
+    const interval = setInterval(fetchUsageCounts, 10000); // every 10s
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleGenerateApiKey = async () => {
+    if (!newAppName.trim()) {
+      addAlert("error", "Please enter an app name.");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        "http://localhost:8000/api/generate-api-key/",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ app_name: newAppName }),
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to generate API key");
+      const newKey = await response.json();
+      addAlert("success", `API key generated for ${newAppName}`);
+      setApiKeys((prev) => [
+        ...prev,
+        {
+          key: newKey.api_key,
+          app_name: newKey.app_name,
+          usage_count: newKey.usage_count || 0,
+        },
+      ]);
+      setNewAppName("");
+    } catch (err) {
+      console.error("Generate failed:", err);
+      addAlert("error", "Failed to generate API key.");
+    }
+  };
+
+  const handleRevokeApiKey = async (key: string) => {
+    try {
+      const response = await fetch(
+        "http://localhost:8000/api/revoke-api-key/",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ api_key: key }),
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to revoke API key");
+
+      // Trigger animation
+      setDeletingKey(key);
+
+      // Wait for animation to finish
+      setTimeout(() => {
+        setApiKeys((prevKeys) => prevKeys.filter((k) => k.key !== key));
+        setDeletingKey(null);
+      }, 300);
+
+      addAlert("success", "API key revoked.");
+    } catch (err) {
+      console.error("Revoke failed:", err);
+      addAlert("error", "Failed to revoke API key.");
+    }
+  };
+
+  const handleCopy = (key: string) => {
+    navigator.clipboard.writeText(key).then(() => {
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey(null), 2000); // reset after 2 sec
+    });
+  };
 
   //deleting records from the database
   const handleResolveError = async (errorId: number) => {
     try {
       const response = await fetch(
         `http://localhost:8000/api/admin_errors/${errorId}/`,
-        { method: "DELETE", headers: { "X-API-KEY": "supersecret" } }
+        { method: "DELETE", headers: { "X-API-KEY": fixedApiKey } }
       );
       if (!response.ok) throw new Error("Failed to delete error");
       setIssues((prev) => prev.filter((error) => error.id !== errorId));
@@ -288,7 +432,7 @@ const AdminDashboard: React.FC = () => {
 
       {/* Alerts Section */}
       <section
-        className="bg-gray-50 rounded-lg shadow-lg p-6 mb-6"
+        className="bg-gray-50 rounded-lg shadow-lg p-6 mb-6 max-h-[30vh]"
         role="region"
         aria-labelledby="alerts-heading"
       >
@@ -358,65 +502,96 @@ const AdminDashboard: React.FC = () => {
         <div className="flex items-center mb-2">
           <h2 className="text-xl font-bold text-gray-700">Issues</h2>
         </div>
-        <table className="divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              {" "}
-              {/*I will remove this after demo*/}
-              <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-32">
-                Error ID
-              </th>
-              <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-32">
-                Error Code
-              </th>
-              <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider min-w-[500px]">
-                Description
-              </th>
-              <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-48">
-                Date Occurred
-              </th>
-              <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-32">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {issues.map((error) => (
-              <tr key={error.id}>
-                <td className="px-8 py-4 whitespace-nowrap text-base font-mono text-red-600">
-                  {error.id}
-                </td>
+        <div className="max-h-[30vh] overflow-y-auto">
+          <table className="divide-y divide-gray-200 ">
+            <thead className="bg-gray-50">
+              <tr>
+                {" "}
                 {/*I will remove this after demo*/}
-                <td className="px-8 py-4 whitespace-nowrap text-base font-mono text-red-600">
-                  {error.error_code}
-                </td>
-                <td className="px-8 py-4 whitespace-normal text-base text-gray-900 max-w-2xl">
-                  {error.error_description}
-                </td>
-                <td className="px-8 py-4 whitespace-nowrap text-base text-gray-500">
-                  {new Date(error.created_at).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </td>
-                <td className="px-8 py-4 whitespace-nowrap">
-                  <button
-                    onClick={() => handleResolveError(error.id)}
-                    className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
-                    aria-label={`Mark error ${error.id} as resolved`}
-                  >
-                    <TrashIcon className="w-5 h-5" />
-                    <span>Resolve</span>
-                  </button>
-                </td>
+                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-32">
+                  Error ID
+                </th>
+                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-32">
+                  Error Code
+                </th>
+                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider min-w-[500px]">
+                  Description
+                </th>
+                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-48">
+                  Error File
+                </th>
+                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-48">
+                  Error Line
+                </th>
+                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-48">
+                  Date Occurred
+                </th>
+                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-32">
+                  Actions
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {issues.map((error) => (
+                <tr key={error.id}>
+                  <td className="px-8 py-4 whitespace-nowrap text-base font-mono text-red-600">
+                    {error.id}
+                  </td>
+                  <td className="px-8 py-4 whitespace-nowrap text-base font-mono text-red-600">
+                    {error.error_code}
+                  </td>
+                  <td className="px-8 py-4 whitespace-normal text-base text-gray-900 max-w-2xl">
+                    {error.error_description}
+                  </td>
+                  <td className="px-8 py-4 whitespace-normal text-base text-gray-900 max-w-2xl">
+                    {error.files_name}
+                  </td>
+                  <td className="px-8 py-4 whitespace-normal text-base text-gray-900 max-w-2xl">
+                    {error.line_number}
+                  </td>
+                  <td className="px-8 py-4 whitespace-nowrap text-base text-gray-500">
+                    {new Date(error.created_at).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </td>
+                  <td className="px-8 py-4 whitespace-nowrap">
+                    <button
+                      onClick={() => handleResolveError(error.id)}
+                      className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
+                      aria-label={`Mark error ${error.id} as resolved`}
+                    >
+                      <TrashIcon className="w-5 h-5" />
+                      <span>Clear</span>
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
+
+      {/* Container Status */}
+      <ul className="space-y-2">
+      <h2 className="text-xl font-bold text-gray-700 mb-4">Service Status</h2>
+        {containerStatus && Object.entries(containerStatus).map(([name, isRunning]) => (
+          <li key={name} className="flex items-center gap-2">
+            <span
+              className={`inline-block w-3 h-3 rounded-full ${
+                isRunning ? "bg-green-500" : "bg-red-500"
+              }`}
+            />
+            <span className="font-semibold capitalize">{name}:</span>
+            <span className={isRunning ? "text-green-600" : "text-red-600"}>
+              {isRunning ? "Running" : "Stopped"}
+            </span>
+          </li>
+        ))}
+      </ul>
 
       {/* Dropdown Menu (above file upload) */}
       <section
@@ -510,6 +685,79 @@ const AdminDashboard: React.FC = () => {
           <p className="text-sm text-gray-500">Shapefiles & .csv only.</p>
         </div>
       </section>
+
+      {/* API Key Management Section */}
+      <section className="bg-gray-50 rounded-lg shadow-lg p-6 mt-10 mb-6">
+        <h2 className="text-xl font-bold text-gray-700 mb-4">
+          API Key Management
+        </h2>
+
+        <div className="flex mb-4">
+          <input
+            type="text"
+            placeholder="Enter App Name"
+            className="p-2 border border-gray-300 rounded-l-md w-full"
+            value={newAppName}
+            onChange={(e) => setNewAppName(e.target.value)}
+          />
+          <button
+            className="bg-blue-500 text-white px-4 py-2 rounded-r-md hover:bg-blue-600"
+            onClick={handleGenerateApiKey}
+          >
+            Generate
+          </button>
+        </div>
+
+        <table className="w-full table-auto text-left border border-gray-300">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="px-4 py-2">API Key</th>
+              <th className="px-4 py-2">App Name</th>
+              <th className="px-4 py-2">Usage Count</th>
+              <th className="px-4 py-2">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {apiKeys.map((key) => (
+              <tr
+                key={key.key}
+                className={`transition-opacity duration-300 ease-in-out ${
+                  deletingKey === key.key ? "opacity-0" : "opacity-100"
+                }`}
+              >
+                <td className="px-4 py-2 font-mono truncate max-w-[250px]">
+                  <div className="flex items-center gap-2">
+                    <span className="truncate">{key.key}</span>
+                    <button
+                      onClick={() => handleCopy(key.key)}
+                      className="text-blue-500 hover:text-blue-700 transition"
+                      title={
+                        copiedKey === key.key ? "Copied!" : "Copy to clipboard"
+                      }
+                    >
+                      {copiedKey === key.key ? (
+                        <Check className="w-4 h-4 text-green-600" />
+                      ) : (
+                        <ClipboardCopy className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                </td>
+                <td className="px-4 py-2">{key.app_name || "—"}</td>
+                <td className="px-4 py-2">{key.usage_count}</td>
+                <td className="px-4 py-2">
+                  <button
+                    onClick={() => handleRevokeApiKey(key.key)}
+                    className="text-red-600 hover:underline"
+                  >
+                    Revoke
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
     </main>
   );
 };
@@ -526,4 +774,3 @@ export default AdminDashboard;
     setShowConfirmation(false);
   };
  */
-

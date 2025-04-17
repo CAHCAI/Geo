@@ -229,6 +229,8 @@ class HealthProfessionalShortageArea(models.Model):
     rural_status = models.CharField(max_length=50, null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
     latitude = models.FloatField(null=True, blank=True)
+    hpsa_estimated_served_population = models.BigIntegerField(null=True)
+    hpsa_estimated_underserved_population = models.BigIntegerField(null=True)
     common_county_name = models.CharField(max_length=100, null=True, blank=True)
     common_postal_code = models.CharField(max_length=20, null=True, blank=True)
     common_state_name = models.CharField(max_length=100, null=True, blank=True)
@@ -274,6 +276,8 @@ class APIKey(models.Model):
     expires_at = models.DateTimeField(null=True, blank=True)  # Ensure this exists
     usage_count = models.IntegerField(default=0)
     revoked = models.BooleanField(default=False)
+    app_name = models.CharField(max_length=255, null=True, blank=True)
+
 
     def is_valid(self):
         """ Check if the API key is valid (not expired or revoked) """
@@ -320,6 +324,8 @@ class AdminErrors(models.Model):
     id = models.AutoField(primary_key=True)
     error_code = models.IntegerField()
     error_description = models.TextField()
+    files_name = models.TextField(default="Untraceable file name")
+    line_number = models.TextField(default="Untraceable line number")
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
