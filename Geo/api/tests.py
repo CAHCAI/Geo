@@ -1,4 +1,4 @@
-from django.test import TestCase
+from django.test import TestCase, Client
 from .models import (AssemblyDistrict, HealthServiceArea, 
 SenateDistrict, CongressionalDistrict, LAServicePlanningArea,
 MedicalServiceStudyArea, PrimaryCareShortageArea, RegisteredNurseShortageArea)
@@ -17,6 +17,15 @@ get_shapefile_layer, extract_zip, find_shapefile, upload_assembly_shapefile,
 upload_congressional_shapefile, upload_hsa_shapefile, upload_senate_shapefile,
 upload_laspa_shapefile, upload_mssa_shapefile, upload_pcsa_shapefile, upload_rnsa_shapefile)
 from datetime import date
+from django.core.files.uploadedfile import SimpleUploadedFile
+from .models import OverrideLocation
+import io
+import openpyxl
+from .models import APIKey  # APIKey model is
+from datetime import datetime, timedelta
+from django.utils import timezone
+import secrets
+
 
 # Test utilities library
 class UtilsFunctionTests(TestCase):
@@ -385,3 +394,120 @@ class URLTests(TestCase):
         response = self.client.get('/api/')  # Replace '/api/' with the actual path if different
         # Update this to the expected status code for your API root
         # self.assertEqual(response.status_code, 200)  # Commented out since the actual code may vary
+        
+class OverrideRoutesTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+        raw_key = secrets.token_hex(64)
+        hashed_key = raw_key  # In real use, hash this if needed
+
+        APIKey.objects.create(
+            key=hashed_key,
+            app_name="TestSuite",
+            expires_at=timezone.make_aware(datetime.now() + timedelta(days=30))
+        )
+
+        self.api_key = {"HTTP_X_API_KEY": raw_key}
+
+        self.test_data = {
+            "address": "123 Main St",
+            "latitude": 38.5816,
+            "longitude": -121.4944,
+        }
+        self.obj = OverrideLocation.objects.create(**self.test_data)
+    
+    def test_post_override_location(self):
+        response = self.client.post(
+            "/api/override-location/",
+            json.dumps({
+                "lat": 35.0,
+                "lon": -120.0,
+                "address": "456 Side St"
+            }),
+            content_type="application/json",
+            **self.api_key
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("success", response.json())
+
+    def test_get_manual_overrides(self):
+        response = self.client.get("/api/manual-overrides", **self.api_key)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(len(response.json()) >= 1)
+
+    def test_post_manual_override(self):
+        response = self.client.post(
+            "/api/manual-overrides",
+            json.dumps({
+                "latitude": 40.0,
+                "longitude": -100.0,
+                "address": "789 Test Ave"
+            }),
+            content_type="application/json",
+            **self.api_key
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["address"], "789 Test Ave")
+
+    def test_get_single_override(self):
+        response = self.client.get(f"/api/manual-overrides/{self.obj.id}", **self.api_key)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["address"], self.test_data["address"])
+
+    def test_put_override(self):
+        response = self.client.put(
+            f"/api/manual-overrides/{self.obj.id}",
+            json.dumps({
+                "latitude": 41.0,
+                "longitude": -105.0,
+                "address": "Updated Address"
+            }),
+            content_type="application/json",
+            **self.api_key
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["address"], "Updated Address")
+
+    def test_delete_override(self):
+        response = self.client.delete(f"/api/manual-overrides/{self.obj.id}", **self.api_key)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("success", response.json())
+
+    def test_upload_xlsx(self):
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.append(["Address", "Latitude", "Longitude"])
+        ws.append(["Excel Test", 36.0, -115.0])
+        stream = io.BytesIO()
+        wb.save(stream)
+        stream.seek(0)
+
+        xlsx_file = SimpleUploadedFile(
+            "test.xlsx",
+            stream.read(),
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
+        response = self.client.post(
+            "/api/manual-overrides/upload-xlsx",
+            data={"file": xlsx_file},
+            **self.api_key  # Let Django handle content_type and boundary
+        )
+
+        self.assertEqual(response.status_code, 200, f"Response: {response.content}")
+        self.assertIn("success", response.json())
+
+    #Azure Tests 
+    def test_check_override_location_found(self):
+        response = self.client.get(
+            f"/api/override-locations?address={self.test_data['address']}",
+            **self.api_key
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["found"], True)
+
+    def test_check_override_location_not_found(self):
+        response = self.client.get("/api/override-locations?address=Fake St", **self.api_key)
+        self.assertIn(response.status_code, [200, 404])
+    

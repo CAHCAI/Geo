@@ -22,12 +22,6 @@ const AdminDashboard: React.FC = () => {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [coordinates, setCoordinates] = useState("");
-  const [address, setAddress] = useState("");
-  const [showAddressInput, setShowAddressInput] = useState(false);
-  const [showSubmitButton, setShowSubmitButton] = useState(false);
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedOption, setSelectedOption] = useState<string>("senate");
   const [adminCount, setAdminCount] = useState<number | null>(null);
   const [normalCount, setNormalCount] = useState<number | null>(null);
@@ -102,7 +96,7 @@ const AdminDashboard: React.FC = () => {
         const { admin_count, normal_count } = await getActiveSessions();
         setAdminCount(admin_count);
         if (normal_count !== null) {
-          setNormalCount(Math.round(normal_count / 10));
+          setNormalCount(Math.round(normal_count));
         } else {
           setNormalCount(null);
         }
@@ -349,74 +343,6 @@ const AdminDashboard: React.FC = () => {
   // Remove an alert by id
   const removeAlert = (id: number) => {
     setAlerts((prevAlerts) => prevAlerts.filter((alert) => alert.id !== id));
-  };
-
-  const handleCoordinatesChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const value = event.target.value;
-    const coordinatesRegex = /^-?\d{1,3}\.\d+,\s*-?\d{1,3}\.\d+$/;
-    setCoordinates(value);
-    setShowAddressInput(coordinatesRegex.test(value));
-  };
-
-  const handleAddressChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setAddress(event.target.value);
-    setShowSubmitButton(event.target.value.length > 0);
-  };
-
-  const handleSubmit = () => {
-    setShowConfirmation(true);
-  };
-
-  const confirmSubmit = async () => {
-    setIsSubmitting(true);
-    try {
-      const lat = parseFloat(coordinates.split(",")[0].trim());
-      const lon = parseFloat(coordinates.split(",")[1].trim());
-
-      if (isNaN(lat) || isNaN(lon)) {
-        throw new Error(
-          "Invalid coordinate format. Ensure it is in 'lat, lon' format."
-        );
-      }
-
-      const response = await fetch(
-        "http://localhost:8000/api/override-location/",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-API-KEY": fixedApiKey,
-          },
-          body: JSON.stringify({
-            lat: lat,
-            lon: lon,
-            address: address.trim(),
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Server response error:", errorData);
-        throw new Error(errorData.message || "Failed to update location.");
-      }
-
-      alert(
-        `Coordinates: ${coordinates}\nAddress: ${address}\nSuccessfully Updated!`
-      );
-    } catch (error) {
-      console.error("Error updating location:", error);
-      alert("Failed to update location. Please try again.");
-    }
-
-    setIsSubmitting(false);
-    setCoordinates("");
-    setAddress("");
-    setShowAddressInput(false);
-    setShowSubmitButton(false);
-    setShowConfirmation(false);
   };
 
   return (
@@ -764,13 +690,3 @@ const AdminDashboard: React.FC = () => {
 
 export default AdminDashboard;
 
-/*
-  const confirmSubmit = () => {
-    alert(`Coordinates: ${coordinates}\nAddress: ${address}\nSuccessfully Updated!`);
-    setCoordinates("");
-    setAddress("");
-    setShowAddressInput(false);
-    setShowSubmitButton(false);
-    setShowConfirmation(false);
-  };
- */
