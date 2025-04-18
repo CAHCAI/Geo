@@ -420,32 +420,30 @@ const HpsaSearchPage: React.FC = () => {
     <>
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 bg-white p-2 rounded"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 bg-white dark:bg-[#2f3136] text-black dark:text-white p-2 rounded"
       >
         Skip to main content
       </a>
+
       <header className="container mx-auto pt-5 px-4">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-blue-500">
           Health Professional Shortage Areas (HPSA) Search
         </h1>
       </header>
+
       <div className="container mx-auto pt-5 px-4 space-y-4">
         {/* Alerts Section */}
-        <section
-          className="p-0 mb-1"
-          role="region"
-          aria-labelledby="alerts-heading"
-        >
+        <section className="p-0 mb-1" role="region" aria-labelledby="alerts-heading">
           <div className="space-y-2">
             {alerts.map((alert) => (
               <div
                 key={alert.id}
                 className={`p-4 rounded-lg ${
                   alert.type === "error"
-                    ? "bg-red-100 text-red-700"
+                    ? "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300"
                     : alert.type === "success"
-                    ? "bg-green-100 text-green-700"
-                    : "bg-blue-100 text-blue-700"
+                    ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-300"
+                    : "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300"
                 }`}
               >
                 <p>{alert.message}</p>
@@ -461,7 +459,7 @@ const HpsaSearchPage: React.FC = () => {
           isLoading={isLoading}
         />
 
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
           Example: <span className="italic">37.7749, -122.4194</span> or{" "}
           <span className="italic">
             California State Capitol, 1315 10th St, Sacramento, CA 95814
@@ -472,22 +470,20 @@ const HpsaSearchPage: React.FC = () => {
           <>
             {/* Base Table */}
             <div className="relative">
-              <div className="border border-gray-300 rounded-lg p-4 shadow-md bg-white max-h-[250px] sm:max-h-[300px] overflow-auto">
+              <div className="border border-gray-300 dark:border-[#4f545c] rounded-lg p-4 shadow-md bg-white dark:bg-[#2f3136] max-h-[250px] sm:max-h-[300px] overflow-auto">
                 <div className="space-y-2">
                   {transposedBaseTableData.map((row, index) => (
                     <div
                       key={index}
                       className={`py-2 ${
                         index !== transposedBaseTableData.length - 1
-                          ? "border-b border-gray-300"
+                          ? "border-b border-gray-300 dark:border-[#4f545c]"
                           : ""
                       }`}
                     >
-                      <div className="font-semibold text-gray-800">
-                        {row.Header}:
-                      </div>
+                      <div className="font-semibold text-gray-800 dark:text-blue-500 ">{row.Header}:</div>
                       {row.rows.map((cell, idx) => (
-                        <div key={idx} className="text-gray-700">
+                        <div key={idx} className="text-gray-700 dark:text-gray-300">
                           {cell}
                         </div>
                       ))}
@@ -496,257 +492,42 @@ const HpsaSearchPage: React.FC = () => {
                 </div>
               </div>
             </div>
-
-            {/* Row 2 */}
           </>
         )}
 
-        {/* Row 3 - Using Transposed Data Needed to Make Rows Instead of Columns*/}
+        {/* Repeat this card structure with dark classes */}
         <div className="w-full space-y-4">
           {searchResults?.senate?.length > 0 && (
             <div className="flex flex-wrap gap-4 pb-4">
-              <div className="relative">
-                <div className="border border-gray-300 rounded-lg shadow-md bg-white min-h-[400px] max-h-[400px] overflow-auto resize-x min-w-[300px] w-fit max-w-[350px]">
-                  <h3 className="text-lg font-bold text-gray-900 mb-3 sticky top-0 bg-white p-4 ">
-                    Primary Health Care
-                  </h3>
-                  <div className="space-y-2 p-4 ">
-                    {transposedPrimaryCareData.map((row, index) => (
-                      <div
-                        key={index}
-                        className={`py-2 ${
-                          index !== transposedPrimaryCareData.length - 1
-                            ? "border-b border-gray-300"
-                            : ""
-                        }`}
-                      >
-                        <div className="font-semibold text-gray-800">
-                          {row.Header}:
-                        </div>
-                        {row.rows.map((cell, idx) => (
-                          <div key={idx} className="text-gray-700">
-                            {cell}
-                          </div>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div className="relative">
-                <div className="border border-gray-300 rounded-lg shadow-md bg-white min-h-[400px] max-h-[400px] overflow-auto resize-x min-w-[300px] w-fit max-w-[350px]">
-                  <h3 className="text-lg font-bold text-gray-900 mb-3 sticky top-0 bg-white p-4 ">
-                    Mental Health Care
-                  </h3>
-                  <div className="space-y-2 p-4 ">
-                    {transposedMentalHealthData.map((row, index) => (
-                      <div
-                        key={index}
-                        className={`py-2 ${
-                          index !== transposedMentalHealthData.length - 1
-                            ? "border-b border-gray-300"
-                            : ""
-                        }`}
-                      >
-                        <div className="font-semibold text-gray-800">
-                          {row.Header}:
-                        </div>
-                        {row.rows.map((cell, idx) => (
-                          <div key={idx} className="text-gray-700">
-                            {cell}
-                          </div>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div className="relative">
-                <div className="border border-gray-300 rounded-lg shadow-md bg-white min-h-[400px] max-h-[400px] overflow-auto resize-x min-w-[300px] w-fit max-w-[350px]">
-                  <h3 className="text-lg font-bold text-gray-900 mb-3 sticky top-0 bg-white p-4 ">
-                    Dental Health Care
-                  </h3>
-                  <div className="space-y-2 p-4 ">
-                    {transposedDentalHealthData.map((row, index) => (
-                      <div
-                        key={index}
-                        className={`py-2 ${
-                          index !== transposedDentalHealthData.length - 1
-                            ? "border-b border-gray-300"
-                            : ""
-                        }`}
-                      >
-                        <div className="font-semibold text-gray-800">
-                          {row.Header}:
-                        </div>
-                        {row.rows.map((cell, idx) => (
-                          <div key={idx} className="text-gray-700">
-                            {cell}
-                          </div>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div className="relative">
-                <div className="border border-gray-300 rounded-lg shadow-md bg-white min-h-[400px] max-h-[400px] overflow-auto resize-x min-w-[300px] w-fit max-w-[350px]">
-                  <h3 className="text-lg font-bold text-gray-900 mb-3 sticky top-0 bg-white p-4 ">
-                    Health Service Area
-                  </h3>
-                  <div className="space-y-2 p-4 ">
-                    {transposedHealthServiceAreaData.map((row, index) => (
-                      <div
-                        key={index}
-                        className={`py-2 ${
-                          index !== transposedHealthServiceAreaData.length - 1
-                            ? "border-b border-gray-300"
-                            : ""
-                        }`}
-                      >
-                        <div className="font-semibold text-gray-800">
-                          {row.Header}:
-                        </div>
-                        {row.rows.map((cell, idx) => (
-                          <div key={idx} className="text-gray-700">
-                            {cell}
-                          </div>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="relative">
-                <div className="border border-gray-300 rounded-lg shadow-md bg-white min-h-[400px] max-h-[400px] overflow-auto resize-x min-w-[300px] w-fit max-w-[350px]">
-                  <h3 className="text-lg font-bold text-gray-900 mb-3 sticky top-0 bg-white p-4 ">
-                    Planning Area
-                  </h3>
-                  <div className="space-y-2 p-4 ">
-                    {transposedLAServicePlanningData.map((row, index) => (
-                      <div
-                        key={index}
-                        className={`py-2 ${
-                          index !== transposedLAServicePlanningData.length - 1
-                            ? "border-b border-gray-300"
-                            : ""
-                        }`}
-                      >
-                        <div className="font-semibold text-gray-800">
-                          {row.Header}:
-                        </div>
-                        {row.rows.map((cell, idx) => (
-                          <div key={idx} className="text-gray-700">
-                            {cell}
-                          </div>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {searchResults?.assembly?.length > 0 && (
-                <div className="relative">
-                  <div className="border border-gray-300 rounded-lg shadow-md bg-white min-h-[400px] max-h-[400px] overflow-auto resize-x min-w-[300px] w-fit max-w-[350px]">
-                    <h3 className="text-lg font-bold text-gray-900 mb-3 sticky top-0 bg-white p-4 ">
-                      Assembly District
-                    </h3>
-                    <div className="space-y-2 p-4 ">
-                      {transposedLAServicePlanningData.map((row, index) => (
-                        <div
-                          key={index}
-                          className={`py-2 ${
-                            index !== transposedLAServicePlanningData.length - 1
-                              ? "border-b border-gray-300"
-                              : ""
-                          }`}
-                        >
-                          <div className="font-semibold text-gray-800">
-                            {row.Header}:
-                          </div>
-                          {row.rows.map((cell, idx) => (
-                            <div key={idx} className="text-gray-700">
-                              {cell}
-                            </div>
-                          ))}
-                        </div>
-                      ))}
-                      {transposedAssemblyData.map((row, index) => (
-                        <div
-                          key={index}
-                          className={`py-2 ${
-                            index !== transposedAssemblyData.length - 1
-                              ? "border-b border-gray-300"
-                              : ""
-                          }`}
-                        >
-                          <div className="font-semibold text-gray-800">
-                            {row.Header}:
-                          </div>
-                          {row.rows.map((cell, idx) => (
-                            <div key={idx} className="text-gray-700">
-                              {cell}
-                            </div>
-                          ))}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-              {searchResults?.senate?.length > 0 && (
-                <div className="relative">
-                  <div className="border border-gray-300 rounded-lg shadow-md bg-white min-h-[400px] max-h-[400px] overflow-auto resize-x min-w-[300px] w-fit max-w-[350px]">
-                    <h3 className="text-lg font-bold text-gray-900 mb-3 sticky top-0 bg-white p-4 ">
-                      Senate District
-                    </h3>
-                    <div className="space-y-2 p-4 ">
-                      {transposedSenateData.map((row, index) => (
-                        <div
-                          key={index}
-                          className={`py-2 ${
-                            index !== transposedSenateData.length - 1
-                              ? "border-b border-gray-300"
-                              : ""
-                          }`}
-                        >
-                          <div className="font-semibold text-gray-800">
-                            {row.Header}:
-                          </div>
-                          {row.rows.map((cell, idx) => (
-                            <div key={idx} className="text-gray-700">
-                              {cell}
-                            </div>
-                          ))}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-              {searchResults?.congressional?.length > 0 && (
-                <div className="relative">
-                  <div className="border border-gray-300 rounded-lg shadow-md bg-white min-h-[400px] max-h-[400px] overflow-auto resize-x min-w-[300px] w-fit max-w-[350px]">
-                    <h3 className="text-lg font-bold text-gray-900 mb-3 sticky top-0 bg-white p-4">
-                      Congressional District
+              {/* Example card updated for dark mode */}
+              {[
+                { title: "Primary Health Care", data: transposedPrimaryCareData },
+                { title: "Mental Health Care", data: transposedMentalHealthData },
+                { title: "Dental Health Care", data: transposedDentalHealthData },
+                { title: "Health Service Area", data: transposedHealthServiceAreaData },
+                { title: "Planning Area", data: transposedLAServicePlanningData },
+                { title: "Assembly District", data: transposedAssemblyData },
+                { title: "Senate District", data: transposedSenateData },
+                { title: "Congressional District", data: transposedCongressionalData },
+              ].map(({ title, data }) => (
+                <div key={title} className="relative">
+                  <div className="border border-gray-300 dark:border-[#4f545c] rounded-lg shadow-md bg-white dark:bg-[#2f3136] min-h-[400px] max-h-[400px] overflow-auto resize-x min-w-[300px] w-fit max-w-[350px]">
+                    <h3 className="text-lg font-bold text-gray-900 mb-3 sticky top-0 bg-white dark:bg-[#2f3136] dark:text-blue-500 p-4 ">
+                      {title}
                     </h3>
                     <div className="space-y-2 p-4">
-                      {transposedCongressionalData.map((row, index) => (
+                      {data.map((row, index) => (
                         <div
                           key={index}
                           className={`py-2 ${
-                            index !== transposedCongressionalData.length - 1
-                              ? "border-b border-gray-300"
+                            index !== data.length - 1
+                              ? "border-b border-gray-300 dark:border-[#4f545c]"
                               : ""
                           }`}
                         >
-                          <div className="font-semibold text-gray-800">
-                            {row.Header}:
-                          </div>
+                          <div className="font-semibold text-gray-900 dark:text-white">{row.Header}:</div>
                           {row.rows.map((cell, idx) => (
-                            <div key={idx} className="text-gray-700">
+                            <div key={idx} className="text-gray-700 dark:text-gray-300">
                               {cell}
                             </div>
                           ))}
@@ -755,12 +536,13 @@ const HpsaSearchPage: React.FC = () => {
                     </div>
                   </div>
                 </div>
-              )}
+              ))}
             </div>
           )}
         </div>
       </div>
     </>
+
   );
 };
 

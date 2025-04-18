@@ -57,7 +57,7 @@ const App: React.FC = () => {
       case "admin-dashboard":
         return <AdminDashboard />;
       case "home":
-        return <Home />;
+        return <Home setActivePage={setActivePage}/>;
       case "test_cred":
         return <TestAdminCredentials />;
       case "licensed-healthcare":
@@ -69,12 +69,12 @@ const App: React.FC = () => {
       case "cord-override":
         return <CordOverride />;
       default:
-        return <Home />;
+        return <Home setActivePage={setActivePage}/>;
     }
   };
 
   return (
-    <div className="bg-white dark:bg-black">
+    <div className="bg-white dark:bg-[#2f3136] ">
       {/* Navbar */}
       <nav className="drop-shadow-lg z-50">
         <div className="lg:block hidden px-4  w-full">

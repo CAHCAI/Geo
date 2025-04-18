@@ -1,6 +1,10 @@
 import React from "react";
 
-const Home: React.FC = () => {
+type HomeProps = {
+  setActivePage: React.Dispatch<React.SetStateAction<string>>;
+};
+
+const Home: React.FC<HomeProps> = ({ setActivePage }) => {
   return (
     <>
       {/* 1. Skip Link for Keyboard Navigation */}
@@ -46,13 +50,14 @@ const Home: React.FC = () => {
             >
               Health Professional Shortage Search
             </h2>
-            <p className="text-gray-800 mb-4">
+            <p className="text-gray-800 mb-4  dark:text-gray-200">
               Look up{" "}
               <a
-                href="#hpsa-search" // Replace with the actual destination if available
                 className="text-blue-900 dark:text-blue-500 hover:underline focus:underline"
               >
-                specific Health Professional Shortage Areas
+                <button onClick={() => setActivePage("hpsa-search")}>
+                  specific Health Professional Shortage Areas
+                </button>
               </a>
               .
             </p>
@@ -95,13 +100,14 @@ const Home: React.FC = () => {
             >
               Licensed Healthcare Facilities
             </h2>
-            <p className="text-gray-800 mb-4">
+            <p className="text-gray-800 mb-4 dark:text-gray-200">
               Look up{" "}
               <a
-                href="#licensed-facilities" // Replace with the actual destination if available
                 className="text-blue-900 dark:text-blue-500 hover:underline focus:underline"
               >
-                Licensed Healthcare Facilities
+                <button onClick={() => setActivePage("licensed-healthcare")}>
+                  Licensed Healthcare Facilities
+                </button>
               </a>
               .
             </p>

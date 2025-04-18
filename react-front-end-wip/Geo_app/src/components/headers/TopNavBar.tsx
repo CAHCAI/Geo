@@ -3,7 +3,7 @@ import ThemeToggle from "../ThemeToggle";
 
 const TopNavBar = () => {
   return (
-    <div className="max-w-screen-xl mx-auto flex items-center gap-3 justify-between dark:bg-black bg-white">
+    <div className="max-w-screen-xl mx-auto flex items-center gap-3 justify-between dark:bg-[#202225] bg-white">
       <div>
         <img
           src={CA_LOGO}

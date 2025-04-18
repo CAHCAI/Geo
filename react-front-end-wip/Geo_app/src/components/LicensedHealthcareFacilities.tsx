@@ -93,7 +93,7 @@ const LicensedHealthcareFacilities: React.FC = () => {
 
   return (
     <main className="container mx-auto pt-5 px-4 space-y-4">
-      <section className="border border-gray-300 dark:bg-gray-800 rounded-lg p-4 shadow-md bg-white overflow-auto">
+      <section className="border border-gray-300 dark:border-gray-700 dark:bg-[#2f3136] bg-white rounded-lg p-4 shadow-md overflow-auto">
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
@@ -103,7 +103,7 @@ const LicensedHealthcareFacilities: React.FC = () => {
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className=" text-white">
+                  <TableRow className="bg-gray-200 dark:bg-[#36393f] text-black dark:text-white">
                     {tableColumns.map((col) => (
                       <TableHead
                         key={col.accessor}
@@ -122,7 +122,7 @@ const LicensedHealthcareFacilities: React.FC = () => {
                                 [col.accessor]: e.target.value,
                               }))
                             }
-                            className="w-full px-2 py-1 mt-1 border-black rounded text-sm text-black"
+                            className="w-full px-2 py-1 mt-1 rounded text-sm text-black dark:text-white dark:bg-[#202225] dark:placeholder-gray-400 border dark:border-gray-600"
                           />
                         </div>
                       </TableHead>
@@ -133,16 +133,16 @@ const LicensedHealthcareFacilities: React.FC = () => {
                   {paginatedData.map((row, index) => (
                     <TableRow
                       key={index}
-                      className={
+                      className={`${
                         index % 2 === 0
-                          ? "bg-white"
-                          : "bg-gray-50 hover:bg-gray-100"
-                      }
+                          ? "bg-white dark:bg-[#2f3136]"
+                          : "bg-gray-50 dark:bg-[#202225] hover:bg-gray-100 dark:hover:bg-[#2a2d31]"
+                      }`}
                     >
                       {tableColumns.map((col) => (
                         <TableCell
                           key={col.accessor}
-                          className="p-3 truncate text-sm"
+                          className="p-3 truncate text-sm text-black dark:text-gray-200"
                         >
                           {typeof row[col.accessor as keyof FacilityData] ===
                           "boolean"
@@ -156,7 +156,7 @@ const LicensedHealthcareFacilities: React.FC = () => {
                   ))}
                 </TableBody>
               </Table>
-            </div>
+        </div>
 
             <div className="flex justify-between items-center mt-4">
               <Button

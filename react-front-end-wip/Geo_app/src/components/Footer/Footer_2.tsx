@@ -9,7 +9,7 @@ import {
 
 const Footer_2 = () => {
   return (
-    <div className="max-w-screen-xl mx-auto pb-20 bg-white dark:bg-black">
+    <div className="max-w-screen-xl mx-auto pb-20 bg-white dark:bg-[#2f3136]">
       {/* ========== top section start here==========  */}
       <div className="py-10 px-6">
         <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 text-sm text-gray-800">

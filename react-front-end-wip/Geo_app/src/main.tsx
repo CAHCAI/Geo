@@ -17,7 +17,7 @@ const RootLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   return (
     <html lang="en" className=" scroll-smooth">
-      <body className=" bg-white dark:bg-black min-h-screen">
+      <body className=" bg-white dark:bg-[#2f3136] min-h-screen">
         <ThemeProvider>
         {/* Main Content */}
           <main>{children}</main>
