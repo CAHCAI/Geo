@@ -40,7 +40,7 @@ export const InputWithButton: React.FC<{
   fetchResults: () => void;
   isLoading: boolean;
 }> = ({ searchQuery, setSearchQuery, fetchResults, isLoading }) => (
-  <div className="flex flex-col sm:flex-row w-full max-w-sm items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-4">
+  <div className="flex flex-col sm:flex-row  min-w-sm max-w-[50vw] items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-4">
     <label htmlFor="coordinates-input" className="sr-only">
       Enter coordinates (latitude, longitude)
     </label>
@@ -52,7 +52,6 @@ export const InputWithButton: React.FC<{
       onChange={(e) => setSearchQuery(e.target.value)}
       className=" border-gray-300 border-2 bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 text-md"
       aria-describedby="coordinate-hint"
-      
     />
     <p id="coordinate-hint" className="sr-only">
       Example: 37.7749, -122.4194
@@ -88,45 +87,53 @@ const HpsaSearchPage: React.FC = () => {
   const fetchResults = async () => {
     console.log("fetchResults function triggered.");
     setError(null);
-  
+
     if (!searchQuery.trim()) {
       console.error("No search query provided.");
       setError("Please enter valid coordinates.");
       addAlert("error", "Please enter valid coordinates.");
       return;
     }
-  
+
     setIsLoading(true);
-  
+
     let lat: number | null = null;
     let lng: number | null = null;
-  
+
     try {
       // Check if input is a coordinate
       const parts = searchQuery.split(",");
-      if (parts.length === 2 && !isNaN(parseFloat(parts[0])) && !isNaN(parseFloat(parts[1]))) {
+      if (
+        parts.length === 2 &&
+        !isNaN(parseFloat(parts[0])) &&
+        !isNaN(parseFloat(parts[1]))
+      ) {
         lat = parseFloat(parts[0].trim());
         lng = parseFloat(parts[1].trim());
       } else {
         // If input is an address, try to get coordinates from override API
-        const overrideRes = await fetch(`http://localhost:8000/api/override-locations?address=${encodeURIComponent(searchQuery)}`, {
-          method: "GET",
-          headers: {
-            "X-API-KEY": fixedApiKey,
-          },
-        });
+        const overrideRes = await fetch(
+          `http://localhost:8000/api/override-locations?address=${encodeURIComponent(
+            searchQuery
+          )}`,
+          {
+            method: "GET",
+            headers: {
+              "X-API-KEY": fixedApiKey,
+            },
+          }
+        );
         const overrideData = await overrideRes.json();
-        
+
         if (overrideRes.ok && overrideData.latitude && overrideData.longitude) {
           lat = overrideData.latitude;
           lng = overrideData.longitude;
 
-          if(overrideData.found){
+          if (overrideData.found) {
             console.log("Using coordinates from override:", lat, lng);
-          }else{
+          } else {
             console.log("Using coordinates from azure:", lat, lng);
           }
-          
         } else {
           console.error("Could not resolve address to coordinates.");
           setError("Could not resolve address to coordinates.");
@@ -134,10 +141,10 @@ const HpsaSearchPage: React.FC = () => {
           return;
         }
       }
-  
+
       const apiUrl = `http://localhost:8000/api/search?lat=${lat}&lng=${lng}`;
       console.log("Fetching from API:", apiUrl);
-  
+
       const response = await fetch(apiUrl, {
         method: "GET",
         headers: {
@@ -145,10 +152,10 @@ const HpsaSearchPage: React.FC = () => {
           "X-API-KEY": fixedApiKey,
         },
       });
-  
+
       const data = await response.json();
       console.log("Fetched data:", data);
-  
+
       if (
         Object.keys(data).length === 0 ||
         (!data.senate && !data.assembly && !data.congressional && !data.hsa)
@@ -169,7 +176,6 @@ const HpsaSearchPage: React.FC = () => {
       setIsLoading(false);
     }
   };
-  
 
   // Add a new alert
   const addAlert = (type: Alert["type"], message: string) => {
@@ -457,9 +463,10 @@ const HpsaSearchPage: React.FC = () => {
 
         <p className="text-sm text-gray-500 mt-1">
           Example: <span className="italic">37.7749, -122.4194</span> or{" "}
-          <span className="italic">California State Capitol, 1315 10th St, Sacramento, CA 95814</span>
+          <span className="italic">
+            California State Capitol, 1315 10th St, Sacramento, CA 95814
+          </span>
         </p>
-
 
         {searchResults?.senate?.length > 0 && (
           <>
