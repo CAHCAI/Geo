@@ -114,7 +114,7 @@ const sections = [
       { id: "servicestatus-parameters", label: "Parameters" },
       { id: "servicestatus-response", label: "Response" },
     ],
-  }
+  },
 ];
 
 const APIReference: React.FC = () => {
@@ -141,193 +141,205 @@ const APIReference: React.FC = () => {
   const [apikeysData, setApikeysData] = useState<any>(null);
   const [servicestatusData, setServicestatusData] = useState<any>(null);
 
-useEffect(() => {
-  fetch("/api/openapi.json")
-    .then((response) => response.json())
-    .then((data) => {
-      setApiSchema(data);
+  useEffect(() => {
+    fetch("/api/openapi.json")
+      .then((response) => response.json())
+      .then((data) => {
+        setApiSchema(data);
+      })
+      .catch((error) => {
+        console.error("Error fetching OpenAPI JSON:", error);
+      });
+  }, []);
+
+  // Fetch real example data
+  useEffect(() => {
+    const lat = 34;
+    const lng = -118;
+    const API_KEY = import.meta.env.VITE_API_KEY;
+
+    fetch(`/api/search?lat=${lat}&lng=${lng}`, {
+      headers: {
+        "X-API-KEY": API_KEY,
+      },
     })
-    .catch((error) => {
-      console.error("Error fetching OpenAPI JSON:", error);
-    });
-}, []);
+      .then((response) => response.json())
+      .then((data) => {
+        setExampleData(data);
+      })
+      .catch((error) => {
+        console.error("Error fetching example data:", error);
+      });
+  }, []);
 
-// Fetch real example data
-useEffect(() => {
-  const lat = 34;
-  const lng = -118;
-  const API_KEY = import.meta.env.VITE_API_KEY;
-
-  fetch(`/api/search?lat=${lat}&lng=${lng}`, {
-    headers: {
-      "X-API-KEY": API_KEY, 
-     },
-  })  
-    .then((response) => response.json())
-    .then((data) => {
-      setExampleData(data);
+  useEffect(() => {
+    const API_KEY = import.meta.env.VITE_API_KEY;
+    fetch("/api/test-cache", {
+      headers: {
+        "X-API-KEY": API_KEY,
+      },
     })
-    .catch((error) => {
-      console.error("Error fetching example data:", error);
-    });
-}, []);
+      .then((response) => response.json())
+      .then((data) => {
+        setTestCacheData(data);
+      })
+      .catch((error) => {
+        console.error("Error fetching test-cache data:", error);
+      });
+  }, []);
 
-useEffect(() => {
-  const API_KEY = import.meta.env.VITE_API_KEY;
-  fetch("/api/test-cache", {
-    headers: {
-      "X-API-KEY": API_KEY,
-    },
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      setTestCacheData(data);
+  useEffect(() => {
+    const API_KEY = import.meta.env.VITE_API_KEY;
+    fetch("/api/list-tables", {
+      headers: {
+        "X-API-KEY": API_KEY,
+      },
     })
-    .catch((error) => {
-      console.error("Error fetching test-cache data:", error);
-    });
-}, []);
+      .then((response) => response.json())
+      .then((data) => {
+        setListTablesData(data);
+      })
+      .catch((error) => {
+        console.error("Error fetching list-tables data:", error);
+      });
+  }, []);
 
-useEffect(() => {
-  const API_KEY = import.meta.env.VITE_API_KEY;
-  fetch("/api/list-tables", {
-    headers: {
-      "X-API-KEY": API_KEY,
-    },
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      setListTablesData(data);
+  useEffect(() => {
+    const API_KEY = import.meta.env.VITE_API_KEY;
+    fetch("/api/all-district-data", {
+      headers: {
+        "X-API-KEY": API_KEY,
+      },
     })
-    .catch((error) => {
-      console.error("Error fetching list-tables data:", error);
-    });
-}, []);
+      .then((response) => response.json())
+      .then((data) => {
+        setAllDistrictData(data);
+      })
+      .catch((error) => {
+        console.error("Error fetching all-district-data:", error);
+      });
+  }, []);
 
-useEffect(() => {
-  const API_KEY = import.meta.env.VITE_API_KEY;
-  fetch("/api/all-district-data", {
-    headers: {
-      "X-API-KEY": API_KEY,
-    },
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      setAllDistrictData(data);
+  useEffect(() => {
+    const API_KEY = import.meta.env.VITE_API_KEY;
+    fetch("/api/test", {
+      headers: {
+        "X-API-KEY": API_KEY,
+      },
     })
-    .catch((error) => {
-      console.error("Error fetching all-district-data:", error);
-    });
-}, []);
+      .then((res) => res.json())
+      .then((data) => setTestapiData(data))
+      .catch((err) => console.error("Error fetching /api/test:", err));
+  }, []);
 
-useEffect(() => {
-  const API_KEY = import.meta.env.VITE_API_KEY;
-  fetch("/api/test", {
-    headers: {
-      "X-API-KEY": API_KEY,
-    },
-  })
-    .then((res) => res.json())
-    .then((data) => setTestapiData(data))
-    .catch((err) => console.error("Error fetching /api/test:", err));
-}, []);
+  useEffect(() => {
+    const API_KEY = import.meta.env.VITE_API_KEY;
+    fetch("/api/dev-credentials", {
+      headers: {
+        "X-API-KEY": API_KEY,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => setDevcredentialsData(data))
+      .catch((err) =>
+        console.error("Error fetching /api/dev-credentials:", err)
+      );
+  }, []);
 
-useEffect(() => {
-  const API_KEY = import.meta.env.VITE_API_KEY;
-  fetch("/api/dev-credentials", {
-    headers: {
-      "X-API-KEY": API_KEY,
-    },
-  })
-    .then((res) => res.json())
-    .then((data) => setDevcredentialsData(data))
-    .catch((err) => console.error("Error fetching /api/dev-credentials:", err));
-}, []);
+  useEffect(() => {
+    const API_KEY = import.meta.env.VITE_API_KEY;
+    fetch("/api/override-locations", {
+      headers: {
+        "X-API-KEY": API_KEY,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => setOverridelocationsData(data))
+      .catch((err) =>
+        console.error("Error fetching /api/override-locations:", err)
+      );
+  }, []);
 
-useEffect(() => {
-  const API_KEY = import.meta.env.VITE_API_KEY;
-  fetch("/api/override-locations", {
-    headers: {
-      "X-API-KEY": API_KEY,
-    },
-  })
-    .then((res) => res.json())
-    .then((data) => setOverridelocationsData(data))
-    .catch((err) => console.error("Error fetching /api/override-locations:", err));
-}, []);
+  useEffect(() => {
+    const API_KEY = import.meta.env.VITE_API_KEY;
+    fetch("/api/manual-overrides", {
+      headers: {
+        "X-API-KEY": API_KEY,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => setManualoverridesData(data))
+      .catch((err) =>
+        console.error("Error fetching /api/manual-overrides:", err)
+      );
+  }, []);
 
-useEffect(() => {
-  const API_KEY = import.meta.env.VITE_API_KEY;
-  fetch("/api/manual-overrides", {
-    headers: {
-      "X-API-KEY": API_KEY,
-    },
-  })
-    .then((res) => res.json())
-    .then((data) => setManualoverridesData(data))
-    .catch((err) => console.error("Error fetching /api/manual-overrides:", err));
-}, []);
+  useEffect(() => {
+    const API_KEY = import.meta.env.VITE_API_KEY;
+    fetch("/api/manual-overrides/1", {
+      // Example for {override_id} set to 123
+      headers: {
+        "X-API-KEY": API_KEY,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => setManualoverridesidData(data))
+      .catch((err) =>
+        console.error("Error fetching /api/manual-overrides/123:", err)
+      );
+  }, []);
 
-useEffect(() => {
-  const API_KEY = import.meta.env.VITE_API_KEY;
-  fetch("/api/manual-overrides/1", {
-    // Example for {override_id} set to 123
-    headers: {
-      "X-API-KEY": API_KEY,
-    },
-  })
-    .then((res) => res.json())
-    .then((data) => setManualoverridesidData(data))
-    .catch((err) => console.error("Error fetching /api/manual-overrides/123:", err));
-}, []);
+  useEffect(() => {
+    const API_KEY = import.meta.env.VITE_API_KEY;
+    fetch("/api/active-sessions", {
+      headers: {
+        "X-API-KEY": API_KEY,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => setActivesessionsData(data))
+      .catch((err) =>
+        console.error("Error fetching /api/active-sessions:", err)
+      );
+  }, []);
 
-useEffect(() => {
-  const API_KEY = import.meta.env.VITE_API_KEY;
-  fetch("/api/active-sessions", {
-    headers: {
-      "X-API-KEY": API_KEY,
-    },
-  })
-    .then((res) => res.json())
-    .then((data) => setActivesessionsData(data))
-    .catch((err) => console.error("Error fetching /api/active-sessions:", err));
-}, []);
+  useEffect(() => {
+    const API_KEY = import.meta.env.VITE_API_KEY;
+    fetch("/api/admin_errors", {
+      headers: {
+        "X-API-KEY": API_KEY,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => setAdminerrorsData(data))
+      .catch((err) => console.error("Error fetching /api/admin_errors:", err));
+  }, []);
 
-useEffect(() => {
-  const API_KEY = import.meta.env.VITE_API_KEY;
-  fetch("/api/admin_errors", {
-    headers: {
-      "X-API-KEY": API_KEY,
-    },
-  })
-    .then((res) => res.json())
-    .then((data) => setAdminerrorsData(data))
-    .catch((err) => console.error("Error fetching /api/admin_errors:", err));
-}, []);
+  useEffect(() => {
+    const API_KEY = import.meta.env.VITE_API_KEY;
+    fetch("/api/api-keys", {
+      headers: {
+        "X-API-KEY": API_KEY,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => setApikeysData(data))
+      .catch((err) => console.error("Error fetching /api/api-keys:", err));
+  }, []);
 
-useEffect(() => {
-  const API_KEY = import.meta.env.VITE_API_KEY;
-  fetch("/api/api-keys", {
-    headers: {
-      "X-API-KEY": API_KEY,
-    },
-  })
-    .then((res) => res.json())
-    .then((data) => setApikeysData(data))
-    .catch((err) => console.error("Error fetching /api/api-keys:", err));
-}, []);
-
-useEffect(() => {
-  const API_KEY = import.meta.env.VITE_API_KEY;
-  fetch("/api/service_status", {
-    headers: {
-      "X-API-KEY": API_KEY,
-    },
-  })
-    .then((res) => res.json())
-    .then((data) => setServicestatusData(data))
-    .catch((err) => console.error("Error fetching /api/service_status:", err));
-}, []);
+  useEffect(() => {
+    const API_KEY = import.meta.env.VITE_API_KEY;
+    fetch("/api/service_status", {
+      headers: {
+        "X-API-KEY": API_KEY,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => setServicestatusData(data))
+      .catch((err) =>
+        console.error("Error fetching /api/service_status:", err)
+      );
+  }, []);
 
   // For quickly finding the main parent of each subsection
   const PARENT_SECTION: Record<string, string> = {
@@ -589,7 +601,9 @@ useEffect(() => {
             http://localhost:8000/api/search?lat=${"{lat}"}&lng=${"{lng}"}
           </code>
           <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto text-sm mt-2">
-          {exampleData ? JSON.stringify(exampleData, null, 2) : "Loading example..."}
+            {exampleData
+              ? JSON.stringify(exampleData, null, 2)
+              : "Loading example..."}
           </pre>
         </section>
         {/* GetHPSDesignations Section */}
@@ -670,7 +684,9 @@ useEffect(() => {
             Response Example
           </h2>
           <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto text-sm mt-2">
-          {exampleData ? JSON.stringify(exampleData, null, 2) : "Loading example..."}
+            {exampleData
+              ? JSON.stringify(exampleData, null, 2)
+              : "Loading example..."}
           </pre>
         </section>
 
@@ -720,7 +736,9 @@ useEffect(() => {
         >
           <h2 className="text-xl font-bold text-blue-500 mb-2">Response</h2>
           <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto text-sm mt-2">
-{testCacheData ? JSON.stringify(testCacheData, null, 2) : "Loading TestCache data..."}
+            {testCacheData
+              ? JSON.stringify(testCacheData, null, 2)
+              : "Loading TestCache data..."}
           </pre>
         </section>
 
@@ -770,7 +788,9 @@ useEffect(() => {
         >
           <h2 className="text-xl font-bold text-blue-500 mb-2">Response</h2>
           <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto text-sm mt-2">
-          {listTablesData ? JSON.stringify(listTablesData, null, 2) : "Loading ListTables data..."}
+            {listTablesData
+              ? JSON.stringify(listTablesData, null, 2)
+              : "Loading ListTables data..."}
           </pre>
         </section>
 
@@ -823,13 +843,15 @@ useEffect(() => {
         >
           <h2 className="text-xl font-bold text-blue-500 mb-2">Response</h2>
           <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto text-sm mt-2">
-          {allDistrictData ? JSON.stringify(allDistrictData, null, 2) : "Loading AllDistrictData..."}
+            {allDistrictData
+              ? JSON.stringify(allDistrictData, null, 2)
+              : "Loading AllDistrictData..."}
           </pre>
         </section>
 
         <section
           id="testapi"
-          ref={(el) => (sectionRefs.current["testapi"] = el)}
+          ref={(el) => (sectionRefs.current["testapi"] = el as HTMLDivElement)}
           className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
         >
           <h2 className="text-2xl font-bold text-blue-600 mb-2">Test</h2>
@@ -846,7 +868,9 @@ useEffect(() => {
 
         <section
           id="testapi-parameters"
-          ref={(el) => (sectionRefs.current["testapi-parameters"] = el)}
+          ref={(el) =>
+            (sectionRefs.current["testapi-parameters"] = el as HTMLDivElement)
+          }
           className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
         >
           <h2 className="text-2xl font-bold text-blue-600 mb-2">Parameters</h2>
@@ -859,18 +883,24 @@ useEffect(() => {
 
         <section
           id="testapi-response"
-          ref={(el) => (sectionRefs.current["testapi-response"] = el)}
+          ref={(el) =>
+            (sectionRefs.current["testapi-response"] = el as HTMLDivElement)
+          }
           className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
         >
           <h2 className="text-xl font-bold text-blue-500 mb-2">Response</h2>
           <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto text-sm mt-2">
-{testapiData ? JSON.stringify(testapiData, null, 2) : "Loading Test API data..."}
+            {testapiData
+              ? JSON.stringify(testapiData, null, 2)
+              : "Loading Test API data..."}
           </pre>
         </section>
 
         <section
           id="devcredentials"
-          ref={(el) => (sectionRefs.current["devcredentials"] = el)}
+          ref={(el) =>
+            (sectionRefs.current["devcredentials"] = el as HTMLDivElement)
+          }
           className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
         >
           <h2 className="text-2xl font-bold text-blue-600 mb-2">
@@ -890,7 +920,8 @@ useEffect(() => {
         <section
           id="devcredentials-parameters"
           ref={(el) =>
-            (sectionRefs.current["devcredentials-parameters"] = el)
+            (sectionRefs.current["devcredentials-parameters"] =
+              el as HTMLDivElement)
           }
           className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
         >
@@ -905,19 +936,24 @@ useEffect(() => {
         <section
           id="devcredentials-response"
           ref={(el) =>
-            (sectionRefs.current["devcredentials-response"] = el)
+            (sectionRefs.current["devcredentials-response"] =
+              el as HTMLDivElement)
           }
           className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
         >
           <h2 className="text-xl font-bold text-blue-500 mb-2">Response</h2>
           <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto text-sm mt-2">
-{devcredentialsData ? JSON.stringify(devcredentialsData, null, 2) : "Loading DevCredentials data..."}
+            {devcredentialsData
+              ? JSON.stringify(devcredentialsData, null, 2)
+              : "Loading DevCredentials data..."}
           </pre>
         </section>
 
         <section
           id="overridelocations"
-          ref={(el) => (sectionRefs.current["overridelocations"] = el)}
+          ref={(el) =>
+            (sectionRefs.current["overridelocations"] = el as HTMLDivElement)
+          }
           className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
         >
           <h2 className="text-2xl font-bold text-blue-600 mb-2">
@@ -937,7 +973,8 @@ useEffect(() => {
         <section
           id="overridelocations-parameters"
           ref={(el) =>
-            (sectionRefs.current["overridelocations-parameters"] = el)
+            (sectionRefs.current["overridelocations-parameters"] =
+              el as HTMLDivElement)
           }
           className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
         >
@@ -952,19 +989,24 @@ useEffect(() => {
         <section
           id="overridelocations-response"
           ref={(el) =>
-            (sectionRefs.current["overridelocations-response"] = el)
+            (sectionRefs.current["overridelocations-response"] =
+              el as HTMLDivElement)
           }
           className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
         >
           <h2 className="text-xl font-bold text-blue-500 mb-2">Response</h2>
           <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto text-sm mt-2">
-{overridelocationsData ? JSON.stringify(overridelocationsData, null, 2) : "Loading OverrideLocations data..."}
+            {overridelocationsData
+              ? JSON.stringify(overridelocationsData, null, 2)
+              : "Loading OverrideLocations data..."}
           </pre>
         </section>
 
         <section
           id="manualoverrides"
-          ref={(el) => (sectionRefs.current["manualoverrides"] = el)}
+          ref={(el) =>
+            (sectionRefs.current["manualoverrides"] = el as HTMLDivElement)
+          }
           className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
         >
           <h2 className="text-2xl font-bold text-blue-600 mb-2">
@@ -984,7 +1026,8 @@ useEffect(() => {
         <section
           id="manualoverrides-parameters"
           ref={(el) =>
-            (sectionRefs.current["manualoverrides-parameters"] = el)
+            (sectionRefs.current["manualoverrides-parameters"] =
+              el as HTMLDivElement)
           }
           className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
         >
@@ -999,19 +1042,24 @@ useEffect(() => {
         <section
           id="manualoverrides-response"
           ref={(el) =>
-            (sectionRefs.current["manualoverrides-response"] = el)
+            (sectionRefs.current["manualoverrides-response"] =
+              el as HTMLDivElement)
           }
           className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
         >
           <h2 className="text-xl font-bold text-blue-500 mb-2">Response</h2>
           <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto text-sm mt-2">
-{manualoverridesData ? JSON.stringify(manualoverridesData, null, 2) : "Loading ManualOverrides data..."}
+            {manualoverridesData
+              ? JSON.stringify(manualoverridesData, null, 2)
+              : "Loading ManualOverrides data..."}
           </pre>
         </section>
 
         <section
           id="manualoverridesid"
-          ref={(el) => (sectionRefs.current["manualoverridesid"] = el)}
+          ref={(el) =>
+            (sectionRefs.current["manualoverridesid"] = el as HTMLDivElement)
+          }
           className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
         >
           <h2 className="text-2xl font-bold text-blue-600 mb-2">
@@ -1031,7 +1079,8 @@ useEffect(() => {
         <section
           id="manualoverridesid-parameters"
           ref={(el) =>
-            (sectionRefs.current["manualoverridesid-parameters"] = el)
+            (sectionRefs.current["manualoverridesid-parameters"] =
+              el as HTMLDivElement)
           }
           className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
         >
@@ -1049,19 +1098,24 @@ useEffect(() => {
         <section
           id="manualoverridesid-response"
           ref={(el) =>
-            (sectionRefs.current["manualoverridesid-response"] = el)
+            (sectionRefs.current["manualoverridesid-response"] =
+              el as HTMLDivElement)
           }
           className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
         >
           <h2 className="text-xl font-bold text-blue-500 mb-2">Response</h2>
           <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto text-sm mt-2">
-{manualoverridesidData ? JSON.stringify(manualoverridesidData, null, 2) : "Loading ManualOverrides/{override_id} data..."}
+            {manualoverridesidData
+              ? JSON.stringify(manualoverridesidData, null, 2)
+              : "Loading ManualOverrides/{override_id} data..."}
           </pre>
         </section>
 
         <section
           id="activesessions"
-          ref={(el) => (sectionRefs.current["activesessions"] = el)}
+          ref={(el) =>
+            (sectionRefs.current["activesessions"] = el as HTMLDivElement)
+          }
           className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
         >
           <h2 className="text-2xl font-bold text-blue-600 mb-2">
@@ -1081,7 +1135,8 @@ useEffect(() => {
         <section
           id="activesessions-parameters"
           ref={(el) =>
-            (sectionRefs.current["activesessions-parameters"] = el)
+            (sectionRefs.current["activesessions-parameters"] =
+              el as HTMLDivElement)
           }
           className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
         >
@@ -1096,19 +1151,24 @@ useEffect(() => {
         <section
           id="activesessions-response"
           ref={(el) =>
-            (sectionRefs.current["activesessions-response"] = el)
+            (sectionRefs.current["activesessions-response"] =
+              el as HTMLDivElement)
           }
           className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
         >
           <h2 className="text-xl font-bold text-blue-500 mb-2">Response</h2>
           <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto text-sm mt-2">
-{activesessionsData ? JSON.stringify(activesessionsData, null, 2) : "Loading ActiveSessions data..."}
+            {activesessionsData
+              ? JSON.stringify(activesessionsData, null, 2)
+              : "Loading ActiveSessions data..."}
           </pre>
         </section>
 
         <section
           id="adminerrors"
-          ref={(el) => (sectionRefs.current["adminerrors"] = el)}
+          ref={(el) =>
+            (sectionRefs.current["adminerrors"] = el as HTMLDivElement)
+          }
           className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
         >
           <h2 className="text-2xl font-bold text-blue-600 mb-2">AdminErrors</h2>
@@ -1125,7 +1185,10 @@ useEffect(() => {
 
         <section
           id="adminerrors-parameters"
-          ref={(el) => (sectionRefs.current["adminerrors-parameters"] = el)}
+          ref={(el) =>
+            (sectionRefs.current["adminerrors-parameters"] =
+              el as HTMLDivElement)
+          }
           className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
         >
           <h2 className="text-2xl font-bold text-blue-600 mb-2">Parameters</h2>
@@ -1138,18 +1201,22 @@ useEffect(() => {
 
         <section
           id="adminerrors-response"
-          ref={(el) => (sectionRefs.current["adminerrors-response"] = el)}
+          ref={(el) =>
+            (sectionRefs.current["adminerrors-response"] = el as HTMLDivElement)
+          }
           className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
         >
           <h2 className="text-xl font-bold text-blue-500 mb-2">Response</h2>
           <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto text-sm mt-2">
-{adminerrorsData ? JSON.stringify(adminerrorsData, null, 2) : "Loading AdminErrors data..."}
+            {adminerrorsData
+              ? JSON.stringify(adminerrorsData, null, 2)
+              : "Loading AdminErrors data..."}
           </pre>
         </section>
 
         <section
           id="apikeys"
-          ref={(el) => (sectionRefs.current["apikeys"] = el)}
+          ref={(el) => (sectionRefs.current["apikeys"] = el as HTMLDivElement)}
           className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
         >
           <h2 className="text-2xl font-bold text-blue-600 mb-2">ApiKeys</h2>
@@ -1166,7 +1233,9 @@ useEffect(() => {
 
         <section
           id="apikeys-parameters"
-          ref={(el) => (sectionRefs.current["apikeys-parameters"] = el)}
+          ref={(el) =>
+            (sectionRefs.current["apikeys-parameters"] = el as HTMLDivElement)
+          }
           className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
         >
           <h2 className="text-2xl font-bold text-blue-600 mb-2">Parameters</h2>
@@ -1179,12 +1248,14 @@ useEffect(() => {
 
         <section
           id="apikeys-response"
-          ref={(el) => (sectionRefs.current["apikeys-response"] = el)}
+          ref={(el) =>
+            (sectionRefs.current["apikeys-response"] = el as HTMLDivElement)
+          }
           className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
         >
           <h2 className="text-xl font-bold text-blue-500 mb-2">Response</h2>
           <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto text-sm mt-2">
-          {`[
+            {`[
   {
     "key": "a8943nj9wuwhc98whin23989823nc399578hubc73478hf982hbx932bx87xb2x",
     "app_name": "Googleee",
@@ -1196,7 +1267,9 @@ useEffect(() => {
 
         <section
           id="servicestatus"
-          ref={(el) => (sectionRefs.current["servicestatus"] = el)}
+          ref={(el) =>
+            (sectionRefs.current["servicestatus"] = el as HTMLDivElement)
+          }
           className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
         >
           <h2 className="text-2xl font-bold text-blue-600 mb-2">
@@ -1216,7 +1289,8 @@ useEffect(() => {
         <section
           id="servicestatus-parameters"
           ref={(el) =>
-            (sectionRefs.current["servicestatus-parameters"] = el)
+            (sectionRefs.current["servicestatus-parameters"] =
+              el as HTMLDivElement)
           }
           className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
         >
@@ -1231,16 +1305,18 @@ useEffect(() => {
         <section
           id="servicestatus-response"
           ref={(el) =>
-            (sectionRefs.current["servicestatus-response"] = el)
+            (sectionRefs.current["servicestatus-response"] =
+              el as HTMLDivElement)
           }
           className="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg"
         >
           <h2 className="text-xl font-bold text-blue-500 mb-2">Response</h2>
           <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto text-sm mt-2">
-{servicestatusData ? JSON.stringify(servicestatusData, null, 2) : "Loading ServiceStatus data..."}
+            {servicestatusData
+              ? JSON.stringify(servicestatusData, null, 2)
+              : "Loading ServiceStatus data..."}
           </pre>
         </section>
-
       </div>
       {/* Back to Top Button */}
       <button
