@@ -3,7 +3,7 @@ import zipfile
 import os
 from tempfile import TemporaryDirectory
 from osgeo import ogr
-from django.contrib.gis.gdal import DataSource
+from django.contrib.gis.gdal import DataSource # type: ignore
 from api.models import HealthServiceArea, LAServicePlanningArea, MedicalServiceStudyArea, PrimaryCareShortageArea, RegisteredNurseShortageArea, SenateDistrict, CongressionalDistrict, AssemblyDistrict
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.gis.geos import MultiPolygon, Polygon

@@ -60,7 +60,7 @@ def test(request):
     """
     A simple test endpoint to verify the API is working.
     """
-    return JsonResponse({"success": True, "message": "test api, successful."})
+    return JsonResponse({"success": True, "message": "test api, successful."}, status=200)
 
 @router.get("/test-cache")
 def test_cache(request):
@@ -84,7 +84,7 @@ def test_cache(request):
         return JsonResponse({"success": False, "message": f"Redis failed: {str(e)}"})
 
 @router.post("/upload-shapefile/")
-def upload_shapefile(request, file: UploadedFile = File(...), file_type: str = Form(...)):
+def upload_shapefile(request, file: UploadedFile = File(...), file_type: str = Form(...)): # type: ignore
     """
     Upload a shapefile (as .zip) and populate the respective model.
     """
@@ -123,10 +123,10 @@ def upload_shapefile(request, file: UploadedFile = File(...), file_type: str = F
             print(f"Error found but not logged into the database! {e}")
         return JsonResponse({"success" : False, "message" : "CSV must be uploaded under Health Provider Shortage Areas (HPSA)"}, status=500)
     
-    
+    tmp_dir=None
     try:   
         # Extract the zip file
-        tmp_dir = extract_zip(file)
+        tmp_dir = extract_zip(file) # type: ignore
     
         # Get the path to the shapefile (.shp)
         shapefile_path = find_shapefile(tmp_dir.name)
@@ -303,7 +303,6 @@ def all_districts_data(request):
         cache_value = cache.get(cache_key)
         if cache_value:
             cache_value = json.loads(cache_value)
-            cache_value["used_cache"] = True
             return JsonResponse(cache_value, safe=False)
     except Exception as e:
         try:
@@ -417,7 +416,6 @@ def coordinate_search(request, lat: float, lng: float):
         cache_value = cache.get(cache_key)
         if cache_value:
             cache_value = json.loads(cache_value)
-            cache_value["used_cache"] = True
             return JsonResponse(cache_value, safe=False)
 
         point = Point(lng, lat, srid=4326)
@@ -436,9 +434,13 @@ def coordinate_search(request, lat: float, lng: float):
         mental_matches = []
         dental_matches = []
         censuskey = 0
+        
+        primary_match = None
+        mental_match = None
+        dental_match = None
 
         if medicalservicestudyarea_matches.exists():
-            raw_censuskey = medicalservicestudyarea_matches.first().geoid
+            raw_censuskey = medicalservicestudyarea_matches.first().geoid # type: ignore
             censuskey = raw_censuskey.lstrip("0") if raw_censuskey else None
             print(f"Raw GEOID: {raw_censuskey} | Stripped: {censuskey}")
 
@@ -566,7 +568,7 @@ class OverrideLocationOut(Schema):
     
     
 @router.post("/manual-overrides/upload-xlsx")
-def upload_overrides_xlsx(request, file: UploadedFile = File(...)):
+def upload_overrides_xlsx(request, file: UploadedFile = File(...)): # type: ignore
     """
     Expects an XLSX with:
     1) Address
@@ -581,7 +583,7 @@ def upload_overrides_xlsx(request, file: UploadedFile = File(...)):
 
         new_overrides = []
         # If row 1 is a header, start from row=2
-        for row in sheet.iter_rows(min_row=2, values_only=True):
+        for row in sheet.iter_rows(min_row=2, values_only=True): # type: ignore
             address, lat, lon = row[0], row[1], row[2]
             #print(f"Row data: address={address}, lat={lat}, lon={lon}")
             if address and lat is not None and lon is not None:
@@ -646,7 +648,7 @@ def create_override(request, payload: OverrideLocationIn):
     print(f"Creating new override with data: {payload.dict()}")
     try:
         obj = OverrideLocation.objects.create(**payload.dict())
-        print(f"Override created with ID={obj.id}")
+        print(f"Override created with ID={obj.id}") # type: ignore
         return obj
     except Exception as e:
         try:
@@ -766,7 +768,7 @@ class AdminErrorSchema(Schema):
     error_description: str
     files_name: str
     line_number: str
-    created_at: datetime = Field(..., format="iso8601")  
+    created_at: datetime = Field(..., format="iso8601")   # type: ignore
 
 class APIKeySchema(Schema):
     key: str
