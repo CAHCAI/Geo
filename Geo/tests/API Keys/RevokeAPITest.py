@@ -134,7 +134,7 @@ class APIGenerateTest:
 #Run the test
 if __name__ == "__main__":
     test = APIGenerateTest()
-
+    #Replace this with a vaid login
     test.loginforapi("admin", "test")
     test.test_generate_and_revoke_api_key()
     test.close()

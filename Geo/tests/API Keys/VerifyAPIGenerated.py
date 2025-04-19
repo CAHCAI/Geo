@@ -125,7 +125,7 @@ class APIGenerateTest:
 if __name__ == "__main__":
     test = APIGenerateTest()
 
-    #Login - put in a valif username and password
+    #Login - put in a valid username and password
     test.loginforapi("admin", "test")
 
     test.test_generate_api_key()
