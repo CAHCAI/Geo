@@ -1,4 +1,6 @@
+
 from django.test import TestCase, Client
+from random import randint
 from .models import (AssemblyDistrict, HealthServiceArea, 
 SenateDistrict, CongressionalDistrict, LAServicePlanningArea,
 MedicalServiceStudyArea, PrimaryCareShortageArea, RegisteredNurseShortageArea)
@@ -17,15 +19,6 @@ get_shapefile_layer, extract_zip, find_shapefile, upload_assembly_shapefile,
 upload_congressional_shapefile, upload_hsa_shapefile, upload_senate_shapefile,
 upload_laspa_shapefile, upload_mssa_shapefile, upload_pcsa_shapefile, upload_rnsa_shapefile)
 from datetime import date
-from django.core.files.uploadedfile import SimpleUploadedFile
-from .models import OverrideLocation
-import io
-import openpyxl
-from .models import APIKey  # APIKey model is
-from datetime import datetime, timedelta
-from django.utils import timezone
-import secrets
-
 
 # Test utilities library
 class UtilsFunctionTests(TestCase):
@@ -394,6 +387,140 @@ class URLTests(TestCase):
         response = self.client.get('/api/')  # Replace '/api/' with the actual path if different
         # Update this to the expected status code for your API root
         # self.assertEqual(response.status_code, 200)  # Commented out since the actual code may vary
+    
+# def upload_shapefile(request, file: UploadedFile = File(...), file_type: str = Form(...)):
+class GeoAPITests(TestCase):
+    def setUp(self):
+        super().setUp()
+        self.base_url = "http://localhost:8000/api"
+        
+    def test_upload_valid_shapefile(self):
+        # open laspa.zip
+        with open("/app/sql/data/laspa.zip", "rb") as f:
+            # multipart/form-data format
+            files = {'file': ('laspa.zip', f)} # correct file
+            data = {'file_type': 'laspa'} # correct file type
+            headers = {'X-Api-Key': 'supersecret'}
+            
+            # upload the file
+            response = requests.post(
+                f"{self.base_url}/upload-shapefile/",  
+                headers=headers, 
+                files=files,
+                data=data
+            )
+            
+            # verify 200 status code incicates successful API test
+            self.assertEqual(response.status_code, 200)
+    
+    def test_upload_invalid_shapefile_type(self):
+        # open laspa.zip
+        with open("/app/sql/data/laspa.zip", "rb") as f:
+            # multipart/form-data format
+            files = {'file': ('laspa.zip', f)}
+            data = {'file_type': 'assembly'} # wrong file type selected for upload
+            headers = {'X-Api-Key': 'supersecret'}
+            
+            response = requests.post(
+                f"{self.base_url}/upload-shapefile/",  
+                headers=headers, 
+                files=files,
+                data=data
+            )
+            # because we chose assembly, we should get a 400 for invalid shapefile type selection
+            self.assertEqual(response.status_code, 400)
+            
+    def test_upload_invalid_shapefile(self):
+        # Create a temporary text file as invalid shapefile
+        import tempfile
+        with tempfile.NamedTemporaryFile(suffix='.txt', mode='wb') as temp:
+            # Write some content to the file
+            temp.write(b"This is not a shapefile, just plain text")
+            temp.flush()  # Make sure content is written
+            
+            # multipart/form-data format
+            # trying to pass as "laspa.zip" to see if the API will accept it
+            with open(temp.name, 'rb') as f:
+                files = {'file': ('laspa.zip', f)}
+                data = {'file_type': 'laspa'} 
+                headers = {'X-Api-Key': 'supersecret'}
+                
+                response = requests.post(
+                    f"{self.base_url}/upload-shapefile/",  
+                    headers=headers, 
+                    files=files,
+                    data=data
+                )
+                
+                # Validate the API successfully rejected the bad file
+                self.assertEqual(response.status_code, 500)
+        
+    def test_upload_valid_csv(self):
+        # open laspa.zip
+        with open("/app/sql/data/dh.csv", "rb") as f:
+            # multipart/form-data format
+            files = {'file': ('dh.csv', f)}
+            data = {'file_type': 'hpsa'} # hpsa file_type for csvs
+            headers = {'X-Api-Key': 'supersecret'}
+            
+            response = requests.post(
+                f"{self.base_url}/upload-shapefile/",  
+                headers=headers, 
+                files=files,
+                data=data
+            )
+            # we should get a 200
+            self.assertEqual(response.status_code, 200)
+            
+    def test_upload_invalid_csv(self):
+        # Create a temporary text file as invalid shapefile
+        import tempfile
+        with tempfile.NamedTemporaryFile(suffix='.txt', mode='wb') as temp:
+            # Write some content to the file
+            temp.write(b"This is not a csv file, just plain text")
+            temp.flush()  # Make sure content is written
+            
+            # multipart/form-data format
+            # trying to pass as "laspa.zip" to see if the API will accept it
+            with open(temp.name, 'rb') as f:
+                files = {'file': ('dh.csv', f)}
+                data = {'file_type': 'hpsa'} 
+                headers = {'X-Api-Key': 'supersecret'}
+                
+                response = requests.post(
+                    f"{self.base_url}/upload-shapefile/",  
+                    headers=headers, 
+                    files=files,
+                    data=data
+                )
+                
+                # Validate the API successfully rejected the bad file
+                self.assertEqual(response.status_code, 400)
+
+    def test_all_districts_data(self):
+        headers = {'X-Api-Key': 'supersecret'}
+        response = requests.get(f"{self.base_url}/all-districts-data", headers=headers)
+        self.assertEqual(response.status_code, 200)
+    
+    def test_coordinate_search(self):
+        headers = {'X-Api-Key': 'supersecret'}
+        lat = 38
+        lng = -121
+        response = requests.get(f"{self.base_url}search?lat=${lat}&lng=${lng}", headers=headers)
+        print(response.json())
+    
+    def test_service_status(self):
+        # make sure all services are up
+        headers = {'X-Api-Key': 'supersecret'}
+        response = requests.get(f"{self.base_url}/service_status/", headers=headers)
+        expected_result = {
+            "redis": True,
+            "postgis": True,
+            "django": True,
+            "react": True
+        }
+        self.assertEqual(response.json(), expected_result)
+
         
 class OverrideRoutesTest(TestCase):
     def setUp(self):

@@ -102,11 +102,19 @@ def upload_shapefile(request, file: UploadedFile = File(...), file_type: str = F
         return JsonResponse({"success" : False, "message" : "Invalid file type specifier"})
     print("validated file")
     if (file_type == "hpsa"):
-        handle_csv_upload(file)
-        print("handled csv upload")
-        # if upload is successful, flush the cache 
-        cache.flushdb()
-        return JsonResponse({"success" : True, "message" : "HPSA data uploaded"}, status=200)
+        try:
+            handle_csv_upload(file)
+            print("handled csv upload")
+            # if upload is successful, flush the cache 
+            cache.flushdb()
+            return JsonResponse({"success" : True, "message" : "HPSA data uploaded"}, status=200)
+        except Exception as e:
+            try:
+                stack = traceback.extract_stack()
+                error_response(400, f"Failed to upload HPSA data: {str(e)}", stack)
+            except Exception as e_inner:
+                print(f"Error creating log in the database: {e_inner}")
+            return JsonResponse({"success" : False, "message" : f"Failed to upload HPSA data: {str(e)}"}, status=400)
     elif (file_type != "hpsa" and file.name.lower().endswith(".csv")):
         try:
             stack = traceback.extract_stack()
@@ -258,7 +266,6 @@ def process_uploaded_zip(file, expected_filename):
 #Test 
 @router.get("/dev-credentials")
 def dev_credentials(request):
-   
     return {
         "admin_username": "user",
         "admin_password": "password"
