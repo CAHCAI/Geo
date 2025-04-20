@@ -1,5 +1,8 @@
+import datetime
+import secrets
 from django.test import TestCase, Client
-from .models import (AssemblyDistrict, HealthServiceArea, 
+from random import randint
+from .models import (APIKey, AssemblyDistrict, HealthServiceArea, 
 SenateDistrict, CongressionalDistrict, LAServicePlanningArea,
 MedicalServiceStudyArea, PrimaryCareShortageArea, RegisteredNurseShortageArea)
 from django.urls import reverse, resolve
@@ -16,17 +19,26 @@ from .utils import (parse_date, parse_float, identify_shapefile_type,
 get_shapefile_layer, extract_zip, find_shapefile, upload_assembly_shapefile, 
 upload_congressional_shapefile, upload_hsa_shapefile, upload_senate_shapefile,
 upload_laspa_shapefile, upload_mssa_shapefile, upload_pcsa_shapefile, upload_rnsa_shapefile)
-from datetime import date
+from datetime import date, timedelta, timezone, datetime
+import requests
 from django.core.files.uploadedfile import SimpleUploadedFile
 from .models import OverrideLocation
 import io
 import openpyxl
 from .models import APIKey  # APIKey model is
-from datetime import datetime, timedelta
 from django.utils import timezone
 import secrets
+from Geo.cache import cache, TTL
 
-
+class RedisCacheTests(TestCase):
+    def test_redis_cache(self):
+        key = "test_key"
+        value = randint(0, 100)
+        cache.set(key, value)
+        self.assertEqual(int(cache.get(key)), value)
+        cache.delete(key)
+        self.assertEqual(cache.get(key), None)
+        
 # Test utilities library
 class UtilsFunctionTests(TestCase):
     def test_parse_date_valid_formats(self):
@@ -58,7 +70,7 @@ class UtilsFunctionTests(TestCase):
         self.assertEqual(identify_shapefile_type(["HSA_NUMBER"]), "hsa")
         self.assertEqual(identify_shapefile_type(["UNKNOWN_FIELD"]), "unknown")
 
-# Test shapefile upload functionality
+# Test shapefile upload functionality without using API
 class ShapefileUploadTests(TestCase):
 
     # Test assembly
@@ -394,7 +406,263 @@ class URLTests(TestCase):
         response = self.client.get('/api/')  # Replace '/api/' with the actual path if different
         # Update this to the expected status code for your API root
         # self.assertEqual(response.status_code, 200)  # Commented out since the actual code may vary
+    
+# def upload_shapefile(request, file: UploadedFile = File(...), file_type: str = Form(...)):
+class GeoAPITests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        raw_key = secrets.token_hex(64)
+
+        APIKey.objects.create(
+            key=raw_key,
+            app_name="TestSuite",
+            expires_at=timezone.make_aware(datetime.now() + timedelta(days=30))
+        )
         
+        cls.api_key = raw_key
+        cls.upload_all_data_files()
+    
+    def setUp(self):
+        super().setUp()
+        # Upload all necessary files through the API
+    
+    # uploads all data to testing DB to ensure  validation tests pass
+    @classmethod
+    def upload_all_data_files(cls):
+        """Upload all necessary data files through the API"""
+        client = Client()
+        # Map file paths to their corresponding file types
+        file_mappings = {
+            "/app/sql/data/ad.zip": "assembly",
+            "/app/sql/data/sd.zip": "senate", 
+            "/app/sql/data/cd.zip": "congressional",
+            "/app/sql/data/hsa.zip": "hsa",
+            "/app/sql/data/laspa.zip": "laspa", 
+            "/app/sql/data/mssa.zip": "mssa",
+            "/app/sql/data/pcsa.zip": "pcsa",
+            "/app/sql/data/rnsa.zip": "rnsa",
+            "/app/sql/data/pc.csv": "hpsa",  # CSV files all use hpsa type
+            "/app/sql/data/dh.csv": "hpsa",
+            "/app/sql/data/mh.csv": "hpsa"
+        }
+        
+        # Upload each file if it exists
+        for file_path, file_type in file_mappings.items():
+            if os.path.exists(file_path):
+                try:
+                    with open(file_path, "rb") as f:
+                        response = client.post(
+                            "/api/upload-shapefile/",
+                            {'file': f, 'file_type': file_type},
+                            HTTP_X_API_KEY=cls.api_key
+                        )
+                        print(f"Uploaded {file_path} as {file_type}: Status {response.status_code}")
+                except Exception as e:
+                    print(f"Error uploading {file_path}: {e}")
+        
+    def tearDown(self):
+        """Clean up after each test"""
+        # Delete API keys created for this test
+        APIKey.objects.filter(app_name="TestSuite").delete()
+        # Call the parent tearDown method
+        super().tearDown()
+        
+    def test_api_up(self):
+        response = self.client.get("/api/test", HTTP_X_API_KEY=self.api_key)
+        self.assertEqual(response.status_code, 200)
+        
+    def test_api_auth_required(self):
+        # test route
+        response = self.client.get("/api/test")
+        self.assertEqual(response.status_code, 401) # make sure they're unauthorized
+        # all districts data route
+        response = self.client.get("/api/all-districts-data")
+        self.assertEqual(response.status_code, 401) # make sure they're unauthorized
+        # coordinates route
+        lat = 38.0
+        lng = -121.0
+        response = self.client.get(f"/api/search?lat={lat}&lng={lng}")
+        self.assertEqual(response.status_code, 401) # make sure they're unauthorized
+        # shapefile upload route
+        with open("/app/sql/data/laspa.zip", "rb") as f:
+            # Django test client uses a different format for file uploads
+            data = {'file_type': 'laspa'} # correct file type
+            
+            # upload the file
+            response = self.client.post(
+                "/api/upload-shapefile/",
+                {'file': f, **data}
+            )
+            self.assertEqual(response.status_code, 401) # make sure they're unauthorized
+        response = self.client.get("/api/service_status/")
+        self.assertEqual(response.status_code, 401) # make sure they're unauthorized
+        
+    def test_upload_valid_shapefile(self):
+        # open laspa.zip
+        with open("/app/sql/data/laspa.zip", "rb") as f:
+            data = {'file_type': 'laspa'} # correct file type
+            
+            # upload the file
+            response = self.client.post(
+                "/api/upload-shapefile/",
+                {'file': f, **data},
+                HTTP_X_API_KEY=self.api_key
+            )
+            
+            # verify 200 status code incicates successful API test
+            self.assertEqual(response.status_code, 200)
+    
+    def test_upload_invalid_shapefile_type(self):
+        # open laspa.zip
+        with open("/app/sql/data/laspa.zip", "rb") as f:
+            data = {'file_type': 'assembly'} # wrong file type selected for upload
+            
+            response = self.client.post(
+                "/api/upload-shapefile/",
+                {'file': f, **data},
+                HTTP_X_API_KEY=self.api_key
+            )
+            # because we chose assembly, we should get a 400 for invalid shapefile type selection
+            self.assertEqual(response.status_code, 400)
+            
+    def test_upload_invalid_shapefile(self):
+        # Create a temporary text file as invalid shapefile
+        import tempfile
+        with tempfile.NamedTemporaryFile(suffix='.txt', mode='wb') as temp:
+            # Write some content to the file
+            temp.write(b"This is not a shapefile, just plain text")
+            temp.flush()  # Make sure content is written
+            
+            # trying to pass as "laspa.zip" to see if the API will accept it
+            with open(temp.name, 'rb') as f:
+                data = {'file_type': 'laspa'} 
+                
+                response = self.client.post(
+                    "/api/upload-shapefile/",
+                    {'file': f, **data},
+                    HTTP_X_API_KEY=self.api_key
+                )
+                
+                # Validate the API successfully rejected the bad file
+                self.assertEqual(response.status_code, 400)
+                
+    def test_upload_missing_shapefile(self):
+        data = {'file_type': 'laspa'} 
+        
+        response = self.client.post(
+            "/api/upload-shapefile/",
+            data,
+            HTTP_X_API_KEY=self.api_key
+        )
+        
+        # Validate the API successfully threw 422 unprocessable content (no file)
+        self.assertEqual(response.status_code, 422)
+        
+    def test_upload_missing_shapefile_type(self):
+        # open laspa
+        with open("/app/sql/data/laspa.zip", "rb") as f:
+            # post without giving file type
+            response = self.client.post(
+                "/api/upload-shapefile/",
+                {'file': f},
+                HTTP_X_API_KEY=self.api_key
+            )
+            
+            # Validate the API successfully rejected the bad file
+            self.assertEqual(response.status_code, 422) # unprocessabe
+        
+        
+    def test_upload_valid_csv(self):
+        # open laspa.zip
+        with open("/app/sql/data/dh.csv", "rb") as f:
+            data = {'file_type': 'hpsa'} # hpsa file_type for csvs
+            
+            response = self.client.post(
+                "/api/upload-shapefile/",
+                {'file': f, **data},
+                HTTP_X_API_KEY=self.api_key
+            )
+            # we should get a 200
+            self.assertEqual(response.status_code, 200)
+            
+    def test_upload_invalid_csv(self):
+        # Create a temporary text file as invalid shapefile
+        import tempfile
+        with tempfile.NamedTemporaryFile(suffix='.txt', mode='wb') as temp:
+            # Write some content to the file
+            temp.write(b"This is not a csv file, just plain text")
+            temp.flush()  # Make sure content is written
+            
+            # trying to pass as "laspa.zip" to see if the API will accept it
+            with open(temp.name, 'rb') as f:
+                data = {'file_type': 'hpsa'} 
+                
+                response = self.client.post(
+                    "/api/upload-shapefile/",
+                    {'file': f, **data},
+                    HTTP_X_API_KEY=self.api_key
+                )
+                
+                # Validate the API successfully rejected the bad file
+                self.assertEqual(response.status_code, 400)
+
+    def test_all_districts_data(self):
+        response = self.client.get("/api/all-districts-data", HTTP_X_API_KEY=self.api_key)
+        self.assertEqual(response.status_code, 200)
+    
+    def test_coordinate_search(self):
+        # expected response for 38, -121
+        expected_json = {
+            'senate': [{'district_number': 5, 'district_label': '5|3.34%', 'population': 1021134}], 
+            'assembly': [{'district_number': 9, 'district_label': '9|-4.86%', 'population': 470020}], 
+            'congressional': [{'district_number': 9, 'district_label': '9|0%', 'population': 760066}], 
+            'healthservicearea': [{'hsa_name': 'North San Joaquin', 'hsa_number': 6}], 
+            'LaServicePlanning': [], 
+            'RegisteredNurseShortageArea': [{'rnsa': 'Yes', 'Effective': 'Medium'}], 
+            'MedicalServiceStudyArea': [{'mssaid': '165', 'definition': 'Rural', 'county': 'San Joaquin', 'censustract': '004800', 'censuskey': '06077004800'}], 
+            'PrimaryCareShortageArea': [{'pcsa': 'Yes', 'scoretota': 6, 'mssa': '077'}], 
+            'PrimaryCareHPSA': [], 
+            'MentalHealthHPSA': [{'HPSA Source ID': '70699906PN', 'Designated': 'Yes', 'Designated On': '2011-11-14', 'Formal Ratio': 'N/A', 'Population Below Poverty': 'N/A', 'Designation Population': 1302, 'Estimated Underserved': 1302, 'Estimated Served': 'N/A', 'Priority Score': 6}], 
+            'DentalHealthHPSA': []
+        }
+        # search known coordinates inside California
+        lat = 38.0
+        lng = -121.0
+        response = self.client.get(f"/api/search?lat={lat}&lng={lng}", HTTP_X_API_KEY=self.api_key)
+        self.assertEqual(response.json(), expected_json)
+        
+        # search outside of California
+        expected_json = {
+            "senate": [],
+            "assembly": [],
+            "congressional": [],
+            "healthservicearea": [],
+            "LaServicePlanning": [],
+            "RegisteredNurseShortageArea": [],
+            "MedicalServiceStudyArea": [],
+            "PrimaryCareShortageArea": [],
+            "PrimaryCareHPSA": [],
+            "MentalHealthHPSA": [],
+            "DentalHealthHPSA": []
+        }
+        lat = -lat
+        lng = -lng
+        response = self.client.get(f"/api/search?lat={lat}&lng={lng}", HTTP_X_API_KEY=self.api_key)
+        # assert empty return for coordinate outside California
+        self.assertEqual(response.json(), expected_json)
+    
+    def test_service_status(self):
+        # make sure all services are up
+        response = self.client.get("/api/service_status/", HTTP_X_API_KEY=self.api_key)
+        expected_result = {
+            "redis": True,
+            "postgis": True,
+            "django": True,
+            "react": True
+        }
+        self.assertEqual(response.json(), expected_result)
+
+
 class OverrideRoutesTest(TestCase):
     def setUp(self):
         self.client = Client()
@@ -426,13 +694,13 @@ class OverrideRoutesTest(TestCase):
                 "address": "456 Side St"
             }),
             content_type="application/json",
-            **self.api_key
+            **self.api_key # type: ignore
         )
         self.assertEqual(response.status_code, 200)
         self.assertIn("success", response.json())
 
     def test_get_manual_overrides(self):
-        response = self.client.get("/api/manual-overrides", **self.api_key)
+        response = self.client.get("/api/manual-overrides", **self.api_key) # type: ignore
         self.assertEqual(response.status_code, 200)
         self.assertTrue(len(response.json()) >= 1)
 
@@ -445,40 +713,40 @@ class OverrideRoutesTest(TestCase):
                 "address": "789 Test Ave"
             }),
             content_type="application/json",
-            **self.api_key
+            **self.api_key # type: ignore
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["address"], "789 Test Ave")
 
     def test_get_single_override(self):
-        response = self.client.get(f"/api/manual-overrides/{self.obj.id}", **self.api_key)
+        response = self.client.get(f"/api/manual-overrides/{self.obj.id}", **self.api_key) # type: ignore
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["address"], self.test_data["address"])
 
     def test_put_override(self):
         response = self.client.put(
-            f"/api/manual-overrides/{self.obj.id}",
+            f"/api/manual-overrides/{self.obj.id}", # type: ignore
             json.dumps({
                 "latitude": 41.0,
                 "longitude": -105.0,
                 "address": "Updated Address"
             }),
             content_type="application/json",
-            **self.api_key
+            **self.api_key # type: ignore
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["address"], "Updated Address")
 
     def test_delete_override(self):
-        response = self.client.delete(f"/api/manual-overrides/{self.obj.id}", **self.api_key)
+        response = self.client.delete(f"/api/manual-overrides/{self.obj.id}", **self.api_key) # type: ignore
         self.assertEqual(response.status_code, 200)
         self.assertIn("success", response.json())
 
     def test_upload_xlsx(self):
         wb = openpyxl.Workbook()
         ws = wb.active
-        ws.append(["Address", "Latitude", "Longitude"])
-        ws.append(["Excel Test", 36.0, -115.0])
+        ws.append(["Address", "Latitude", "Longitude"]) # type: ignore
+        ws.append(["Excel Test", 36.0, -115.0]) # type: ignore
         stream = io.BytesIO()
         wb.save(stream)
         stream.seek(0)
@@ -492,7 +760,7 @@ class OverrideRoutesTest(TestCase):
         response = self.client.post(
             "/api/manual-overrides/upload-xlsx",
             data={"file": xlsx_file},
-            **self.api_key  # Let Django handle content_type and boundary
+            **self.api_key  # type: ignore
         )
 
         self.assertEqual(response.status_code, 200, f"Response: {response.content}")
@@ -502,12 +770,11 @@ class OverrideRoutesTest(TestCase):
     def test_check_override_location_found(self):
         response = self.client.get(
             f"/api/override-locations?address={self.test_data['address']}",
-            **self.api_key
+            **self.api_key # type: ignore
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["found"], True)
 
     def test_check_override_location_not_found(self):
-        response = self.client.get("/api/override-locations?address=Fake St", **self.api_key)
+        response = self.client.get("/api/override-locations?address=Fake St", **self.api_key) # type: ignore
         self.assertIn(response.status_code, [200, 404])
-    

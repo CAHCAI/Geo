@@ -283,7 +283,7 @@ class APIKey(models.Model):
         """ Check if the API key is valid (not expired or revoked) """
         if self.revoked:
             return False
-        if self.expires_at and self.expires_at < timezone.now():
+        if self.expires_at and self.expires_at < timezone.now(): # type: ignore
             return False
         return True
 
@@ -304,7 +304,7 @@ class APIKey(models.Model):
         """ Generate a new API key with expiration """
         return cls.objects.create(
             key=secrets.token_hex(32),
-            expires_at=timezone.make_aware(datetime.now() + timedelta(days=expires_in_days))  # Timezone-aware
+            expires_at=timezone.make_aware(datetime.now() + timedelta(days=expires_in_days))  # Timezone-aware # type: ignore
         )
 
     def __str__(self):

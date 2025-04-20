@@ -3,7 +3,7 @@ import zipfile
 import os
 from tempfile import TemporaryDirectory
 from osgeo import ogr
-from django.contrib.gis.gdal import DataSource
+from django.contrib.gis.gdal import DataSource # type: ignore
 from api.models import HealthServiceArea, LAServicePlanningArea, MedicalServiceStudyArea, PrimaryCareShortageArea, RegisteredNurseShortageArea, SenateDistrict, CongressionalDistrict, AssemblyDistrict
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.gis.geos import MultiPolygon, Polygon
@@ -60,6 +60,7 @@ def handle_csv_upload(uploaded_file):
         return handle_csv(tmp_path)
     except Exception as e:
         print(e)
+        raise
         
 def parse_shared_hpsa_fields(row):
     return {
@@ -111,11 +112,6 @@ def handle_csv(file_path):
     """
     Reads a CSV file, determines the HPSA discipline (dental, mental, primary)
     from 'HPSA Discipline Class', and then does a bulk insert into the DB.
-    
-    This approach:
-      1) Reads every row and sorts them into separate lists by discipline
-      2) For each discipline that actually has data, we TRUNCATE once
-      3) Bulk insert the rows for that discipline
     """
     print("handling csv file")
     try:
@@ -127,6 +123,11 @@ def handle_csv(file_path):
         # Read CSV
         with open(file_path, "r", encoding="utf-8") as f:
             reader = csv.DictReader(f)
+            
+            # Validate CSV structure has required headers
+            if not reader.fieldnames or "HPSA Discipline Class" not in reader.fieldnames:
+                raise ValueError("Invalid CSV format: Missing required headers")
+            
             for row in reader:
                 discipline_class = row.get("HPSA Discipline Class", "").lower()
                 shared_fields = parse_shared_hpsa_fields(row)
@@ -140,6 +141,10 @@ def handle_csv(file_path):
                 elif "primary" in discipline_class:
                     instance = HPSA_PrimaryCareShortageArea(**shared_fields)
                     primary_rows.append(instance)
+
+        # Check if we found any valid rows
+        if not any([dental_rows, mental_rows, primary_rows]):
+            raise ValueError("No valid HPSA data found in the CSV file")
 
         # Now bulk-insert for each discipline that actually has data.
         # We also TRUNCATE each table only once per discipline.
@@ -164,6 +169,7 @@ def handle_csv(file_path):
 
     except Exception as e:
         print(f"Error in handle_csv: {e}")
+        raise
 
 
 def to_dict(dist):
