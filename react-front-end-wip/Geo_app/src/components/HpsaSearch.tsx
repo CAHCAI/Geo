@@ -158,7 +158,7 @@ const HpsaSearchPage: React.FC = () => {
 
       if (
         Object.keys(data).length === 0 ||
-        (!data.senate && !data.assembly && !data.congressional && !data.hsa)
+        (!data.senate?.length || !data.assembly?.length || !data.congressional?.length)
       ) {
         console.warn("No results found.");
         setError("No results found.");
