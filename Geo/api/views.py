@@ -24,16 +24,14 @@ def index(request):
     return render(request,'frontend.html'),
 
 def error_response(code, description, stk):
-    # caller_frame = stk[-1]  
-    caller_frame = stk[-2]
-    filename = caller_frame.filename
+    caller_frame = stk[-1]  
+    filename = "views.py"
     line = caller_frame.lineno
     AdminErrors.objects.create(
         error_code=code,
         error_description=description,
         files_name=filename,
-        line_number=str(line),
-        created_at=now()
+        line_number=str(line)
     )
 
 # Admin login from the frontend.
@@ -52,8 +50,7 @@ def admin_login(request):
         else:
             try:
                 stack = traceback.extract_stack()
-                error_response(401, f"Invalid credentials provided during login by {username})", stack)
-                AdminErrors.objects.create(error_code=401, error_description=f"Invalid credentials provided during login by {username})", error_time=now())
+                error_response(401, f"Invalid credentials provided during login by {username}", stack)
             except Exception as e:
                 print(f"Error found but not logged into the database! {e}")
             return JsonResponse({"error": "Invalid credentials"}, status=401)
@@ -71,6 +68,7 @@ def admin_logout(request):
 def protected_view(request):
     return JsonResponse({"message": "Authorized access"}, status=200)
 
+@csrf_exempt
 def create_api_key(request):
     client_ip = request.META.get("REMOTE_ADDR")  # Get the client's IP address
     api_key = APIKey.objects.create(ip_address=client_ip)
@@ -79,11 +77,11 @@ def create_api_key(request):
 def message_view(request):
     return JsonResponse({"message": "Hello from Django API!"})
 
-
+@csrf_exempt
 @api_view(["POST"])
 def generate_api_key(request):
     # Get app name from request
-    app_name = request.data.get("app_name")  
+    app_name = request.data.get("app_name") 
 
     if not app_name: 
         try:
@@ -115,7 +113,7 @@ def generate_api_key(request):
     })
 
 
-
+@csrf_exempt
 @api_view(["POST"])
 def validate_api_key(request):
     key = request.data.get("api_key")  # Get the raw API key from the request
@@ -152,7 +150,7 @@ def validate_api_key(request):
     return Response({"message": "API key valid", "usage_count": valid_key.usage_count})
 
 
-
+@csrf_exempt
 @api_view(["POST"])
 def revoke_api_key(request):
     key = request.data.get("api_key")
@@ -171,11 +169,10 @@ def revoke_api_key(request):
         except Exception as e:
              print(f"Error found but not logged into the database! {e}")
         return Response({"error": "API key not found or invalid"}, status=404)
-
     valid_key.revoke()
     try:
         stack = traceback.extract_stack()
-        error_response(403, f"API key revoked", stack)
+        error_response(403, f"API key WAS revoked! Please check if this was intentional!", stack)
     except Exception as e:
         print(f"Error found but not logged into the database! {e}")
     return Response({"message": "API key revoked"})
