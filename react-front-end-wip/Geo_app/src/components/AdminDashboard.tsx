@@ -348,40 +348,36 @@ const AdminDashboard: React.FC = () => {
   return (
     // Wrap in a <main> with an aria-label to identify this primary region
     <main
-      className="container mx-auto p-4"
+      className="container mx-auto p-4 dark:bg-[#2f3136] text-gray-800 dark:text-gray-200"
       aria-label="Admin Dashboard"
       id="admin-dashboard"
     >
-      <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">
+      <h1 className="text-3xl font-bold mb-6 text-center text-gray-800 dark:text-white">
         Admin Dashboard
       </h1>
 
       {/* Alerts Section */}
       <section
-        className="bg-gray-50 rounded-lg shadow-lg p-6 mb-6 max-h-[30vh]"
+        className="bg-gray-50 dark:bg-[#36393f] rounded-lg shadow-lg p-6 mb-6 max-h-[30vh]"
         role="region"
         aria-labelledby="alerts-heading"
       >
-        <h2
-          id="alerts-heading"
-          className="text-xl font-semibold text-gray-700 mb-4"
-        >
+        <h2 id="alerts-heading" className="text-xl font-semibold text-gray-700 dark:text-white mb-4">
           Alerts
         </h2>
         {alerts.length === 0 ? (
-          <p className="text-gray-600">No new alerts at the moment.</p>
+          <p className="text-gray-600 dark:text-gray-400">No new alerts at the moment.</p>
         ) : (
           <div className="space-y-2">
             {alerts.map((alert) => (
               <div
                 key={alert.id}
-                // Optionally add role="alert" if you'd like these to be read out immediately by screen readers.
                 className={`p-4 rounded-lg ${
-                  alert.type === "error"
-                    ? "bg-red-100 text-red-700"
-                    : alert.type === "success"
-                    ? "bg-green-100 text-green-700"
-                    : "bg-blue-100 text-blue-700"
+                  alert.type === 'error'
+                    ? 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300'
+                    : alert.type === 'success'
+                    ? 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-300'
+                    : 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300'
                 }`}
               >
                 <p>{alert.message}</p>
@@ -391,73 +387,67 @@ const AdminDashboard: React.FC = () => {
         )}
       </section>
 
-      {/* Active Admin Sessions Card */}
+      {/* Active Admin Sessions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        {/* Admin Sessions Card */}
-        <div className="bg-gray-50  rounded-lg shadow-lg p-6">
-          <h2 className="text-lg font-bold text-gray-700 mb-1">
-            Active Admin Sessions
-          </h2>
-          <p className="text-3xl font-semibold text-blue-600">
+        <div className="bg-gray-50 dark:bg-[#36393f] rounded-lg shadow-lg p-6">
+          <h2 className="text-lg font-bold text-gray-700 dark:text-white mb-1">Active Admin Sessions</h2>
+          <p className="text-3xl font-semibold text-blue-600 dark:text-blue-400">
             {adminCount !== null ? adminCount : "Loading..."}
           </p>
-          <p className="text-sm text-gray-500 mt-2">
-            Currently logged-in admin users
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Currently logged-in admin users</p>
+        </div>
+
+        <div className="bg-gray-50 dark:bg-[#36393f] rounded-lg shadow-lg p-6">
+          <h2 className="text-lg font-bold text-gray-700 dark:text-white mb-1">Active Normal Users</h2>
+          <p className="text-3xl font-semibold text-green-600 dark:text-green-400">
+            {normalCount !== null ? normalCount : "Loading..."}
           </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Non-admin authenticated sessions</p>
         </div>
 
         {/* Normal User Sessions Card */}
-        <div className="bg-gray-50 rounded-lg shadow-lg p-6">
-          <h2 className="text-lg font-bold text-gray-700 mb-1">
-            Active Normal Users
-          </h2>
-          <p className="text-3xl font-semibold text-green-600">
-            {normalCount !== null ? normalCount : "Loading..."}
-          </p>
-          <p className="text-sm text-gray-500 mt-2">
-            Non-admin authenticated sessions
-          </p>
+        <div className="bg-gray-50 dark:bg-[#36393f] rounded-lg shadow-lg p-6">
+            <h2 className="text-lg font-bold text-gray-700 dark:text-white mb-1">Active Normal Users</h2>
+            <p className="text-3xl font-semibold text-green-600 dark:text-green-400">
+              {normalCount !== null ? normalCount : "Loading..."}
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Non-admin authenticated sessions</p>
+          </div>
         </div>
-      </div>
 
       {/* Statistics Section */}
-      <section
-        className="bg-gray-50 rounded-lg shadow-lg p-6 mb-6"
-        aria-label="Statistics"
-      >
+      <section className="bg-gray-50 dark:bg-[#36393f] rounded-lg shadow-lg p-6 mb-6" aria-label="Statistics">
         <div className="flex items-center mb-2">
-          <h2 className="text-xl font-bold text-gray-700">Issues</h2>
+          <h2 className="text-xl font-bold text-gray-700 dark:text-white">Issues</h2>
         </div>
         <div className="max-h-[30vh] overflow-y-auto">
-          <table className="divide-y divide-gray-200 ">
-            <thead className="bg-gray-50">
+          <table className="divide-y divide-gray-200 dark:divide-[#4f545c]">
+            <thead className="bg-gray-50 dark:bg-[#2f3136]">
               <tr>
-                {" "}
-                {/*I will remove this after demo*/}
-                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-32">
+                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-32">
                   Error ID
                 </th>
-                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-32">
+                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-32">
                   Error Code
                 </th>
-                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider min-w-[500px]">
+                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider min-w-[500px]">
                   Description
                 </th>
-                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-48">
+                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-48">
                   Error File
                 </th>
-                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-48">
+                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-48">
                   Error Line
                 </th>
-                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-48">
+                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-48">
                   Date Occurred
                 </th>
-                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-32">
+                <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-32">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white dark:bg-[#2f3136] divide-y divide-gray-200 dark:divide-[#4f545c]">
               {issues.map((error) => (
                 <tr key={error.id}>
                   <td className="px-8 py-4 whitespace-nowrap text-base font-mono text-red-600">
@@ -466,16 +456,16 @@ const AdminDashboard: React.FC = () => {
                   <td className="px-8 py-4 whitespace-nowrap text-base font-mono text-red-600">
                     {error.error_code}
                   </td>
-                  <td className="px-8 py-4 whitespace-normal text-base text-gray-900 max-w-2xl">
+                  <td className="px-8 py-4 whitespace-normal text-base text-gray-900 dark:text-gray-200 max-w-2xl">
                     {error.error_description}
                   </td>
-                  <td className="px-8 py-4 whitespace-normal text-base text-gray-900 max-w-2xl">
+                  <td className="px-8 py-4 whitespace-normal text-base text-gray-900 dark:text-gray-200 max-w-2xl">
                     {error.files_name}
                   </td>
-                  <td className="px-8 py-4 whitespace-normal text-base text-gray-900 max-w-2xl">
+                  <td className="px-8 py-4 whitespace-normal text-base text-gray-900 dark:text-gray-200 max-w-2xl">
                     {error.line_number}
                   </td>
-                  <td className="px-8 py-4 whitespace-nowrap text-base text-gray-500">
+                  <td className="px-8 py-4 whitespace-nowrap text-base text-gray-500 dark:text-gray-400">
                     {new Date(error.created_at).toLocaleDateString("en-US", {
                       year: "numeric",
                       month: "short",
@@ -487,7 +477,7 @@ const AdminDashboard: React.FC = () => {
                   <td className="px-8 py-4 whitespace-nowrap">
                     <button
                       onClick={() => handleResolveError(error.id)}
-                      className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
+                      className="flex items-center gap-2 px-4 py-2 bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300 rounded-md hover:bg-red-200 dark:hover:bg-red-400/30 transition-colors"
                       aria-label={`Mark error ${error.id} as resolved`}
                     >
                       <TrashIcon className="w-5 h-5" />
@@ -502,17 +492,17 @@ const AdminDashboard: React.FC = () => {
       </section>
 
       {/* Container Status */}
-      <ul className="space-y-2">
-      <h2 className="text-xl font-bold text-gray-700 mb-4">Service Status</h2>
+      <ul className="space-y-2 p-4 rounded-xl shadow-md bg:gray-100 dark:bg-[#2B2D31] mb-4">
+        <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Service Status</h2>
         {containerStatus && Object.entries(containerStatus).map(([name, isRunning]) => (
-          <li key={name} className="flex items-center gap-2">
+          <li key={name} className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
             <span
               className={`inline-block w-3 h-3 rounded-full ${
-                isRunning ? "bg-green-500" : "bg-red-500"
+                isRunning ? "bg-green-400" : "bg-red-400"
               }`}
             />
-            <span className="font-semibold capitalize">{name}:</span>
-            <span className={isRunning ? "text-green-600" : "text-red-600"}>
+            <span className="font-semibold capitalize text-gray-900 dark:text-white">{name}:</span>
+            <span className={isRunning ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
               {isRunning ? "Running" : "Stopped"}
             </span>
           </li>
@@ -521,11 +511,11 @@ const AdminDashboard: React.FC = () => {
 
       {/* Dropdown Menu (above file upload) */}
       <section
-        className="w-full pt-6"
+        className="w-full pt-6 bg-white dark:bg-[#2B2D31] p-4 rounded-xl shadow-md"
         aria-label="Geographical Selection Dropdown"
       >
         <label
-          className="block text-gray-700 font-medium mb-2"
+          className="block text-gray-700 dark:text-gray-200 font-medium mb-2"
           htmlFor="select-option"
         >
           Select Option
@@ -534,7 +524,7 @@ const AdminDashboard: React.FC = () => {
           id="select-option"
           value={selectedOption}
           onChange={(e) => setSelectedOption(e.target.value)}
-          className="w-full p-3 border border-gray-300 rounded-lg"
+          className="w-full p-3 bg-white dark:bg-[#1E1F22] border border-gray-300 dark:border-[#3C3F45] text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"
         >
           <option value="senate">Senate District</option>
           <option value="assembly">Assembly District</option>
@@ -544,37 +534,37 @@ const AdminDashboard: React.FC = () => {
           <option value="rnsa">Registered Nurse Shortage Area</option>
           <option value="mssa">Medical Service Study Area</option>
           <option value="pcsa">Primary Care Shortage Area</option>
-          <option value="hpsa">
-            Health Professional Shortage Area (.csv only)
-          </option>
+          <option value="hpsa">Health Professional Shortage Area (.csv only)</option>
         </select>
-        <p className="text-sm text-gray-500 mt-2">
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
           You have selected:{" "}
-          {selectedOption.charAt(0).toUpperCase() + selectedOption.slice(1)}
+          <span className="text-gray-900 dark:text-white">
+            {selectedOption.charAt(0).toUpperCase() + selectedOption.slice(1)}
+          </span>
         </p>
       </section>
 
       {/* File Upload Section */}
       <section
-        className="bg-gray-50 rounded-lg shadow-lg p-6 mt-6"
+        className="bg-white dark:bg-[#2B2D31] rounded-xl shadow-lg p-6 mt-6"
         aria-label="File Upload"
       >
-        <h2 className="text-xl font-semibold text-gray-700 mb-4">
+        <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
           File Upload
         </h2>
         <div className="flex flex-col items-center justify-center space-y-4">
           {/* Drag-and-drop area */}
           <div
             className={`border-2 border-dashed ${
-              isDragging ? "border-blue-500" : "border-gray-300"
-            } rounded-lg p-8 w-full text-center bg-gray-100 hover:bg-gray-200 transition`}
+              isDragging ? "border-blue-500" : "border-gray-300 dark:border-[#3C3F45]"
+            } rounded-lg p-8 w-full text-center bg-gray-100 dark:bg-[#1E1F22] hover:bg-gray-200 dark:hover:bg-[#26272B] transition`}
             onDragOver={handleDragOver}
             onDragEnter={handleDragEnter}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
             aria-label="Drag and drop your files here"
           >
-            <p className="text-gray-600 mb-4">Drag and drop your files here</p>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">Drag and drop your files here</p>
             <input
               type="file"
               id="file-upload"
@@ -584,12 +574,12 @@ const AdminDashboard: React.FC = () => {
             />
             <label
               htmlFor="file-upload"
-              className="px-6 py-3 bg-blue-500 text-white font-bold rounded-lg shadow-md hover:bg-blue-600 transition cursor-pointer"
+              className="px-6 py-3 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition cursor-pointer"
             >
               Select Files
             </label>
             {selectedFile && (
-              <p className="mt-4 text-gray-600">
+              <p className="mt-4 text-gray-700 dark:text-gray-300">
                 Selected file: {selectedFile.name}
               </p>
             )}
@@ -602,19 +592,19 @@ const AdminDashboard: React.FC = () => {
             disabled={isUploading || !selectedFile}
             className={`px-6 py-3 ${
               isUploading || !selectedFile
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-green-500 hover:bg-green-600"
+                ? "bg-gray-400 dark:bg-gray-600 cursor-not-allowed"
+                : "bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700"
             } text-white font-bold rounded-lg shadow-md transition`}
           >
             {isUploading ? "Uploading..." : "Upload File"}
           </button>
-          <p className="text-sm text-gray-500">Shapefiles & .csv only.</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Shapefiles & .csv only.</p>
         </div>
       </section>
 
       {/* API Key Management Section */}
-      <section className="bg-gray-50 rounded-lg shadow-lg p-6 mt-10 mb-6">
-        <h2 className="text-xl font-bold text-gray-700 mb-4">
+      <section className="bg-white dark:bg-[#2B2D31] rounded-xl shadow-lg p-6 mt-10 mb-6">
+        <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
           API Key Management
         </h2>
 
@@ -622,20 +612,20 @@ const AdminDashboard: React.FC = () => {
           <input
             type="text"
             placeholder="Enter App Name"
-            className="p-2 border border-gray-300 rounded-l-md w-full"
+            className="p-2 border border-gray-300 dark:border-[#3C3F45] bg-white dark:bg-[#1E1F22] text-gray-900 dark:text-white placeholder-gray-400 rounded-l-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={newAppName}
             onChange={(e) => setNewAppName(e.target.value)}
           />
           <button
-            className="bg-blue-500 text-white px-4 py-2 rounded-r-md hover:bg-blue-600"
+            className="bg-blue-600 text-white px-4 py-2 rounded-r-md hover:bg-blue-700"
             onClick={handleGenerateApiKey}
           >
             Generate
           </button>
         </div>
 
-        <table className="w-full table-auto text-left border border-gray-300">
-          <thead className="bg-gray-100">
+        <table className="w-full table-auto text-left border border-gray-300 dark:border-[#3C3F45] text-gray-800 dark:text-gray-300">
+          <thead className="bg-gray-100 dark:bg-[#1E1F22] text-gray-700 dark:text-gray-400">
             <tr>
               <th className="px-4 py-2">API Key</th>
               <th className="px-4 py-2">App Name</th>
@@ -649,20 +639,18 @@ const AdminDashboard: React.FC = () => {
                 key={key.key}
                 className={`transition-opacity duration-300 ease-in-out ${
                   deletingKey === key.key ? "opacity-0" : "opacity-100"
-                }`}
+                } hover:bg-gray-100 dark:hover:bg-[#3C3F45]`}
               >
                 <td className="px-4 py-2 font-mono truncate max-w-[250px]">
                   <div className="flex items-center gap-2">
                     <span className="truncate">{key.key}</span>
                     <button
                       onClick={() => handleCopy(key.key)}
-                      className="text-blue-500 hover:text-blue-700 transition"
-                      title={
-                        copiedKey === key.key ? "Copied!" : "Copy to clipboard"
-                      }
+                      className="text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-500 transition"
+                      title={copiedKey === key.key ? "Copied!" : "Copy to clipboard"}
                     >
                       {copiedKey === key.key ? (
-                        <Check className="w-4 h-4 text-green-600" />
+                        <Check className="w-4 h-4 text-green-600 dark:text-green-500" />
                       ) : (
                         <ClipboardCopy className="w-4 h-4" />
                       )}
@@ -674,7 +662,7 @@ const AdminDashboard: React.FC = () => {
                 <td className="px-4 py-2">
                   <button
                     onClick={() => handleRevokeApiKey(key.key)}
-                    className="text-red-600 hover:underline"
+                    className="bg-red-500 hover:bg-red-400 text-white px-3 py-1 rounded-md transition"
                   >
                     Revoke
                   </button>
@@ -684,6 +672,7 @@ const AdminDashboard: React.FC = () => {
           </tbody>
         </table>
       </section>
+
     </main>
   );
 };
