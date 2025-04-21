@@ -511,6 +511,8 @@ def check_override_location(request, address: str):
     """
     Check if the address is in the override list. If not, geocode it using Azure Maps.
     """
+    if not address.strip():
+        return JsonResponse({"error": "Address parameter is required"}, status=400)
     # Check for override match
     try:
         override = OverrideLocation.objects.get(address__iexact=address.strip())
