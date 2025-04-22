@@ -663,7 +663,11 @@ class GeoAPITests(TestCase):
         self.assertEqual(response.json(), expected_result)
 
 
+import logging
 
+def setUp(self):
+    logging.disable(logging.CRITICAL)  # Disable all logging messages
+    
 class OverrideRoutesTest(TestCase):
     def setUp(self):
         self.client = Client()
@@ -686,7 +690,6 @@ class OverrideRoutesTest(TestCase):
         }
         self.obj = OverrideLocation.objects.create(**self.test_data)
 
-    # Valid test cases
     def test_post_override_location(self):
         response = self.client.post(
             "/api/override-location/",
@@ -700,11 +703,13 @@ class OverrideRoutesTest(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertIn("success", response.json())
+        print("✅ test_post_override_location: Test Passed!")
 
     def test_get_manual_overrides(self):
         response = self.client.get("/api/manual-overrides", **self.api_key)
         self.assertEqual(response.status_code, 200)
         self.assertTrue(len(response.json()) >= 1)
+        print("✅ test_get_manual_overrides: Test Passed!")
 
     def test_post_manual_override(self):
         response = self.client.post(
@@ -719,11 +724,13 @@ class OverrideRoutesTest(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["address"], "789 Test Ave")
+        print("✅ test_post_manual_override: Test Passed!")
 
     def test_get_single_override(self):
         response = self.client.get(f"/api/manual-overrides/{self.obj.id}", **self.api_key)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["address"], self.test_data["address"])
+        print("✅ test_get_single_override: Test Passed!")
 
     def test_put_override(self):
         response = self.client.put(
@@ -738,11 +745,13 @@ class OverrideRoutesTest(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["address"], "Updated Address")
+        print("✅ test_put_override: Test Passed!")
 
     def test_delete_override(self):
         response = self.client.delete(f"/api/manual-overrides/{self.obj.id}", **self.api_key)
         self.assertEqual(response.status_code, 200)
         self.assertIn("success", response.json())
+        print("✅ test_delete_override: Test Passed!")
 
     def test_upload_xlsx(self):
         wb = openpyxl.Workbook()
@@ -766,6 +775,7 @@ class OverrideRoutesTest(TestCase):
         )
         self.assertEqual(response.status_code, 200, f"Response: {response.content}")
         self.assertIn("success", response.json())
+        print("✅ test_upload_xlsx: Test Passed!")
 
     def test_check_override_location_found(self):
         response = self.client.get(
@@ -774,12 +784,13 @@ class OverrideRoutesTest(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["found"], True)
+        print("✅ test_check_override_location_found: Test Passed!")
 
     def test_check_override_location_not_found(self):
         response = self.client.get("/api/override-locations?address=Fake St", **self.api_key)
         self.assertIn(response.status_code, [200, 404])
+        print("✅ test_check_override_location_not_found: Test Passed!")
 
-    # Failing/edge case tests
     def test_create_override_with_missing_fields(self):
         response = self.client.post(
             "/api/manual-overrides",
@@ -787,7 +798,8 @@ class OverrideRoutesTest(TestCase):
             content_type="application/json",
             **self.api_key
         )
-        self.assertNotEqual(response.status_code, 200)  # Should return 400 or validation error
+        self.assertNotEqual(response.status_code, 200)
+        print("✅ test_create_override_with_missing_fields: Test Passed!")
 
     def test_upload_xlsx_with_missing_file(self):
         response = self.client.post(
@@ -796,10 +808,12 @@ class OverrideRoutesTest(TestCase):
             **self.api_key
         )
         self.assertNotEqual(response.status_code, 200)
+        print("✅ test_upload_xlsx_with_missing_file: Test Passed!")
 
     def test_override_location_without_api_key(self):
         response = self.client.get("/api/manual-overrides")
         self.assertEqual(response.status_code, 401)
+        print("✅ test_override_location_without_api_key: Test Passed!")
 
     def test_create_override_with_invalid_coords(self):
         response = self.client.post(
@@ -813,7 +827,9 @@ class OverrideRoutesTest(TestCase):
             **self.api_key
         )
         self.assertNotEqual(response.status_code, 200)
+        print("✅ test_create_override_with_invalid_coords: Test Passed!")
 
     def test_check_location_with_empty_address(self):
         response = self.client.get("/api/override-locations?address=", **self.api_key)
         self.assertIn(response.status_code, [400, 404])
+        print("✅ test_check_location_with_empty_address: Test Passed!")

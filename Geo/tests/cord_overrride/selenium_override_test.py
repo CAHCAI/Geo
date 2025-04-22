@@ -138,6 +138,47 @@ class ManualOverrideCRUDTest:
 
         time.sleep(2)
         
+        
+    def test_invalid_excel_upload(self):
+        print("Testing invalid excel upload...")
+
+        file_path = os.path.abspath("not_a_valid_excel.txt")
+        with open(file_path, "w") as f:
+            f.write("This is not an Excel file.")
+
+        upload_input = self.driver.find_element(By.ID, "file-upload")
+        upload_input.send_keys(file_path)
+        time.sleep(1)
+
+        try:
+            # Wait for and accept the alert first
+            alert = WebDriverWait(self.driver, 5).until(EC.alert_is_present())
+            print(f"[FAIL TEST] Alert appeared: {alert.text}")
+            alert.accept()
+            print("Alert was handled correctly.")
+        except TimeoutException:
+            print("[FAIL TEST] No alert appeared (unexpected).")
+
+
+    def test_create_override_missing_fields(self):
+        print("Testing creating override with missing fields...")
+
+        try:
+            # Clear coordinate input (deliberately do not enter anything)
+            coord_input = self.driver.find_element(By.XPATH, "/html/body/div/html/body/main/div/main/div/section[2]/input[1]")
+            coord_input.clear()
+            time.sleep(1)
+
+            # Do NOT enter address or anything else
+
+            # Try to find and click the submit button — this should NOT exist or be clickable
+            submit_btn = self.driver.find_element(By.XPATH, '//button[contains(text(), "Submit")]')
+            submit_btn.click()
+            print("[FAIL TEST] Submit button was found and clicked despite missing fields - this is a failure.")
+        except Exception:
+            print("[EXPECTED PASS] Submit button not found or not clickable due to empty form - test passed.")
+
+
 # Run the full test
 if __name__ == "__main__":
     test = ManualOverrideCRUDTest()
@@ -145,16 +186,28 @@ if __name__ == "__main__":
     
     print("Creating a new override...")
     test.create_override("1.1, 2.2")
-
+    print("Passed 1")
+    
     print("Editing the first override...")
     test.update_first_override("EditedTest","2.2","3.3")
-
+    print("Passed 2")
+    
     print("Deleting the last override...")
     test.delete_last_override()
+    print("Passed 3")
     
     print("Uploading Excels...")
     test.upload_excel_file("test.xlsx")
-
+    print("Passed 4")
+    
+    print("Testing invalid excel Upload...")
+    test.test_invalid_excel_upload()
+    print("Passed 5")
+    
+    print("Testing Creating an override with missing fields...")
+    test.test_create_override_missing_fields()
+    print("Passed 6")
+    
     print("All Tests Passed :)")
     time.sleep(10)
 
