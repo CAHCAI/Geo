@@ -150,11 +150,6 @@ const AdminDashboard: React.FC = () => {
   }, []);
 
   const handleGenerateApiKey = async () => {
-    if (!newAppName.trim()) {
-      addAlert("error", "Please enter an app name.");
-      return;
-    }
-
     try {
       const response = await fetch(
         "http://localhost:8000/api/generate-api-key/",
@@ -164,6 +159,11 @@ const AdminDashboard: React.FC = () => {
           body: JSON.stringify({ app_name: newAppName }),
         }
       );
+
+      if(!newAppName.trim()) {
+        addAlert("error", "Please enter an app name.");
+        return;
+      }
 
       if (!response.ok) throw new Error("Failed to generate API key");
       const newKey = await response.json();

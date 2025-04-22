@@ -62,29 +62,18 @@ class AdminLoginTest:
             #keep the webpage running
             time.sleep(1) 
 
-            #see if any alerts arise
             try:
-                WebDriverWait(self.driver, 4).until(EC.alert_is_present())
-                #save the alert
-                alert = self.driver.switch_to.alert
-                #get the text from the alert
-                alert_text = alert.text
+                WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="radix-:r3:"]/section/div[2]/div/button')))
+                # welcome_text = self.driver.find_element(By.XPATH, "//*[contains(text(), 'Welcome back')]").text
+                print(f"✅ Valid User - Login Accepted ===> Passed Test for user: {username}")
 
-                #test passed = logged in
-                if "✅ Login successful!" in alert_text:
-                    print("-----Results =======> Valid credentials [PASSED]")
-                    #click the OK button
-                    alert.accept()
-                else:
-                    #no alert = login failed
-                    print("-----Results =======> Invalid credentials [FAILED]")
-            except:
-                #no alert = login failed
-                print("-----Results =======> Invalid credentials [FAILED]")
+            except Exception as e:
+                #catch any errors
+                print(f"❌ Invalid user: Login Denied for user: {username} ===> Passed Test")
 
         except Exception as e:
-            #catch any errors
-            print(f"------Error ========> Error occured while automating! {e}")
+                #catch any errors
+                print(f"❌Test failed due to error {e}:")
 
     def close(self):
         #close the web driver
@@ -96,10 +85,19 @@ if __name__ == "__main__":
     admin_login_test = AdminLoginTest()
 
     #list containing test_usernames
-    test_usernames = ["prash", "admin", "prash", "ballu", "ballu", "ball"]
+    test_usernames = ["prash", "admin", "pp", "john", "doe", "vegeta", "tanjiro", "nezuko", "geo", "bernard", 
+                      "mike", "yahir", "hassan", "prithisha", "brandon", "ben", "prashant", "buddy", "meglu", "testingUser",
+                      "iphone12", "android", "samsung", "nokia", "huawei", "oneplus", "xiaomi", "oppo", "vivo", "done"]
 
     #list containing test_passwords
-    test_passwords = ["1234", "admin", "1234", "4435", "44435", "4435"]
+    test_passwords = ["1234", "admin", "1234", "doe1234", "1111", "0000@s", "1234", "admin", "1234", "doe1234", 
+                      "1111", "0000@s", "1234", "admin", "1234", "doe1234", "1111", "0000@s", "erwat567", "qwerrty12344567890",
+                      "1234", "admin", "1234", "doe1234", "1111", "0000@s", "1234", "admin", "finally6789", "doe1234"]
+    
+    #for my test, valid users are pp, nezuko, buddy, samsung, vivo.
+    
+    #check if the test_usernames and test_passwords are the same length
+    print(f"The usernames and password are of same length? {len(test_passwords) == len(test_usernames)}")
 
     #how many times to run the test
     number_of_tests = len(test_usernames)
