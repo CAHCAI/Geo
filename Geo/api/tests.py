@@ -833,3 +833,37 @@ class OverrideRoutesTest(TestCase):
         response = self.client.get("/api/override-locations?address=", **self.api_key)
         self.assertIn(response.status_code, [400, 404])
         print("✅ test_check_location_with_empty_address: Test Passed!")
+
+
+# Test superuser creation
+import logging
+log = logging.getLogger(__name__)          # Use logging instead of print
+
+class SuperUserCreationTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        testUserNames = ["brandon", "beku", "luffy", "kakashi", "sasuke" , "ash", "choji", "gara"]
+        testPasswords = ["123@3weWq", "123@3weWq", "123@3weWq", "123@3weWq", "123@3weWq", "123@3weWq", "123@3weWq", "123@3weWq"]
+        total_users = []
+
+        for i in range(len(testUserNames)):
+            cls.username = testUserNames[i]
+            cls.password = testPasswords[i]
+            cls.superuser = User.objects.create_superuser(
+                username=cls.username,
+                password=cls.password,
+                email="brandon@example.com",
+            )
+            total_users.append(cls.superuser)
+            # Emit the credentials – **only** useful in local/dev
+            log.info("✅ user created →  %s  /  %s", cls.username, cls.password)
+
+        for i in range(3, 6):
+            for j in total_users:
+                if (testUserNames[i] == j.username):
+                    log.info(f"❌ Test failed →  User {j.username} exists")
+
+    def test_superuser_was_created(self):
+        user = User.objects.get(username=self.username)
+        self.assertTrue(user.is_superuser)
+        self.assertTrue(user.check_password(self.password))
