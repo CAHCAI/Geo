@@ -397,16 +397,7 @@ const AdminDashboard: React.FC = () => {
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Currently logged-in admin users</p>
         </div>
 
-        <div className="bg-gray-50 dark:bg-[#36393f] rounded-lg shadow-lg p-6">
-          <h2 className="text-lg font-bold text-gray-700 dark:text-white mb-1">Active Normal Users</h2>
-          <p className="text-3xl font-semibold text-green-600 dark:text-green-400">
-            {normalCount !== null ? normalCount : "Loading..."}
-          </p>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Non-admin authenticated sessions</p>
-        </div>
-
-        {/* Normal User Sessions Card */}
-        <div className="bg-gray-50 dark:bg-[#36393f] rounded-lg shadow-lg p-6">
+          <div className="bg-gray-50 dark:bg-[#36393f] rounded-lg shadow-lg p-6">
             <h2 className="text-lg font-bold text-gray-700 dark:text-white mb-1">Active Normal Users</h2>
             <p className="text-3xl font-semibold text-green-600 dark:text-green-400">
               {normalCount !== null ? normalCount : "Loading..."}
