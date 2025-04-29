@@ -509,43 +509,64 @@ class OverrideLocationSchema(Schema):
 @router.get("/override-locations")
 def check_override_location(request, address: str):
     """
-    Check if the address is in the override list. If not, geocode it using Azure Maps.
+    Return Rooftop geocode if available and high confidence; 
+    otherwise check OverrideLocation database.
     """
     if not address.strip():
         return JsonResponse({"error": "Address parameter is required"}, status=400)
-    # Check for override match
-    try:
-        override = OverrideLocation.objects.get(address__iexact=address.strip())
-        #print(override.latitude, override.longitude)
-        
-        return {
-            "found": True,
-            "latitude": override.latitude,
-            "longitude": override.longitude,
-        }
-        
-    except OverrideLocation.DoesNotExist:
-        pass
-    
-    #print("override-locations: " + address + "\n")
+
+    # Setup Azure Maps client
     credential = ClientSecretCredential(
         tenant_id=settings.AZURE_TENANT_ID,
         client_id=settings.AZURE_CLIENT_ID,
         client_secret=settings.AZURE_CLIENT_SECRET,
     )
-    maps_search_client = MapsSearchClient(credential=credential, client_id=settings.AZURE_MAPS_CLIENT_ID)
+    maps_search_client = MapsSearchClient(
+        credential=credential,
+        client_id=settings.AZURE_MAPS_CLIENT_ID
+    )
 
+    # Call Azure Maps geocoding
     result = maps_search_client.get_geocoding(query=address)
+    #print(result)
 
-    if result["features"]:
-        coordinates = result["features"][0]["geometry"]["coordinates"]
+    features = result.get("features", [])
+    if features:
+        feature = features[0]
+        properties = feature.get("properties", {})
+        geocode_points = properties.get("geocodePoints", [])
+
+        # Only proceed if confidence is High and matchCodes contains Good
+        if (
+            properties.get("type") == "Address"
+            and properties.get("confidence") == "High"
+            and "Good" in properties.get("matchCodes", [])
+        ):
+            # Try to find a 'Rooftop' calculation method
+            rooftop_point = next(
+                (pt for pt in geocode_points if pt.get("calculationMethod") == "Rooftop"),
+                None
+            )
+
+            if rooftop_point:
+                coordinates = rooftop_point["geometry"]["coordinates"]
+                return {
+                    "found": False,
+                    "latitude": coordinates[1],
+                    "longitude": coordinates[0],
+                }
+
+    # If no high-confidence Rooftop point, fall back to manual override
+    try:
+        override = OverrideLocation.objects.get(address__iexact=address.strip())
         return {
-            "found": False,
-            "latitude": coordinates[1],
-            "longitude": coordinates[0],
+            "found": True,
+            "latitude": override.latitude,
+            "longitude": override.longitude,
         }
+    except OverrideLocation.DoesNotExist:
+        return JsonResponse({"error": "Unable to geocode address: "+ address}, status=401)
 
-    return JsonResponse({"error": "Unable to geocode address"}, status=404)
 
 
 @router.post("/override-location/")
