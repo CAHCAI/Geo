@@ -224,8 +224,18 @@ INSTALLED_APPS = [
     'api',
 ]
 
+# rate limit config
+
+RATE_LIMIT_DEFAULTS = {
+    "key": "ip",        
+    "rate": "60/m",
+    "method": "ALL",
+    "block": True,
+}
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'api.middleware.GlobalRateLimitMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'api.middleware.VisitorTrackingMiddleware',

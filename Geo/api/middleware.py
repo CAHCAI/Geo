@@ -5,6 +5,55 @@ import uuid
 from django.utils import timezone
 from .models import VisitorTracking
 #from .auth import validate_api_key
+from django.utils.deprecation import MiddlewareMixin
+from django.http import JsonResponse
+from django.conf import settings
+from django.utils.module_loading import import_string
+from django_ratelimit import ALL as RL_ALL          # constant, not a string
+from django_ratelimit.core import get_usage
+
+class GlobalRateLimitMiddleware(MiddlewareMixin):
+    """
+    Applies a single global rate-limit to every request (including Ninja routes).
+    """
+    def process_view(self, request, view_func, view_args, view_kwargs):
+        # get cfg from settings.py 
+        cfg = getattr(settings, "RATE_LIMIT_DEFAULTS", {})
+
+        # parse config
+        key    = cfg.get("key", "ip")
+        rate   = cfg.get("rate", "10/m")
+        method = cfg.get("method", RL_ALL)
+        block  = cfg.get("block", True)
+
+        # dotted-path key?
+        if isinstance(key, str) and "." in key:
+            key = import_string(key)
+
+        # allow human-readable "ALL"
+        if isinstance(method, str) and method.upper() == "ALL":
+            method = RL_ALL
+
+        # get current request usage
+        usage = get_usage(
+            request,
+            group="global",    
+            fn=view_func,           
+            key=key,
+            rate=rate,
+            method=method,
+            increment=True         
+        )
+
+        # When rate-limiting is disabled or mis-configured, usage is None.
+        if usage and usage["should_limit"] and block:
+            return JsonResponse(
+                {"detail": "Rate limit exceeded."},
+                status=429
+            )
+
+        return None
+
 
 class APIKeyMiddleware:
     """Middleware to enforce API key authentication."""

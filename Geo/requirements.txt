@@ -11,6 +11,7 @@ django-ninja==1.3.0
 geojson==3.0.0
 shapely==2.0.1
 redis==4.1.0
+django-ratelimit==4.1.0
 
 # GDAL and its dependencies
 numpy>=1.0.0
