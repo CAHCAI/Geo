@@ -122,7 +122,7 @@ Test result screenshots are stored in `Geo/tests/**`.
 | Brandon Balinado <span title="Developer">🛠️</span>    | 		brandonjbalinado@gmail.com   |
 | Prithisha Panta  <span title="Developer">🛠️</span>    | 		prithisha.panta22@gmail.com  |
 | Yahir Ramos      <span title="Developer">🛠️</span>    | 		Yahirrp530@gmail.com         |
-| <em>Add&nbsp;Name</em> | email@example.com |
+| Prashant Ram     <span title="Developer">🛠️</span>    | 		ramprashant66@gmail.com      |
 | <em>Add&nbsp;Name</em> | email@example.com |
 
 ### EVERYONE ADD UR NAME
