@@ -123,6 +123,7 @@ Test result screenshots are stored in `Geo/tests/**`.
 | Prithisha Panta  <span title="Developer">🛠️</span>    | 		prithisha.panta22@gmail.com  |
 | Yahir Ramos      <span title="Developer">🛠️</span>    | 		Yahirrp530@gmail.com         |
 | Prashant Ram     <span title="Developer">🛠️</span>    | 		ramprashant66@gmail.com      |
+| Ben Eklund       <span title="Developer">🛠️</span>    |     eklundbenjaminj@gmail.com    |
 | <em>Add&nbsp;Name</em> | email@example.com |
 
 ### EVERYONE ADD UR NAME
