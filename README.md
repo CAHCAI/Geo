@@ -1,243 +1,134 @@
-<img src="https://github.com/CAHCAI/Geo/blob/main/hcai-logo.png">
+# HCAI GeoPortal
 
-# React Application - Geo Healthcare Dashboard - Frontend
+![HCAI Logo](react-front-end-wip/Geo_app/src/assets/hcai-logo.png)
 
-## Overview
 
-Welcome to the Geo Healthcare Dashboard, a React application designed to provide a comprehensive interface for users to explore Health Professional Shortage Areas (HPSA), Licensed Healthcare Facilities, and other healthcare resources.
+> **HCAI GeoPortal** is a full‑stack application that streamlines geospatial data management for California’s **Health Care Access & Information (HCAI)** programs.  Built with **React + TypeScript + Vite** on the front‑end and **Django Ninja** on the back‑end, it provides a single place to upload, validate, and visualize healthcare‑facility data while exposing a secure REST API for downstream tools.
 
-The Geo Healthcare Dashboard is built using a modern stack that includes React, Tailwind CSS for styling, and various React components to create an intuitive user experience. This README provides instructions for setting up, using, and navigating through the app, as well as detailing its functionality.
+---
 
-## Tech Stack
+## 1   Project Overview
 
-<div align="left">
-	<img width="50" src="https://user-images.githubusercontent.com/25181517/183897015-94a058a6-b86e-4e42-a37f-bf92061753e5.png" alt="React" title="React"/>
-	<img width="50" src="https://github-production-user-asset-6210df.s3.amazonaws.com/62091613/261395532-b40892ef-efb8-4b0e-a6b5-d1cfc2f3fc35.png" alt="Vite" title="Vite"/>
-	<img width="50" src="https://user-images.githubusercontent.com/25181517/202896760-337261ed-ee92-4979-84c4-d4b829c7355d.png" alt="Tailwind CSS" title="Tailwind CSS"/>
-</div>
+HCAI oversees four key program areas—**Facilities, Workforce, Affordability, and Data**—each of which depends on accurate, up‑to‑date facility locations.  Historically, addresses were cleaned, geocoded, and corrected in separate spreadsheets, making it difficult to keep systems in sync.  **GeoPortal** was created to replace that manual process with an authenticated web interface, bulk‑upload workflow, and policy‑based API so that HCAI analysts can:
 
-## Table of Contents
+* Upload Excel workbooks of Cordinate Overrides
+* Override incorrect coordinates, track the change history, and audit who did what
+* Search by address in real‑time (Azure Maps) while honoring manual overrides
+* Export clean datasets or call the API directly
+* Manage API keys and view usage metrics
 
-- [Features](#features)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Components](#components)
-- [Contributing](#contributing)
-- [License](#license)
+## 2  Why We Built It
 
-## Features
+* **Develop a user-friendly GIS platform** – provide easy access to healthcare data through GIS coordinates.
+* **Single source of truth** – ensure every HCAI program area references the same, validated coordinates.
+* **Security & auditing** – granular API keys, role‑based admin, and a full change log.
+* **Scalability** – container‑ready deployment that fits on‑prem or cloud (Azure/Kubernetes/Docker Compose).
 
-- **Health Professional Shortage Search**: Users can search for Health Professional Shortage Areas (HPSA), including Primary Care, Dental Health, and Mental Health.
-- **Licensed Healthcare Facilities**: View and search for licensed healthcare facilities in different regions.
-- **Admin Dashboard**: An administrative panel for managing users, uploading files, and monitoring data.
-- **User Authentication**: Login functionality with role-based access to certain parts of the application.
-- **Interactive Tables and Data Visualizations**: View healthcare-related data in tables and perform searches.
-- **Responsive Design**: Tailwind CSS ensures that the application is optimized for both desktop and mobile devices.
 
-## Installation
+## 3   Screenshots
 
-To get started with the Geo Healthcare Dashboard, follow these steps:
+| | |
+|---|---|
+| **Admin Dashboard – Manual Overrides** | **Data Table – Bulk Upload Results** |
+| ![Admin dashboard showing coordinate overrides](Admin.png) | ![Data table listing parsed Excel rows](Datatable.png) |
 
-#### Frontend
+### Add more screenshots in !!! and reference them here as your UI evolves._
 
-### Prerequisites
+## 4   Features at a Glance
 
-Ensure you have the following software installed on your system:
+- **Excel Upload** – drag‑and‑drop `.xlsx` files, server‑side schema validation
+- **Real‑time Geocoding** – Azure Maps lookup with fallback to manual entry
+- **Coordinate Override CRUD** – full create/edit/delete with audit trail
+- **API Key Management** – generate, revoke, and rotate keys in‑app
+- **Dark‑Mode UI** – Discord‑inspired Tailwind theme with full accessibility
+- **Comprehensive Test Suite** – Pytest + Django test client, Vitest + React Testing Library, and Selenium end‑to‑end tests
 
-- [Node.js](https://nodejs.org/) (v14 or later)
-- [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
+## 5   Getting Started
 
-### Clone the Repository
+### 5.1  Prerequisites
 
-```bash
-$ gh repo clone CAHCAI/Geo
-$ cd Geo/react-front-end-wip/Geo_app
-```
+| Tool | Version |
+|------|---------|
+| Python | 3.11+ |
+| Node .js | 20 LTS |
+| Docker | 24+ (optional but recommended) |
+| Git | latest |
 
-### Install Dependencies
-
-Install the required dependencies using npm or yarn:
+### 5.2  Clone & Setup
 
 ```bash
-$ npm install
-```
+# Clone the repo
+$ git clone https://github.com/your‑org/hcai‑geoportal.git
+$ cd hcai‑geoportal
 
-### Environment Variables
-
-Create a `.env` file in the root of your project to set up necessary environment variables. Example:
-
-```
-REACT_APP_API_BASE_URL=http://localhost:8000/api
-```
-
-### Running the Frontend Application
-
-To run the application in development mode:
-
-```bash
-$ npm start
-```
-
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-## Usage
-
-The Geo Healthcare Dashboard is divided into multiple sections, accessible through the navigation bar. Here are the key sections of the application:
-
-### Home
-The homepage provides information about Health Professional Shortage Areas (HPSAs) and Licensed Healthcare Facilities. Users can access different searches and data categories from here.
-
-### Health Professional Shortage Search
-Users can perform a search for different types of health professional shortages such as Primary Care, Dental Health, Mental Health, etc. This section uses an input field with a button to trigger the search and displays the results in an interactive table.
-
-### Licensed Healthcare Facilities
-View a list of licensed healthcare facilities. This section provides additional information about the services offered and the geographical distribution of facilities.
-
-### Admin Dashboard
-The Admin Dashboard is accessible to authenticated users with admin privileges. It provides an overview of statistics, such as total users, active sessions, address update requests, and other administrative tasks. It also includes a file upload feature to manage relevant documents.
-
-### Login
-The Login page allows users to log in with a username and password. Once logged in, users can access different parts of the app based on their role.
-
-## Components
-
-### AdminDashboard Component
-The Admin Dashboard component (`AdminDashboard.tsx`) provides an overview for administrators to manage site-related activities. It includes cards displaying statistics about total users, active sessions, and other metrics, as well as a file upload section.
-
-### Footer Component
-The Footer (`Footer.tsx`) is displayed across all pages, providing links to government resources and social media, as well as contact and privacy information.
-
-### Header Component
-The Header (`GeoHeader.tsx`) displays navigation links, the CA Gov logo, and a search bar. It acts as the main navigation for the application.
-
-### Home Component
-The Home page (`Home.tsx`) introduces the main features of the application, including information about Health Professional Shortage Areas (HPSA) and Licensed Healthcare Facilities.
-
-### HpsaSearch Component
-The HPSA Search page (`HpsaSearch.tsx`) allows users to perform searches related to different healthcare shortage categories. The data is displayed in tables, categorized by healthcare type.
-
-### Login Component
-The Login Component (`Login.tsx`) handles user authentication. It includes fields for username and password, along with error handling for incorrect credentials.
-
-### App Component
-The App Component (`App.tsx`) serves as the main entry point, managing navigation between different pages based on the user's actions and login status.
-
-# React Application - Geo Django - Backend
-
-## Overview
-
-The Geo Django Backend serves our React Frontent, in addition to providing a versioned API for additional HCAI applications. The backend provides the frontend data on (HPSA), Licensed Healthcare Facilities, and additional information.
-
-The Geo Django Backend is built using a developer-friendly stack that includes the Django Python web framework, PostgreSQL with PostGIS, API connections, to create a developer friendly API. This README provides instructions for setting up, and using the Django backend.
-
-## Tech Stack
-
-<div align="left">
-	<img width="50" src="https://user-images.githubusercontent.com/25181517/183423507-c056a6f9-1ba8-4312-a350-19bcbc5a8697.png" alt="Python" title="Python"/>
-	<img width="50" src="https://github.com/marwin1991/profile-technology-icons/assets/62091613/9bf5650b-e534-4eae-8a26-8379d076f3b4" alt="Django" title="Django"/>
-	<img width="50" src="https://user-images.githubusercontent.com/25181517/117208740-bfb78400-adf5-11eb-97bb-09072b6bedfc.png" alt="PostgreSQL" title="PostgreSQL"/>
-</div>
-
-## Table of Contents
-
-- [Features](#features)
-- [Installation](#installation)
-- [Usage](#usage)
-- [API](#api)
-- [ERD](#erd)
-- [Contributing](#contributing)
-- [License](#license)
-
-## Features
-
-- **Versioned API Endpoints**: Users can call versioned endpoints providing stability to their applications during changes.
-- **Django Data Models**: Developers have a simplified experience working with the Database.
-- **Docker App**: For easily testing and deploying the Backend and Frontend.
-
-## Installation
-
-To get started with the Geo Django Backend, follow these steps:
-
-#### Backend
-
-### Prerequisites
-
-Ensure you have the following software installed on your system:
-
-- Python (v3.0 or later)
-
-```bash
-$ cd Geo/Geo
-```
-
-### Install Dependencies
-
-Install the required dependencies using pip:
-
-```bash
+# Back‑end (Django)
+$ python -m venv venv && source venv/bin/activate
 $ pip install -r requirements.txt
+$ cp Geo/.env.example Geo/.env  # fill in secrets (Azure Maps, DB, etc.)
+$ python manage.py migrate
+$ python manage.py createsuperuser  # optional
+
+# Front‑end (React)
+$ cd react-front-end-wip/Geo_app
+$ npm install
+$ npm run dev  # local dev server on http://localhost:5173
 ```
 
-### Running the Backend
-
-To run the application:
+### 5.3  Docker Compose (one‑liner)
 
 ```bash
-$ python manage.py runserver
+# From project root
+$ docker compose up --build
 ```
 
-## Usage
+The stack will start on `http://localhost:8000` (API) and `http://localhost:5173` (UI).
 
-The Geo Django Backend is a standard Django App, with an API, database integration through (`models.py`), and Django admin dashboard.
+1. If needed you can apply migrations
+   ```bash
+   #Can be run by a docker or seperate terminal
+   docker exec -it geo_django python manage.py migrate
+   ```
 
-### Api
-The Api allows developers to integrate with the Geo Django Backend service.
+## 6   Testing
 
-### Admin dashboard
-The Django Admin dashboard allows management of the Geo Backend service.
+| Layer | Command | Notes |
+|-------|---------|-------|
+| **Backend Unit & Integration** | `docker exec -it geo_django python manage.py test` or `python manage.py test` | Uses Django test database |
+| **End‑to‑End / Frontend (Selenium)** | `py <testname>` Example: `py .\override_test.py` | Requires ChromeDriver in `PATH` (Provided in Repo)|
 
-## API
+Test result screenshots are stored in `Geo/tests/**`.
 
-Under development (WIP)
+## 7   Deployment
 
-## ERD
+1. Set environment variables (Use `.env` provided).
+2. Configure production database (Azure PostgreSQL, AWS RDS, etc.).
+3. Build front‑end:
+   ```bash
+   cd react-front-end-wip/Geo_app
+   npm run build
+   ```
+4. Collect static files and apply migrations:
+   ```bash
+   cd Geo/Geo/
+   python manage.py migrate
+   ```
+5. Serve with Gunicorn/Uvicorn behind Nginx, or deploy the Docker image to your container platform.
 
-<img src="https://github.com/CAHCAI/Geo/blob/main/ERD.png">
+## 8   Contributors
 
+| Name |Contact |
+|------|------|
+| Michael Mehrdadi <span title="Project Lead">🛠️</span> | 		michaelmehrdadi123@gmail.com |
+| <em>Add&nbsp;Name</em> | email@example.com |
+| <em>Add&nbsp;Name</em> | email@example.com |
 
-## WIP Design
-#### WIP Home Page
-<img src="https://github.com/CAHCAI/Geo/blob/main/Homepage.png">
+### EVERYONE ADD UR NAME
 
-#### WIP Data Table
-<img src="https://github.com/CAHCAI/Geo/blob/main/Datatable.png">
+## 9   License
 
-#### WIP Admin Login
-<img src="https://github.com/CAHCAI/Geo/blob/main/Sign_In.png">
+This project is licensed under the **MIT License**.  See `LICENSE` for details.
 
-#### WIP Admin Page
-<img src="https://github.com/CAHCAI/Geo/blob/main/Admin.png">
+---
 
-## Project Timeline
-<img src="https://github.com/CAHCAI/Geo/blob/main/New_Timeline.png">
-
-## Testing
-
-Placeholder for CSC 191
-
-## Deployment
-
-Placeholder for CSC 191
-
-## Developer Instructions
-
-Placeholder for CSC 191
-
-## Contributing
-
-Contributions are welcome! If you have suggestions for improving this project, please feel free to fork the repository and create a pull request. You can also open an issue with the tag "enhancement".
-
-## License
-
-This project is licensed under the MIT License. See the LICENSE file for more information.
+<!-- Reminder: The CSC 190 timeline/future‑enhancement section was intentionally removed per course requirements. -->
 
