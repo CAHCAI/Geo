@@ -119,6 +119,7 @@ Test result screenshots are stored in `Geo/tests/**`.
 | Name |Contact |
 |------|------|
 | Michael Mehrdadi <span title="Project Lead">🛠️</span> | 		michaelmehrdadi123@gmail.com |
+| Brandon Balinado <span title="Developer">🛠️</span> | 		brandonjbalinado@gmail.com |
 | <em>Add&nbsp;Name</em> | email@example.com |
 | <em>Add&nbsp;Name</em> | email@example.com |
 
