@@ -122,12 +122,12 @@ Test result screenshots are stored in `Geo/tests/**`.
 | Brandon Balinado <span title="Developer">🛠️</span>    | 		brandonjbalinado@gmail.com   |
 | Prithisha Panta  <span title="Developer">🛠️</span>    | 		prithisha.panta22@gmail.com  |
 | Yahir Ramos      <span title="Developer">🛠️</span>    | 		Yahirrp530@gmail.com         |
-| Prashant Ram     <span title="Developer">🛠️</span>    | 		ramprashant66@gmail.com      |
-| Ben Eklund       <span title="Developer">🛠️</span>    |     eklundbenjaminj@gmail.com    |
-| <em>Add&nbsp;Name</em> | email@example.com |
+| Prashant Ram     <span title="Developer">🛠️</span>    | 	   ramprashant66@gmail.com      |
+| Ben Eklund       <span title="Developer">🛠️</span>    | 	   eklundbenjaminj@gmail.com    | 
+| Bernard Knobloch <span title="Developer">🛠️</span>    | 	   knoblochsbernard@gmail.com   |
 
 ### EVERYONE ADD UR NAME
-
+  
 ## 9   License
 
 This project is licensed under the **MIT License**.  See `LICENSE` for details.
