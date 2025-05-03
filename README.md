@@ -126,8 +126,6 @@ Test result screenshots are stored in `Geo/tests/**`.
 | Ben Eklund       <span title="Developer">🛠️</span>    | 	   eklundbenjaminj@gmail.com    | 
 | Bernard Knobloch <span title="Developer">🛠️</span>    | 	   knoblochsbernard@gmail.com   |
 | Muhammad Hassan  <span title="Developer">🛠️</span>    | 	   muhammadh6665@gmail.com      |
-
-### EVERYONE ADD UR NAME
   
 ## 9   License
 
