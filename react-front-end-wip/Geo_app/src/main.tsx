@@ -1,13 +1,12 @@
 import React, { useEffect } from "react";
 import ReactDOM from "react-dom/client";
-import "./index.css";
-import Header from "@/components/GeoHeader"; // Import Header
-import Footer from "@/components/Footer"; // Import Footer
 import App from "./App";
+import "./index.css";
 
 // Import local fonts
-import "./fonts/GeistVF.woff";
 import "./fonts/GeistMonoVF.woff";
+import "./fonts/GeistVF.woff";
+import { ThemeProvider } from "./utils/ThemeContext";
 
 // Main Root Layout Component
 const RootLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -17,10 +16,12 @@ const RootLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   }, []);
 
   return (
-    <html lang="en">
-      <body className="antialiased">
+    <html lang="en" className=" scroll-smooth">
+      <body className=" bg-white dark:bg-[#2f3136] min-h-screen">
+        <ThemeProvider>
         {/* Main Content */}
-        <main className="container mx-auto">{children}</main>
+          <main>{children}</main>
+        </ThemeProvider>
       </body>
     </html>
   );
@@ -33,7 +34,9 @@ const root = ReactDOM.createRoot(
 root.render(
   <React.StrictMode>
     <RootLayout>
+      {/* <Header/> */}
       <App />
+      {/* <Footer/> */}
     </RootLayout>
   </React.StrictMode>
 );

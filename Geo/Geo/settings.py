@@ -161,9 +161,19 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(os.path.join(BASE_DIR, '.env'))
+
+AZURE_CLIENT_ID = os.getenv("AZURE_CLIENT_ID")
+AZURE_TENANT_ID = os.getenv("AZURE_TENANT_ID")
+AZURE_CLIENT_SECRET = os.getenv("AZURE_CLIENT_SECRET")
+AZURE_MAPS_CLIENT_ID = os.getenv("AZURE_MAPS_CLIENT_ID")
+
+#print("Client ID:", os.getenv("AZURE_CLIENT_ID"))  # for debugging only
 
 # Media files (for file uploads)
 MEDIA_URL = '/media/'
@@ -177,6 +187,20 @@ SECRET_KEY = 'django-insecure-*9k$2z9$opo%jne$wlvju)l%*8!p#*rg=jmjzy)oqe+xnfy48-
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'DEBUG',
+    },
+}
 
 ALLOWED_HOSTS = [
     "localhost",
@@ -200,13 +224,24 @@ INSTALLED_APPS = [
     'api',
 ]
 
+# rate limit config
+
+RATE_LIMIT_DEFAULTS = {
+    "key": "ip",        
+    "rate": "60/m",
+    "method": "ALL",
+    "block": True,
+}
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'api.middleware.GlobalRateLimitMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'api.middleware.VisitorTrackingMiddleware',
     'django.middleware.common.CommonMiddleware',
     'corsheaders.middleware.CorsMiddleware',  # Temp
     'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -245,6 +280,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'Geo.wsgi.application'
+
 
 
 # Database
@@ -301,3 +337,16 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+SESSION_ENGINE = "django.contrib.sessions.backends.db"
+
+# Session Settings
+SESSION_COOKIE_AGE = 1800  # 30 minutes
+SESSION_SAVE_EVERY_REQUEST = True  # refresh session expiration with every request
+
+import logging
+
+# Suppress Azure SDK INFO/debug logs
+logging.getLogger("azure").setLevel(logging.WARNING)
+logging.getLogger("azure.core.pipeline.policies.http_logging_policy").setLevel(logging.ERROR)
+logging.getLogger("azure.identity").setLevel(logging.WARNING)

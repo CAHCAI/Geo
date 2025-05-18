@@ -1,15 +1,38 @@
+import traceback
 from django.shortcuts import render
 from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+from django.utils.timezone import now
+from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import check_password
 import json
+import secrets
 from django.contrib.gis.geos import Point
-from .models import AssemblyDistrict, SenateDistrict, CongressionalDistrict
-
+from datetime import timedelta, datetime
+from django.utils import timezone
+from .models import AssemblyDistrict, SenateDistrict, CongressionalDistrict, HealthServiceArea, APIKey, AdminErrors
+from .auth import api_key_required
+import openpyxl
+from rest_framework import viewsets, status
+from rest_framework.decorators import action, api_view
+from rest_framework.response import Response
 
 # Create your views here.
 def index(request):
     return render(request,'frontend.html'),
+
+def error_response(code, description, stk):
+    caller_frame = stk[-1]  
+    filename = "views.py"
+    line = caller_frame.lineno
+    AdminErrors.objects.create(
+        error_code=code,
+        error_description=description,
+        files_name=filename,
+        line_number=str(line)
+    )
 
 # Admin login from the frontend.
 @csrf_exempt  # Disables CSRF protection for API calls (needed for frontend requests).
@@ -25,8 +48,12 @@ def admin_login(request):
             login(request, user)  # Log the admin in.
             return JsonResponse({"message": "Login successful"}, status=200)
         else:
+            try:
+                stack = traceback.extract_stack()
+                error_response(401, f"Invalid credentials provided during login by {username}", stack)
+            except Exception as e:
+                print(f"Error found but not logged into the database! {e}")
             return JsonResponse({"error": "Invalid credentials"}, status=401)
-
     return JsonResponse({"error": "Invalid request"}, status=400)
 
 # This function logs out the admin.
@@ -35,41 +62,126 @@ def admin_logout(request):
     logout(request)  # Logs the user out.
     return JsonResponse({"message": "Logged out successfully"}, status=200)
 
-def coordinate_search(request):
-    # This new view handles your point-in-polygon search.
-    lat = request.GET.get('lat')
-    lng = request.GET.get('lng')
 
-    # Validate we got lat/lng
-    if not lat or not lng:
-        return JsonResponse({"error": "Missing lat or lng"}, status=400)
+@csrf_exempt
+@api_key_required
+def protected_view(request):
+    return JsonResponse({"message": "Authorized access"}, status=200)
 
+@csrf_exempt
+def create_api_key(request):
+    client_ip = request.META.get("REMOTE_ADDR")  # Get the client's IP address
+    api_key = APIKey.objects.create(ip_address=client_ip)
+    return JsonResponse({"api_key": api_key.key, "ip_address": client_ip})
+
+def message_view(request):
+    return JsonResponse({"message": "Hello from Django API!"})
+
+@csrf_exempt
+@api_view(["POST"])
+def generate_api_key(request):
+    # Get app name from request
+    app_name = request.data.get("app_name") 
+
+    if not app_name: 
+        try:
+            stack = traceback.extract_stack()
+            error_response(400, f"App name is required when generating API key", stack)
+        except Exception as e:
+            print(f"Error found but not logged into the database! {e}")
+        return Response({"error": "App name is required"}, status=400)  
+    
+    # Generate a secure random key
+    raw_key = secrets.token_hex(64)
+    
+    # Log the raw key to confirm it's generated correctly
+    print(f"Generated raw key: {raw_key}")
+    
+    # Hash the key before saving to DB
+    hashed_key = raw_key
+    
+    # Set expiration time to 30 days from now (timezone-aware)
+    expiration_time = timezone.make_aware(datetime.now() + timedelta(days=30))
+    
+    # Save the hashed key
+    api_key = APIKey.objects.create(key=hashed_key, expires_at=expiration_time, app_name=app_name)
+    
+    return Response({
+        "api_key": raw_key,  # Show raw key only once
+        "app_name": app_name,
+        "expires_at": expiration_time.strftime('%Y-%m-%d %I:%M %p')  # Format the expiration time
+    })
+
+
+@csrf_exempt
+@api_view(["POST"])
+def validate_api_key(request):
+    key = request.data.get("api_key")  # Get the raw API key from the request
+
+    if not key:
+        return Response({"error": "API key is required"}, status=400)
+
+    # Iterate over all non-revoked API keys and check if any match the provided key.
+    valid_key = None
+    for k in APIKey.objects.filter(revoked=False):
+        if key == k.key:
+            valid_key = k
+            break
+
+    if not valid_key:
+        try:
+            stack = traceback.extract_stack()
+            error_response(400, f"Invalid API key provided for validation {key}", stack)
+        except Exception as e:
+             print(f"Error found but not logged into the database! {e}")
+        return Response({"error": "Invalid API key"}, status=403)
+
+    # Check if the API key has expired
+    if valid_key.expires_at and valid_key.expires_at < timezone.now():
+        try:
+            stack = traceback.extract_stack()
+            error_response(403, f"API key has expired", stack)
+        except Exception as e:
+             print(f"Error found but not logged into the database! {e}")
+        return Response({"error": "API key has expired"}, status=403)
+
+    # Increment usage count if needed
+    valid_key.increment_usage()
+    return Response({"message": "API key valid", "usage_count": valid_key.usage_count})
+
+
+@csrf_exempt
+@api_view(["POST"])
+def revoke_api_key(request):
+    key = request.data.get("api_key")
+    
+    # Iterate over all non-revoked API keys and find a match
+    valid_key = None
+    for k in APIKey.objects.filter(revoked=False):
+        if key == k.key:
+            valid_key = k
+            break
+
+    if not valid_key:
+        try:
+            stack = traceback.extract_stack()
+            error_response(404, f"Invalid API key provided or key not found", stack)
+        except Exception as e:
+             print(f"Error found but not logged into the database! {e}")
+        return Response({"error": "API key not found or invalid"}, status=404)
+    valid_key.revoke()
     try:
-        lat = float(lat)
-        lng = float(lng)
-    except ValueError:
-        return JsonResponse({"error": "Invalid lat or lng"}, status=400)
+        stack = traceback.extract_stack()
+        error_response(403, f"API key WAS revoked! Please check if this was intentional!", stack)
+    except Exception as e:
+        print(f"Error found but not logged into the database! {e}")
+    return Response({"message": "API key revoked"})
 
-    point = Point(lng, lat, srid=4326)
-
- # Query each district table to see if the point is contained
-    senate_matches = SenateDistrict.objects.filter(geom__contains=point)
-    assembly_matches = AssemblyDistrict.objects.filter(geom__contains=point)
-    congressional_matches = CongressionalDistrict.objects.filter(geom__contains=point)
-
-    # Format results (pick whichever fields you want to send back)
-    def to_dict(d):
-        return {
-            "district_number": d.district_number,
-            "district_label": d.district_label,
-            "population": d.population,
-            # etc.
-        }
-
-    results = {
-        "senate": [to_dict(d) for d in senate_matches],
-        "assembly": [to_dict(d) for d in assembly_matches],
-        "congressional": [to_dict(d) for d in congressional_matches],
-    }
-
-    return JsonResponse(results, safe=False)
+'''
+@api_view(["GET"])
+@api_key_required
+def list_api_keys(request):
+    keys = APIKey.objects.filter(revoked=False).order_by('-created_at')
+    serializer = APIKeySerializer(keys, many=True)
+    return Response(serializer.data)
+'''
