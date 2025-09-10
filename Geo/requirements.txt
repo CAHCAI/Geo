@@ -1,6 +1,6 @@
 # Core dependencies
 asgiref==3.8.1
-Django==4.2.16
+Django==4.2.24
 django-cors-headers==3.14.0
 django-extensions==3.2.3
 psycopg==3.2.3
