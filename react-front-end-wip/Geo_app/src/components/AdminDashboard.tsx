@@ -59,25 +59,22 @@ const AdminDashboard: React.FC = () => {
         console.error("Error fetching container status:", error);
       }
     };
-  
+
     fetchContainerStatus();
-    const interval = setInterval(fetchContainerStatus, 1000);
+    const interval = setInterval(fetchContainerStatus, 10000); // ✅ 10 seconds
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
     const fetchInterval = setInterval(() => {
       setRefreshCounter((prev) => prev + 1);
-    }, 10000); // Poll every 10 seconds
+    }, 10000); // ✅ 10 seconds
 
     const fetchIssues = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:8000/api/admin_errors/",
-          {
-            headers: { "X-API-KEY": fixedApiKey },
-          }
-        );
+        const response = await fetch("http://localhost:8000/api/admin_errors/", {
+          headers: { "X-API-KEY": fixedApiKey },
+        });
         if (!response.ok) throw new Error("Failed to fetch issues");
         const data = await response.json();
         setIssues(data);
@@ -106,7 +103,7 @@ const AdminDashboard: React.FC = () => {
     }
 
     fetchSessions();
-    const intervalId = setInterval(fetchSessions, 30000);
+    const intervalId = setInterval(fetchSessions, 10000); // ✅ changed to 10 seconds
     return () => clearInterval(intervalId);
   }, []);
 
@@ -114,9 +111,7 @@ const AdminDashboard: React.FC = () => {
     const fetchApiKeys = async () => {
       try {
         const response = await fetch("http://localhost:8000/api/api-keys/", {
-          headers: {
-            "X-API-KEY": fixedApiKey,
-          },
+          headers: { "X-API-KEY": fixedApiKey },
         });
         const data = await response.json();
         setApiKeys(data);
@@ -133,9 +128,7 @@ const AdminDashboard: React.FC = () => {
     const fetchUsageCounts = async () => {
       try {
         const response = await fetch("http://localhost:8000/api/api-keys/", {
-          headers: {
-            "X-API-KEY": fixedApiKey,
-          },
+          headers: { "X-API-KEY": fixedApiKey },
         });
         const data = await response.json();
         setApiKeys(data);
@@ -145,9 +138,10 @@ const AdminDashboard: React.FC = () => {
     };
 
     fetchUsageCounts(); // initial fetch
-    const interval = setInterval(fetchUsageCounts, 10000); // every 10s
+    const interval = setInterval(fetchUsageCounts, 10000); // ✅ 10 seconds
     return () => clearInterval(interval);
   }, []);
+
 
   const handleGenerateApiKey = async () => {
     try {
@@ -358,7 +352,7 @@ const AdminDashboard: React.FC = () => {
 
       {/* Alerts Section */}
       <section
-        className="bg-gray-50 dark:bg-[#36393f] rounded-lg shadow-lg p-6 mb-6 max-h-[30vh]"
+        className="bg-gray-50 dark:bg-[#36393f] rounded-lg shadow-lg p-6 mb-6 max-h-[30vh] overflow-y-auto"
         role="region"
         aria-labelledby="alerts-heading"
       >
